@@ -1,27 +1,38 @@
 import * as Card from "../components/Card";
-import Menubar from "../components/Menubar";
+import * as Menubar from "../components/Menubar";
+import { useTranslation } from 'react-i18next';
 
 import './Welcome.less'
 
 export default function Welcome() {
+  const { t, i18n } = useTranslation()
+
   return (
     <div id="view-welcome">
-      <Menubar/>
+      <Menubar.Root>
+        <Menubar.MenuFile/>
+        <Menubar.MenuEdit/>
+        <Menubar.MenuSelection/>
+        <Menubar.MenuTeamwork/>
+        <Menubar.MenuRun/>
+        <Menubar.MenuHelp/>
+      </Menubar.Root>
+
       <div id="content">
         <Card.Root>
           <Card.Heading>
-            <h3>Quickly Start</h3>
+            <h3>{t('Quick Start')}</h3>
           </Card.Heading>
           <Card.Content>
-            <span>Empty</span>
+            <span>{t('Empty')}</span>
           </Card.Content>
         </Card.Root>
         <Card.Root>
           <Card.Heading>
-            <h3>Recent</h3>
+            <h3>{t('Recent')}</h3>
           </Card.Heading>
           <Card.Content>
-            <span>Empty</span>
+            <span>{t('Empty')}</span>
           </Card.Content>
         </Card.Root>
       </div>

@@ -14,8 +14,14 @@
     "allowlist": {
       "all": false,
       "shell": {
-        "all": false,
-        "open": true
+        "all": true
+      },
+      "fs": {
+        "all": true,
+        "scope": ["**/*"]
+      },
+      "path": {
+        "all": true
       }
     },
     "bundle": {

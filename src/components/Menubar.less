@@ -1,0 +1,77 @@
+button {
+  all: unset;
+}
+
+.MenubarRoot {
+  display: flex;
+  background-color: var(--primary-background);
+  padding: 3px;
+
+  box-shadow: var(--box-shadow-deep);
+}
+
+.MenubarTrigger {
+  padding: 4px 12px;
+  outline: none;
+  user-select: none;
+  font-weight: 500;
+  line-height: 1;
+
+  font-size: small;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.MenubarTrigger[data-state='open'] {
+  background-color: var(--hover-color);
+}
+
+.MenubarContent,
+.MenubarSubContent {
+  min-width: 220px;
+  background-color: var(--primary-background);
+  padding: 5px;
+  box-shadow: var(--box-shadow-deep);
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+  will-change: transform, opacity;
+}
+
+.MenubarItem,
+.MenubarSubTrigger {
+  all: unset;
+  font-size: small;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 10px;
+  position: relative;
+  user-select: none;
+}
+
+.MenubarItem.inset,
+.MenubarSubTrigger.inset {
+  padding-left: 20px;
+}
+
+.MenubarItem[data-state='open'],
+.MenubarSubTrigger[data-state='open'],
+.MenubarItem[data-highlighted],
+.MenubarSubTrigger[data-highlighted]{
+  background-color: var(--hover-color);
+}
+
+.MenubarSeparator {
+  height: 1px;
+  background-color: var(--separator-color);
+  margin: 5px;
+}
+
+.RightSlot {
+  margin-left: auto;
+  padding-left: 20px;
+  color: var(--font-color);
+}

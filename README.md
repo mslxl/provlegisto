@@ -63,6 +63,6 @@ $ pnpm tauri build
 
 GNU Affero General Public License 3.0
 
-图标: CC-BY-NC-ND
+图标: NoLicense
 
-来自 Tauri 的默认图标，由[Alve Larsson](https://alve.io/), [Daniel Thompson-Yvetot](https://github.com/nothingismagick) 和 [Guillaume Chau](https://github.com/akryum) 进行设计。
+由 Stable Diffusion 生成, prompt为 `master piece, white dress, cat girl, home dress, computer, source code, coding, pure color background`, 种子`-4243955700` 

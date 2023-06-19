@@ -1,3 +1,5 @@
+import {process} from '@tauri-apps/api'
+
 import * as Menubar from '@radix-ui/react-menubar'
 
 import { ReactNode } from 'react'
@@ -6,6 +8,11 @@ import { ChevronRightIcon } from '@radix-ui/react-icons';
 import { useTranslation } from 'react-i18next'
 
 import './Menubar.less'
+
+
+function actionExit(){
+  process.exit(0)
+}
 
 
 export function Root({ children }: { children?: ReactNode }) {
@@ -114,7 +121,7 @@ export function MenuFile() {
           <Menubar.Item className='MenubarItem'>{t('Close Problem List')}</Menubar.Item>
           <Menubar.Separator className='MenubarSeparator' />
 
-          <Menubar.Item className='MenubarItem'>{t('Exit')}</Menubar.Item>
+          <Menubar.Item className='MenubarItem' onClick={ actionExit }>{t('Exit')}</Menubar.Item>
         </Menubar.Content>
       </Menubar.Portal>
     </Menubar.Menu>

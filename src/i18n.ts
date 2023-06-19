@@ -87,6 +87,8 @@ const resources = {
       "View License": "View License",
       "Toggle Developer Tools": "Toggle Developer Tools",
       "About": "About",
+
+      "Join Team": "Join Team",
     }
   },
   zh: {
@@ -174,6 +176,8 @@ const resources = {
       "View License": "查看开源许可",
       "Toggle Developer Tools": "开发者工具",
       "About": "关于",
+
+      "Join Team": "加入队伍",
     }
   }
 }
@@ -182,7 +186,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: "en",
+    lng: "zh",
     fallbackLng: "en",  
     interpolation: {
       escapeValue: false

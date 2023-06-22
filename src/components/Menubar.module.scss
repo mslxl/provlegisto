@@ -1,4 +1,5 @@
-button {
+.MenubarTrigger,
+.MenubarSubTrigger {
   all: unset;
 }
 
@@ -60,7 +61,7 @@ button {
 .MenubarItem[data-state='open'],
 .MenubarSubTrigger[data-state='open'],
 .MenubarItem[data-highlighted],
-.MenubarSubTrigger[data-highlighted]{
+.MenubarSubTrigger[data-highlighted] {
   background-color: var(--hover-color);
 }
 

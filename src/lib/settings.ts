@@ -13,7 +13,8 @@ const settingsManager = new SettingsManager<SettingSchema>(
   }
 )
 
-await settingsManager.initialize()
-await settingsManager.syncCache()
+settingsManager.initialize().then(()=>{
+  settingsManager.syncCache()
+})
 
 export default settingsManager

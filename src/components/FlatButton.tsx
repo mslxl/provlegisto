@@ -1,9 +1,10 @@
 import { ReactNode } from 'react'
-import './FlatButton.less'
+import classnames from 'classnames'
+import styles from './FlatButton.module.scss'
 
 export default function FlatButton({ children }: { children?: ReactNode }) {
   return (
-    <button className='provlegisto-flat-button'>
+    <button className={styles.button}>
       {children}
     </button>
   )

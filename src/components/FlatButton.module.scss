@@ -1,13 +1,15 @@
-.provlegisto-flat-button{
+.button {
+  all:unset;
   padding: 12px 24px;
   display: flex;
   align-items: center;
   gap: 1em;
 
-  &:hover{
+  &:hover {
     background-color: var(--hover-color);
   }
-  &:active{
+
+  &:active {
     background-color: var(--active-color);
   }
 }

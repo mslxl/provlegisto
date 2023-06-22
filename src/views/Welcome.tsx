@@ -2,7 +2,7 @@ import * as Card from "../components/Card";
 import * as Menubar from "../components/Menubar";
 import { useTranslation } from 'react-i18next';
 
-import './Welcome.less'
+import './Welcome.scss'
 import QuickStartBoard from "../components/QuickStartBorad";
 
 export default function Welcome() {

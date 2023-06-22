@@ -1,6 +1,6 @@
-import settingsManager from "./settings";
+import settingsManager from "./lib/settings";
 
-import './theme.less'
+import './theme.scss'
 
 
 settingsManager.get('theme').then((theme)=>{

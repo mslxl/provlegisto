@@ -1,18 +1,18 @@
 import { ReactNode } from 'react'
-import './Card.less'
+import styles from './Card.module.scss'
 
-export function Heading({children}: { children?: ReactNode}) {
+export function Heading({ children }: { children?: ReactNode }) {
   return (
-    <div className='provlegisto-card-heading'>
+    <div className={styles.card_heading}>
       {children}
     </div>
   )
 
 }
 
-export function Content({children}: {children? : ReactNode}) {
+export function Content({ children }: { children?: ReactNode }) {
   return (
-    <div className='provlegisto-card-content'>
+    <div className={styles.card_content}>
       {children}
     </div>
   )
@@ -20,7 +20,7 @@ export function Content({children}: {children? : ReactNode}) {
 
 export function Root({ children }: { children?: ReactNode }) {
   return (
-    <div className='provlegisto-card'>
+    <div className={styles.card}>
       {children}
     </div>
   )

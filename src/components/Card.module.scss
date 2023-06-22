@@ -1,0 +1,26 @@
+.card {
+  border-radius: 8px;
+  box-shadow: var(--box-shadow-light);
+
+  [theme='light'] {
+    background-color: white;
+  }
+
+  [theme='paper']{
+    border: 2px solid black;
+  }
+}
+.card_heading{
+  padding: 0 24px;
+}
+.card_content{
+  padding: 12px 24px;
+}
+
+.card_heading::after{
+  content: '';
+  display: block;
+  width: calc(100% - 20px);
+  height: 1px;
+  background: var(--separator-color);
+}

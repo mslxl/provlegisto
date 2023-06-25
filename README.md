@@ -7,9 +7,9 @@ Provlegisto **WIP**
 
 ![GitHub](https://img.shields.io/github/license/WeeHerb/provlegisto?style=for-the-badge)
 
-Provlegisto 是基于 Tauri 开发的，面向全体 OIer/ACMer 的数据生成器和本地对拍器。在未来可能支持一些基础的代码编辑功能和与OJ的集成。
+Provlegisto 是基于 Tauri 开发的，原为数据生成对拍器, 现经重构后为面向全体 ACMer/OIer 的下一代 IDE
 
-Provlegisto *`/provlegisto/`* 出自 Esperanto，意为“预判者”。我们希望 Provlegisto 能为您在平时训练时快速的发现致使代码错误的输入，为您在构造数据和对拍时节省时间。
+Provlegisto *`/provlegisto/`* 出自 Esperanto，意为“预判者”。我们希望 Provlegisto 能为您在平时训练时快速的发现致使代码错误的输入，为您在测试样例对拍时节省时间。
 </div>
 
 <br/>
@@ -59,7 +59,7 @@ $ pnpm tauri build
 
 ## 开源许可
 
-代码: (c) 2023 - Weeherb
+代码: (c) 2023 - Mslxl
 
 GNU Affero General Public License 3.0
 

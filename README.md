@@ -5,7 +5,7 @@ Provlegisto **WIP**
 
 <img width="160" src="src-tauri\icons\Square150x150Logo.png" alt="logo"></br>
 
-![GitHub](https://img.shields.io/github/license/WeeHerb/provlegisto?style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/sdufeACM/provlegisto?style=for-the-badge)
 
 Provlegisto 是基于 Tauri 开发的，原为数据生成对拍器, 现经重构后为面向全体 ACMer/OIer 的下一代 IDE
 

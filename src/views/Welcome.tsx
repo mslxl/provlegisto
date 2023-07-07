@@ -3,7 +3,7 @@ import * as Menubar from "../components/Menubar";
 import { useTranslation } from 'react-i18next';
 
 import './Welcome.scss'
-import QuickStartBoard from "../components/QuickStartBorad";
+import QuickStartBoard from "../components/QuickStartBoard";
 
 export default function Welcome() {
   const { t, i18n } = useTranslation()

@@ -7,6 +7,8 @@ import { ChevronRightIcon } from '@radix-ui/react-icons';
 
 import { useTranslation } from 'react-i18next'
 
+import { Link } from 'react-router-dom'
+
 import styles from './Menubar.module.scss'
 
 
@@ -110,7 +112,9 @@ export function MenuFile() {
             </Menubar.SubTrigger>
             <Menubar.Portal>
               <Menubar.SubContent className={styles.MenubarSubContent}>
-                <Menubar.Item className={styles.MenubarItem}>{t('Global Preferences')}</Menubar.Item>
+                <Menubar.Item className={styles.MenubarItem}>
+                  <Link to={'/preference/global'}>{t('Global Preferences')}</Link>
+                </Menubar.Item>
                 <Menubar.Item className={styles.MenubarItem}>{t('Problem List Preferences')}</Menubar.Item>
               </Menubar.SubContent>
             </Menubar.Portal>

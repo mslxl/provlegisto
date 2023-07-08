@@ -1,10 +1,6 @@
-import classNames from 'classnames'
-import * as ScrollArea from '@radix-ui/react-scroll-area'
-import * as Accordion from '@radix-ui/react-accordion'
-import { ChevronDownIcon } from '@radix-ui/react-icons';
 import PreferenceView, { CatalogModel } from '../components/Preference'
 
-import * as Card from '../components/Card'
+import { useSettingsStore } from '../store/settings';
 
 
 export default function Page() {
@@ -19,7 +15,9 @@ export default function Page() {
             id: 'editor.theme',
             title: 'Theme',
             ty: 'select',
-            meta: ()=> ['Light', 'Dark', 'Paper'],
+            meta: () => ['Light', 'Dark', 'Paper'],
+            value: useSettingsStore((state: any) => state.theme),
+            setter: useSettingsStore((state: any) => state.setTheme),
           }
         ]
       },
@@ -103,6 +101,7 @@ export default function Page() {
             title: 'Version Code',
             description: '0.0.0-dev',
             ty: 'label',
+            value: "",
           }
         ]
       },

@@ -8,7 +8,7 @@
 }
 
 
-html[theme='dark'] {
+html[data-theme='dark'] {
   --primary-background: #16161e;
   --font-color: white;
   --hover-color: #323232;
@@ -27,7 +27,7 @@ html[theme='dark'] {
   }
 }
 
-html[theme='light'] {
+html[data-theme='light'] {
   --primary-background: #f8f8f8;
   --font-color: black;
   --hover-color: #e8e8e8;
@@ -46,7 +46,7 @@ html[theme='light'] {
 
 }
 
-html[theme='paper'] {
+html[data-theme='paper'] {
   --primary-background: #f8f8f8;
   --font-color: black;
   --hover-color: #e8e8e8;

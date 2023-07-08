@@ -25,8 +25,10 @@ export interface ItemModel {
   id: string,
   title: string
   description?: string
-  ty: 'number' | 'text' | 'label' | 'select' // | 'path' | 'render'
+  ty: 'text' | 'label' | 'select' // | 'path' | 'render'
   meta?: () => any
+  value: string
+  setter?: (value: string) => void
   valid?: (value: string) => boolean
 }
 
@@ -41,16 +43,15 @@ function renderLabel(model: ItemModel) {
 }
 
 function renderSelect(model: ItemModel) {
-
   return (
     <div style={{ width: '100%', display: 'flex', alignItems: 'center' }}>
       <div>
         <div className={style.SettingTitle}>{model.title}</div>
         {model.description && <div className={style.SettingDescription}>{model.description}</div>}
       </div>
-      <span style={{flexGrow: 1}}></span>
+      <span style={{ flexGrow: 1 }}></span>
       <div>
-        <Select.Root>
+        <Select.Root defaultValue={model.value} onValueChange={model.setter}>
           <Select.Trigger className={style.SelectTrigger}>
             <Select.Value />
             <Select.Icon>
@@ -93,7 +94,7 @@ function renderSelect(model: ItemModel) {
 function Section({ model }: { model: SectionModel }) {
   return (
     <ul className={style.SettingList}>
-      {model.items.map((v) => (<li className={style.SettingItem} id={v.id}><Item model={v} /></li>))}
+      {model.items.map((v) => (<li key={v.id} className={style.SettingItem} id={v.id}><Item model={v} /></li>))}
     </ul>
   )
 }

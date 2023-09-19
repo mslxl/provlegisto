@@ -1,6 +1,7 @@
 import type { EditorView } from "codemirror"
 import { Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
+import { map } from "ramda"
 
 export enum Mode {
   c = "cpp",
@@ -33,8 +34,25 @@ const modeTable = {
   },
 }
 
+export const allowExtension = map((k) => (modeTable as any)[k].extension, Object.keys(modeTable))
+export function getModeByExtension(ext: string): Mode | null {
+  if (!ext.startsWith(".")) {
+    ext = "." + ext
+  }
+  for (const k of Object.keys(modeTable)) {
+    if ((modeTable as any)[k].extension === ext) {
+      return k as Mode
+    }
+  }
+  return null
+}
+export function getExtensionByMode(mode: Mode): string {
+  return (modeTable as any)[mode].extension
+}
+
 export const languageSupport = new Compartment()
 export async function setMode(mode: Mode, editor: EditorView): Promise<void> {
+  console.log(`use ${mode} language support`)
   const support = await modeTable[mode].syntax()
   editor.dispatch({
     effects: languageSupport.reconfigure(support()),

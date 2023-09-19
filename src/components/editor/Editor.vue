@@ -1,0 +1,71 @@
+<script setup lang="ts">
+import { basicSetup } from "codemirror"
+import { EditorView, keymap, type ViewUpdate } from "@codemirror/view"
+import { indentWithTab } from "@codemirror/commands"
+import { onMounted, onUnmounted, ref } from "vue"
+import bus from "../../bus"
+import { type Mode, languageSupport, setMode } from "./editorMode"
+import { useEditorStore } from "../../store/editor"
+import { cpp as cppLanguageSupport } from "@codemirror/lang-cpp"
+
+type Props = {
+  codeId: string
+}
+const props = defineProps<Props>()
+const block = ref<Element | null>(null)
+const editorStore = useEditorStore()
+let codemirror: EditorView
+
+editorStore.createIfNotExists(props.codeId)
+
+onMounted(() => {
+  codemirror = new EditorView({
+    extensions: [
+      basicSetup,
+      EditorView.updateListener.of((v: ViewUpdate) => {
+        if (!v.docChanged) return
+        editorStore.editors.get(props.codeId)!.code = codemirror.state.doc.toString()
+      }),
+      keymap.of([indentWithTab]),
+      languageSupport.of(cppLanguageSupport()),
+    ],
+    parent: block.value!,
+  })
+  bus.on(`externalChange:${props.codeId}`, () => {
+    const state = editorStore.editors.get(props.codeId)!
+    // 设置语言
+    setMode(state.mode, codemirror).catch(console.error)
+    // 替换编辑器中所有内容
+    codemirror.dispatch({
+      changes: [
+        {
+          from: 0,
+          to: codemirror.state.doc.length,
+          insert: state.code,
+        },
+      ],
+    })
+  })
+
+  bus.on(`modeChange:${props.codeId}`, (e) => {
+    editorStore.$patch((state) => {
+      state.editors.get(props.codeId)!.mode = e as Mode
+    })
+    setMode(editorStore.currentEditorValue!.mode, codemirror).catch(console.error)
+  })
+})
+
+onUnmounted(() => {
+  codemirror.destroy()
+  bus.off(`modeChange:${props.codeId}`)
+  bus.off(`externalChange:${props.codeId}`)
+})
+</script>
+<template>
+  <div ref="block" :class="`codeblock-${props.codeId}`"></div>
+</template>
+<style lang="scss">
+.cm-editor.cm-focused {
+  outline: none;
+}
+</style>

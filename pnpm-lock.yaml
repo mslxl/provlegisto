@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@codemirror/commands':
+    specifier: ^6.2.5
+    version: 6.2.5
   '@codemirror/lang-cpp':
     specifier: ^6.0.2
     version: 6.0.2
@@ -23,6 +26,9 @@ dependencies:
   '@codemirror/state':
     specifier: ^6.2.1
     version: 6.2.1
+  '@codemirror/view':
+    specifier: ^6.19.0
+    version: 6.19.0
   '@tauri-apps/api':
     specifier: ^1.4.0
     version: 1.4.0

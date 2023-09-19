@@ -3,9 +3,9 @@ import { ref } from "vue"
 import { useSettingStore } from "../../store/settings"
 import bus from "../../bus"
 import { reject, equals } from "ramda"
-import NativeMenubar from "./native.vue"
-import Select from "../popup/Select.vue"
-import { Mode } from "../editor/editorMode"
+import NativeMenubar from "./Native.vue"
+import Select from "../Popup/Select.vue"
+import { Mode } from "../Editor/editorMode"
 import { useEditorStore } from "../../store/editor"
 const settingStore = useSettingStore()
 

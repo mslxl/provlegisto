@@ -1,8 +1,7 @@
-import { Mode } from "../components/editor/editorMode"
+import { Mode } from "../components/Editor/editorMode"
 import { defineStore } from "pinia"
 
 interface State {
-  path?: string
   editors: Map<string, EditorState>
   currentEditor: string | null
 }
@@ -30,6 +29,7 @@ export const useEditorStore = defineStore("editor", {
       this.$patch((state) => {
         state.editors.set(id, {
           code: "",
+          path: null,
           isSaved: false,
           mode,
         })
@@ -42,4 +42,5 @@ interface EditorState {
   code: string
   mode: Mode
   isSaved: boolean
+  path: string | null
 }

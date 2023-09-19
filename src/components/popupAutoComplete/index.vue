@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NModal, NAutoComplete } from "naive-ui"
-import { computed, ref } from "vue"
+import { NModal, NAutoComplete, type AutoCompleteInst } from "naive-ui"
+import { computed, nextTick, ref, watch } from "vue"
 import { compose, pair, sortBy, map, identical, prop, dropWhile, identity } from "ramda"
 
 type Props = {
@@ -13,39 +13,63 @@ type Emits = {
   (e: "update:show", value: boolean): void
   (e: "commit", value: string): void
 }
-const { show, placeholder, options, filter } = defineProps<Props>()
-
+const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 // emit.
 
 const value = ref("")
+const field = ref<AutoCompleteInst | null>(null)
+const focusOwner = ref<HTMLDivElement | null>(null)
 
 const filteredOptions = computed(() => {
-  const drop = filter ? dropWhile(compose(identical(-1), prop(0))) : identity
+  const drop = props.filter ? dropWhile(compose(identical(-1), prop(0))) : identity
   const sort = sortBy(prop(0))
   const recover = map(prop(1))
   const cover = map((x: string) => pair(x.indexOf(value.value), x))
-  return recover(drop(sort(cover(options)))) as unknown as string[]
+  return recover(drop(sort(cover(props.options)))) as unknown as string[]
 })
+watch(
+  () => props.show,
+  () => {
+    if (props.show) {
+      nextTick(() => {
+        value.value = ""
+        field.value?.blur()
+        focusOwner.value?.focus()
+        setTimeout(() => {
+          field.value?.focus()
+        }, 350)
+      }).catch(console.error)
+    }
+  },
+)
 </script>
 
 <template>
-  <NModal :show="show" @update:show="(v) => emit('update:show', v)" transform-origin="center">
-    <NAutoComplete
-      v-model:value="value"
-      spellcheck="false"
-      placement="bottom"
-      class="modal-auto-complete"
-      size="large"
-      :input-props="{
-        autocomplete: 'disabled',
-      }"
-      :get-show="() => true"
-      :placeholder="placeholder"
-      :options="filteredOptions"
-      @select="emit('commit', value)"
-    >
-    </NAutoComplete>
+  <NModal :show="props.show" @update:show="(v) => emit('update:show', v)" transform-origin="center">
+    <div>
+      <div ref="focusOwner" tabindex="-1"></div>
+      <NAutoComplete
+        ref="field"
+        v-model:value="value"
+        spellcheck="false"
+        placement="bottom"
+        class="modal-auto-complete"
+        size="large"
+        :input-props="{
+          // autocomplete: 'disabled',
+          onKeydown: (event) => {
+            if (event.key === 'Enter') {
+              emit('commit', value)
+            }
+          },
+        }"
+        :get-show="() => true"
+        :placeholder="placeholder"
+        :options="filteredOptions"
+        @select="(v) => emit('commit', v.toString())"
+      />
+    </div>
   </NModal>
 </template>
 

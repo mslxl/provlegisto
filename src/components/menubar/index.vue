@@ -22,7 +22,12 @@ bus.on("menu:changeLanguage", () => {
     v-model:show="showModeModal"
     placeholder="Language"
     :options="reject(equals('default'), Object.keys(Mode))"
-    @commit="(mode) => bus.emit('modeChange:main', (Mode as any)[mode])"
+    @commit="
+      (mode) => {
+        bus.emit('modeChange:main', (Mode as any)[mode])
+        showModeModal = false
+      }
+    "
     :filter="true"
   >
   </PopupAutoComplete>

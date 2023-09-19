@@ -3,8 +3,8 @@ import { Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
 
 export enum Mode {
-  c = "clike",
-  cpp = "clike",
+  c = "cpp",
+  cpp = "cpp",
   java = "java",
   python = "python",
   go = "go",
@@ -12,7 +12,7 @@ export enum Mode {
 }
 
 const modeTable = {
-  clike: {
+  cpp: {
     syntax: async () => (await import("@codemirror/lang-cpp")).cpp,
     extension: ".cpp",
   },

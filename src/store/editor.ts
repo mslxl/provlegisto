@@ -2,6 +2,7 @@ import { Mode } from "../components/editor/editorMode"
 import { defineStore } from "pinia"
 
 interface State {
+  path?: string
   editors: Map<string, EditorState>
   currentEditor: string | null
 }

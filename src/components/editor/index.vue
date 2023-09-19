@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { EditorView, basicSetup } from "codemirror"
 import { onMounted, onUnmounted, ref } from "vue"
-import editorBus from "../../bus/editorBus"
-import { languageSupport, setMode } from "./editorMode"
+import bus from "../../bus"
+import { type Mode, languageSupport, setMode } from "./editorMode"
 import { useEditorStore } from "../../store/editor"
 
 type Props = {
@@ -24,7 +24,10 @@ onMounted(() => {
     console.error(e)
   })
 
-  editorBus.on(`modeChange:${props.codeId}`, () => {
+  bus.on(`modeChange:${props.codeId}`, (e) => {
+    editorStore.$patch((state) => {
+      state.editors.get(props.codeId)!.mode = e as Mode
+    })
     setMode(editorStore.currentEditorValue!.mode, codemirror).catch((e) => {
       console.error(e)
     })
@@ -33,7 +36,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   codemirror.destroy()
-  editorBus.off(`modeChange:${props.codeId}`)
+  bus.off(`modeChange:${props.codeId}`)
 })
 </script>
 <template>

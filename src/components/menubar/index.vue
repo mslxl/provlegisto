@@ -4,11 +4,13 @@ import { useSettingStore } from "../../store/settings"
 import bus from "../../bus"
 import { reject, equals } from "ramda"
 import NativeMenubar from "./native.vue"
-import PopupAutoComplete from "../popupAutoComplete/index.vue"
+import Select from "../popup/Select.vue"
 import { Mode } from "../editor/editorMode"
+import { useEditorStore } from "../../store/editor"
 const settingStore = useSettingStore()
 
 const showModeModal = ref(false)
+const editorStore = useEditorStore()
 
 bus.on("menu:changeLanguage", () => {
   showModeModal.value = true
@@ -18,19 +20,19 @@ bus.on("menu:changeLanguage", () => {
 <template>
   <NativeMenubar v-if="settingStore.menubarStyle == 'native'" />
 
-  <PopupAutoComplete
+  <Select
     v-model:show="showModeModal"
     placeholder="Language"
     :options="reject(equals('default'), Object.keys(Mode))"
+    :defaultValue="editorStore.currentEditorValue?.mode"
     @commit="
       (mode) => {
         bus.emit('modeChange:main', (Mode as any)[mode])
         showModeModal = false
       }
     "
-    :filter="true"
   >
-  </PopupAutoComplete>
+  </Select>
 </template>
 
 <style lang="scss" scoped></style>

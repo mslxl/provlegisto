@@ -4,9 +4,8 @@ import { EditorView, keymap, type ViewUpdate } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { onMounted, onUnmounted, ref } from "vue"
 import bus from "../../bus"
-import { type Mode, languageSupport, setMode } from "./editorMode"
+import { type Mode, languageSupport, languageServerSupport, setMode } from "./mode"
 import { useEditorStore } from "../../store/editor"
-import { cpp as cppLanguageSupport } from "@codemirror/lang-cpp"
 
 type Props = {
   codeId: string
@@ -27,14 +26,15 @@ onMounted(() => {
         editorStore.editors.get(props.codeId)!.code = codemirror.state.doc.toString()
       }),
       keymap.of([indentWithTab]),
-      languageSupport.of(cppLanguageSupport()),
+      languageSupport.of([]),
+      languageServerSupport.of([]),
     ],
     parent: block.value!,
   })
   bus.on(`externalChange:${props.codeId}`, () => {
     const state = editorStore.editors.get(props.codeId)!
     // 设置语言
-    setMode(state.mode, codemirror).catch(console.error)
+    setMode(state.mode, codemirror, props.codeId).catch(console.error)
     // 替换编辑器中所有内容
     codemirror.dispatch({
       changes: [
@@ -51,7 +51,7 @@ onMounted(() => {
     editorStore.$patch((state) => {
       state.editors.get(props.codeId)!.mode = e as Mode
     })
-    setMode(editorStore.currentEditorValue!.mode, codemirror).catch(console.error)
+    setMode(editorStore.currentEditorValue!.mode, codemirror, props.codeId).catch(console.error)
   })
 })
 
@@ -69,3 +69,4 @@ onUnmounted(() => {
   outline: none;
 }
 </style>
+./mode

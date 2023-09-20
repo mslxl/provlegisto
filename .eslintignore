@@ -4,3 +4,5 @@ commitlint.config.cjs
 vite.config.ts
 pnpm_lock.yaml
 *.d.ts
+
+src/lsp/index.ts

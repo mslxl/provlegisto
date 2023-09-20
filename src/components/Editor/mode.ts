@@ -2,6 +2,7 @@ import type { EditorView } from "codemirror"
 import { Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
 import { map } from "ramda"
+import { languageServer } from "codemirror-languageserver"
 
 export enum Mode {
   c = "cpp",
@@ -11,19 +12,30 @@ export enum Mode {
   go = "go",
   default = cpp,
 }
+const LOCAL_LSP_ADAPTER_ADDR = "ws://127.0.0.1:3000"
 
 const modeTable = {
   cpp: {
     syntax: async () => (await import("@codemirror/lang-cpp")).cpp,
     extension: ".cpp",
+    lsp: (id: string) =>
+      languageServer({
+        serverUri: (LOCAL_LSP_ADAPTER_ADDR + `/clangd/${id}`) as any,
+        rootUri: "file:///",
+        documentUri: "file:///a",
+        languageId: "cpp",
+        workspaceFolders: null,
+      }),
   },
   python: {
     syntax: async () => (await import("@codemirror/lang-python")).python,
     extension: ".py",
+    lsp: undefined,
   },
   java: {
     syntax: async () => (await import("@codemirror/lang-java")).java,
     extension: ".java",
+    lsp: undefined,
   },
   go: {
     syntax: async () => {
@@ -31,6 +43,7 @@ const modeTable = {
       return () => StreamLanguage.define(go)
     },
     extension: ".go",
+    lsp: undefined,
   },
 }
 
@@ -51,10 +64,23 @@ export function getExtensionByMode(mode: Mode): string {
 }
 
 export const languageSupport = new Compartment()
-export async function setMode(mode: Mode, editor: EditorView): Promise<void> {
+export const languageServerSupport = new Compartment()
+
+export async function setMode(mode: Mode, editor: EditorView, id: string): Promise<void> {
   console.log(`use ${mode} language support`)
-  const support = await modeTable[mode].syntax()
+  const language = modeTable[mode]
+  const support = await language.syntax()
   editor.dispatch({
     effects: languageSupport.reconfigure(support()),
   })
+  // 应用 lsp
+  if (language.lsp !== undefined) {
+    editor.dispatch({
+      effects: languageServerSupport.reconfigure(language.lsp(id)),
+    })
+  } else {
+    editor.dispatch({
+      effects: languageServerSupport.reconfigure([]),
+    })
+  }
 }

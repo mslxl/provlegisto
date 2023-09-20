@@ -5,7 +5,7 @@ import bus from "../../bus"
 import { reject, equals } from "ramda"
 import NativeMenubar from "./Native.vue"
 import Select from "../Popup/Select.vue"
-import { Mode } from "../Editor/editorMode"
+import { Mode } from "../Editor/mode"
 import { useEditorStore } from "../../store/editor"
 const settingStore = useSettingStore()
 
@@ -36,3 +36,4 @@ bus.on("menu:changeLanguage", () => {
 </template>
 
 <style lang="scss" scoped></style>
+../Editor/mode

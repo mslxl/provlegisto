@@ -1,6 +1,6 @@
 import bus from "../../bus"
 import { dialog, fs } from "@tauri-apps/api"
-import { Mode, allowExtension, getExtensionByMode, getModeByExtension } from "../Editor/editorMode"
+import { Mode, allowExtension, getExtensionByMode, getModeByExtension } from "../Editor/mode"
 import { map, slice } from "ramda"
 import { useEditorStore } from "../../store/editor"
 

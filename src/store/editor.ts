@@ -1,4 +1,4 @@
-import { Mode } from "../components/Editor/editorMode"
+import { Mode } from "../components/Editor/mode"
 import { defineStore } from "pinia"
 
 interface State {

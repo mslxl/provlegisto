@@ -5,7 +5,9 @@ import { indentWithTab } from "@codemirror/commands"
 import { onMounted, onUnmounted, ref } from "vue"
 import bus from "../../bus"
 import { type Mode, languageSupport, languageServerSupport, setMode } from "./mode"
+import { setTheme, themeCompartment } from "./theme"
 import { useEditorStore } from "../../store/editor"
+import themes from "./themeTable"
 
 type Props = {
   codeId: string
@@ -28,9 +30,13 @@ onMounted(() => {
       keymap.of([indentWithTab]),
       languageSupport.of([]),
       languageServerSupport.of([]),
+      themeCompartment.of([]),
     ],
     parent: block.value!,
   })
+
+  setTheme(themes.materialLight, codemirror).catch(console.error)
+
   bus.on(`externalChange:${props.codeId}`, () => {
     const state = editorStore.editors.get(props.codeId)!
     // 设置语言
@@ -69,4 +75,3 @@ onUnmounted(() => {
   outline: none;
 }
 </style>
-./mode

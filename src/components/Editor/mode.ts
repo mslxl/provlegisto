@@ -4,6 +4,9 @@ import { StreamLanguage } from "@codemirror/language"
 import { map } from "ramda"
 import { languageServer } from "codemirror-languageserver"
 
+export const languageSupport = new Compartment()
+export const languageServerSupport = new Compartment()
+
 export enum Mode {
   c = "cpp",
   cpp = "cpp",
@@ -62,9 +65,6 @@ export function getModeByExtension(ext: string): Mode | null {
 export function getExtensionByMode(mode: Mode): string {
   return (modeTable as any)[mode].extension
 }
-
-export const languageSupport = new Compartment()
-export const languageServerSupport = new Compartment()
 
 export async function setMode(mode: Mode, editor: EditorView, id: string): Promise<void> {
   console.log(`use ${mode} language support`)

@@ -8,7 +8,7 @@ bus.on("*", (type, e) => {
 })
 
 interface GlobalEventPayload {
-  eventName: string
+  event: string
   data?: any
 }
 async function emitGlobal(name: string, data?: any): Promise<void> {

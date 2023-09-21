@@ -65,6 +65,9 @@ dependencies:
   ramda:
     specifier: ^0.29.0
     version: 0.29.0
+  tauri-plugin-log-api:
+    specifier: github:tauri-apps/tauri-plugin-log#v1
+    version: github.com/tauri-apps/tauri-plugin-log/9075595196d5a66f8f3265d2aaf7e2ffeb4cb2ab
   vue:
     specifier: ^3.3.4
     version: 3.3.4
@@ -5485,3 +5488,11 @@ packages:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
     dev: true
+
+  github.com/tauri-apps/tauri-plugin-log/9075595196d5a66f8f3265d2aaf7e2ffeb4cb2ab:
+    resolution: {tarball: https://codeload.github.com/tauri-apps/tauri-plugin-log/tar.gz/9075595196d5a66f8f3265d2aaf7e2ffeb4cb2ab}
+    name: tauri-plugin-log-api
+    version: 0.0.0
+    dependencies:
+      '@tauri-apps/api': 1.4.0
+    dev: false

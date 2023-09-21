@@ -8,6 +8,7 @@ import { type Mode, languageSupport, languageServerSupport, setMode } from "./mo
 import { setTheme, themeCompartment } from "./theme"
 import { useEditorStore } from "../../store/editor"
 import themes from "./themeTable"
+import { useSettingStore } from "../../store/settings"
 
 type Props = {
   codeId: string
@@ -15,6 +16,7 @@ type Props = {
 const props = defineProps<Props>()
 const block = ref<Element | null>(null)
 const editorStore = useEditorStore()
+const settingsStore = useSettingStore()
 let codemirror: EditorView
 
 editorStore.createIfNotExists(props.codeId)
@@ -35,7 +37,13 @@ onMounted(() => {
     parent: block.value!,
   })
 
-  setTheme(themes.materialLight, codemirror).catch(console.error)
+  setTheme((themes as any)[settingsStore.theme], codemirror).catch(console.error)
+
+  bus.on("pref:theme", (v) => {
+    const value = String(v)
+    settingsStore.theme = value
+    void setTheme((themes as any)[value], codemirror)
+  })
 
   bus.on(`externalChange:${props.codeId}`, () => {
     const state = editorStore.editors.get(props.codeId)!

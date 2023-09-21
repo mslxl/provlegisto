@@ -1,25 +1,18 @@
 <script setup lang="ts">
-import Menubar from "./components/Menubar/Menubar.vue"
-import EditorWithTab from "./components/EditorWithTab/EditorWithTab.vue"
-import { useEditorStore } from "./store/editor"
-import { startLocalLSP, stopLSP } from "./lsp/local"
-import { onMounted, onUnmounted } from "vue"
-
-const editorStore = useEditorStore()
-editorStore.currentEditor = "main"
-onMounted(() => {
-  startLocalLSP().then(console.log).catch(console.error)
-})
-onUnmounted(() => {
-  stopLSP().then(console.log).catch(console.error)
-})
+import { RouterView } from "vue-router"
 </script>
 
 <template>
   <div class="container">
-    <Menubar />
-    <EditorWithTab />
+    <RouterView></RouterView>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.container {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+</style>

@@ -23,6 +23,11 @@ const cmd = [
         type: "menuItem",
         command: "fileSaveAs",
       },
+      {
+        name: "Preference",
+        type: "menuItem",
+        command: "preference",
+      },
     ],
   },
   {
@@ -36,6 +41,27 @@ const cmd = [
       },
     ],
   },
+  // {
+  //   name: "Run",
+  //   type: "menu",
+  //   children: [
+  //     {
+  //       name: "Compile",
+  //       type: "menuItem",
+  //       command: "compile",
+  //     },
+  //     {
+  //       name: "Compile and Run",
+  //       type: "menuItem",
+  //       command: "compileRun",
+  //     },
+  //     {
+  //       name: "Run",
+  //       type: "menuItem",
+  //       command: "run",
+  //     },
+  //   ],
+  // },
 ]
 
 export default cmd

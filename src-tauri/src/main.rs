@@ -3,7 +3,7 @@
 use tauri_plugin_log::LogTarget;
 
 use lsp::LSPState;
-use tauri::Manager;
+use tauri::{Manager, Runtime};
 
 mod lsp;
 
@@ -18,7 +18,7 @@ fn main() {
                 .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![lsp::switch_lsp_adapter])
+        .invoke_handler(tauri::generate_handler![lsp::switch_lsp_adapter,])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

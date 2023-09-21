@@ -7,6 +7,7 @@ import NativeMenubar from "./Native.vue"
 import Select from "../Popup/Select.vue"
 import { Mode } from "../Editor/mode"
 import { useEditorStore } from "../../store/editor"
+import { WebviewWindow } from "@tauri-apps/api/window"
 const settingStore = useSettingStore()
 
 const showModeModal = ref(false)
@@ -14,6 +15,13 @@ const editorStore = useEditorStore()
 
 bus.on("menu:changeLanguage", () => {
   showModeModal.value = true
+})
+
+bus.on("menu:preference", () => {
+  const webview = new WebviewWindow("preference", {
+    url: "/pref",
+  })
+  webview.show().catch(console.error)
 })
 </script>
 
@@ -26,7 +34,7 @@ bus.on("menu:changeLanguage", () => {
     :options="reject(equals('default'), Object.keys(Mode))"
     :defaultValue="editorStore.currentEditorValue?.mode"
     @commit="
-      (mode) => {
+      (mode: string) => {
         bus.emit('modeChange:main', (Mode as any)[mode])
         showModeModal = false
       }
@@ -36,4 +44,3 @@ bus.on("menu:changeLanguage", () => {
 </template>
 
 <style lang="scss" scoped></style>
-../Editor/mode

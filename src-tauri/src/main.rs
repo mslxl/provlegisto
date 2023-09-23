@@ -7,7 +7,9 @@ use tauri_plugin_log::LogTarget;
 use lsp::LSPState;
 use tauri::Manager;
 
+mod cp;
 mod lsp;
+mod net;
 mod presist;
 
 fn main() {
@@ -26,7 +28,10 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             lsp::enable_lsp_adapter,
             presist::get_presist_item,
-            presist::set_presist_item
+            presist::set_presist_item,
+            cp::cp_compile_file,
+            cp::cp_run_detached,
+            cp::cp_compile_run,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

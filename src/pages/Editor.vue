@@ -2,7 +2,7 @@
 import Menubar from "../components/Menubar/Menubar.vue"
 import EditorWithTab from "../components/EditorWithTab/EditorWithTab.vue"
 import { useEditorStore } from "../store/editor"
-import { startLocalLSP, stopLSP } from "../lsp/local"
+import { startLocalLSP, stopLSP } from "../lib/lsp"
 import { onMounted, onUnmounted } from "vue"
 import { useDocumentTitle } from "../lib/window"
 
@@ -24,3 +24,4 @@ onUnmounted(() => {
 </template>
 
 <style scoped></style>
+../lsp/lsp

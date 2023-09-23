@@ -1,12 +1,15 @@
 use tokio::sync::Mutex;
 
-use self::adapter::{LSPAdpater, LocalLSPAdapter};
+use crate::net::RemoteState;
+
+use self::adapter::{LSPAdpaterT, LocalLSPAdapter};
 
 pub mod adapter;
+pub mod clangd_service;
 pub mod service;
 
 pub struct LSPState {
-    mu: Mutex<Option<Box<dyn LSPAdpater>>>,
+    mu: Mutex<Option<Box<dyn LSPAdpaterT>>>,
 }
 impl Default for LSPState {
     fn default() -> Self {
@@ -20,6 +23,7 @@ impl LSPState {
         let mut guard = self.mu.lock().await;
         *guard = None;
     }
+
     pub async fn use_local(&self) {
         let mut guard = self.mu.lock().await;
         *guard = Some(Box::new(LocalLSPAdapter::new()));
@@ -28,8 +32,9 @@ impl LSPState {
 }
 
 #[tauri::command]
-pub async fn switch_lsp_adapter(
+pub async fn enable_lsp_adapter(
     state: tauri::State<'_, LSPState>,
+    net_state: tauri::State<'_, RemoteState>,
     status: i32,
 ) -> Result<(), String> {
     match status {

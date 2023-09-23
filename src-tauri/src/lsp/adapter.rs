@@ -9,7 +9,7 @@ use crate::lsp::service::LSPRegister;
 
 const PORT: u16 = 3000;
 #[async_trait]
-pub trait LSPAdpater: Send + Sync {
+pub trait LSPAdpaterT: Send + Sync {
     async fn start(&mut self);
 }
 
@@ -32,7 +32,7 @@ impl LocalLSPAdapter {
 }
 
 #[async_trait]
-impl LSPAdpater for LocalLSPAdapter {
+impl LSPAdpaterT for LocalLSPAdapter {
     async fn start(&mut self) {
         info!("Local LSP Adapter started");
         let tcp = TcpListener::bind(format!("127.0.0.1:{}", PORT))

@@ -1,5 +1,3 @@
-use std::env;
-
 use tauri::Runtime;
 
 #[tauri::command]

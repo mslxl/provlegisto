@@ -46,9 +46,9 @@ pub struct ExeExecuator;
 #[async_trait::async_trait]
 impl ExecuatorCaller for ExeExecuator {
     #[cfg(target_os = "windows")]
-    fn run_detached(&self, target: &str) {
+    fn run_detached(&self, prov_run_prog: &str, target: &str) {
         std::process::Command::new("cmd")
-            .args(["/C", "start", "cmd", "/Q", "/K", target])
+            .args(["/C", "start", prov_run_prog, target])
             .spawn()
             .unwrap();
     }

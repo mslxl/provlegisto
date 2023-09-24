@@ -3,6 +3,7 @@ mod gcc_provider;
 use std::path::PathBuf;
 
 use log::info;
+use tauri::Runtime;
 use tempfile::{tempdir, TempDir};
 
 use crate::net::RemoteState;
@@ -52,7 +53,7 @@ pub trait CompilerCaller: Sync + Send {
 
 #[async_trait::async_trait]
 pub trait ExecuatorCaller: Sync + Send {
-    fn run_detached(&self, target: &str);
+    fn run_detached(&self, prov_run_prog: &str, target: &str);
     async fn run(&self, target: &str, input_from: &str, output_to: &str) -> Result<String, String>;
 }
 
@@ -134,18 +135,29 @@ pub async fn cp_compile_src(
 }
 
 #[tauri::command]
-pub async fn cp_run_detached_src(
+pub async fn cp_run_detached_src<R: Runtime>(
+    app: tauri::AppHandle<R>,
     state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, CompileCache>,
     src: UserSourceCode,
     compile_args: Vec<String>,
 ) -> Result<(), String> {
+    let prov_run_prog = if cfg!(target_os = "windows") {
+        app.path_resolver()
+            .resolve_resource("bin/prov_console_run.exe")
+    } else {
+        app.path_resolver().resolve_resource("bin/prov_console_run")
+    }
+    .expect("failed to resolve bin/prov_console_run binary");
+
     let provider = LanguageRegister
         .get(&src.lang)
         .ok_or_else(|| String::from("Language is unsupported"))?;
 
     let exe = cp_compile_src(state, cache, src, compile_args).await?;
-    provider.executaor().run_detached(&exe);
+    provider
+        .executaor()
+        .run_detached(prov_run_prog.to_str().unwrap(), &exe);
     Ok(())
 }
 

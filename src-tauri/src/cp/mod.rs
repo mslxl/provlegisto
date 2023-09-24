@@ -8,9 +8,15 @@ use tempfile::{tempdir, TempDir};
 use crate::net::RemoteState;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct UserSourceCode {
+pub struct UserSourceFile {
     lang: String,
     filename: String,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct UserSourceCode {
+    lang: String,
+    src: String,
 }
 
 pub struct CompileCache {
@@ -91,7 +97,7 @@ impl LanguageRegister {
 }
 
 #[tauri::command]
-pub async fn cp_compile_file(
+pub async fn cp_compile_src(
     _state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, CompileCache>,
     src: UserSourceCode,
@@ -102,25 +108,33 @@ pub async fn cp_compile_file(
         .get(&src.lang)
         .ok_or_else(|| String::from("Language is unsupported"))?;
 
-    // 通过内容计算编译后的文件名
-    let hash = sha256::try_digest(PathBuf::from(&src.filename)).map_err(|e| e.to_string())?;
-    let target_dir = cache.cache_dir.path().join(format!("{}.exe", hash));
-    let target_filename = target_dir.to_str().to_owned().unwrap();
+    // 通过内容计算文件名
+    let hash = sha256::digest(&src.src);
+    let src_file = cache
+        .cache_dir
+        .path()
+        .join(format!("{}.{}", hash, provider.compiler().ext()));
+    let src_filename = src_file.to_str().to_owned().unwrap();
+    let target_file = cache.cache_dir.path().join(format!("{}.exe", hash));
+    let target_filename = target_file.to_str().to_owned().unwrap();
 
-    if !target_dir.exists() {
+    if !target_file.exists() {
         // 文件不存在则编译
+        tokio::fs::write(&src_file, &src.src)
+            .await
+            .map_err(|e| e.to_string())?;
         provider
             .compiler()
-            .compile_file(&src.filename, compile_args, target_filename)
+            .compile_file(src_filename, compile_args, target_filename)
             .await?;
     }
-    info!("compile {} to {}", &src.filename, &target_filename);
+    info!("compile {} to {}", &src_filename, &target_filename);
 
     Ok(target_filename.to_owned())
 }
 
 #[tauri::command]
-pub async fn cp_run_detached(
+pub async fn cp_run_detached_src(
     state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, CompileCache>,
     src: UserSourceCode,
@@ -130,13 +144,13 @@ pub async fn cp_run_detached(
         .get(&src.lang)
         .ok_or_else(|| String::from("Language is unsupported"))?;
 
-    let exe = cp_compile_file(state, cache, src, compile_args).await?;
+    let exe = cp_compile_src(state, cache, src, compile_args).await?;
     provider.executaor().run_detached(&exe);
     Ok(())
 }
 
 #[tauri::command]
-pub async fn cp_compile_run(
+pub async fn cp_compile_run_src(
     state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, CompileCache>,
     src: UserSourceCode,
@@ -148,6 +162,6 @@ pub async fn cp_compile_run(
         .get(&src.lang)
         .ok_or_else(|| String::from("Language is unsupported"))?;
 
-    let exe = cp_compile_file(state, cache, src, compile_args).await?;
+    let exe = cp_compile_src(state, cache, src, compile_args).await?;
     provider.executaor().run(&exe, input_from, output_to).await
 }

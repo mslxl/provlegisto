@@ -27,4 +27,3 @@ onUnmounted(() => {
 </template>
 
 <style scoped></style>
-../lsp/lsp

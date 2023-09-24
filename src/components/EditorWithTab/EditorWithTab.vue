@@ -12,7 +12,8 @@ onMounted(() => {
   file.listen()
   bus.on("menu:compile", () => {
     const cur = editorStore.currentEditorValue!
-    compileFile(cur.mode, cur.path!, []).catch((e) => {
+    bus.emit("notify:info", { title: "Start Compile" })
+    compileFile(cur.mode, cur.code, []).catch((e) => {
       bus.emit("notify:error", {
         title: "Compile Error",
         content: e,
@@ -21,7 +22,8 @@ onMounted(() => {
   })
   bus.on("menu:runDetached", () => {
     const cur = editorStore.currentEditorValue!
-    runDetached(cur.mode, cur.path!, []).catch((e) => {
+    bus.emit("notify:info", { title: "Start Compile" })
+    runDetached(cur.mode, cur.code, []).catch((e) => {
       bus.emit("notify:error", {
         title: "Compile Error",
         content: e,

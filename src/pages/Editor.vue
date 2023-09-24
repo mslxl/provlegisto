@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Menubar from "../components/Menubar/Menubar.vue"
+import Notification from "../components/Notification/Notifcation.vue"
 import EditorWithTab from "../components/EditorWithTab/EditorWithTab.vue"
 import { useEditorStore } from "../store/editor"
 import { startLocalLSP, stopLSP } from "../lib/lsp"
@@ -20,7 +21,9 @@ onUnmounted(() => {
 
 <template>
   <Menubar />
-  <EditorWithTab />
+  <Notification>
+    <EditorWithTab />
+  </Notification>
 </template>
 
 <style scoped></style>

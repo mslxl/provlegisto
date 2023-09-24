@@ -33,6 +33,15 @@ onMounted(() => {
       languageSupport.of([]),
       languageServerSupport.of([]),
       themeCompartment.of([]),
+      EditorView.theme({
+        "&": {
+          height: "100%",
+          width: "100%",
+        },
+        "&.cm-editor": {
+          outline: "none",
+        },
+      }),
     ],
     parent: block.value!,
   })
@@ -76,10 +85,20 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div ref="block" :class="`codeblock-${props.codeId}`"></div>
+  <div class="codeblock-wrapper">
+    <div ref="block" :class="`codeblock codeblock-${props.codeId}`"></div>
+  </div>
 </template>
-<style lang="scss">
-.cm-editor.cm-focused {
-  outline: none;
+<style lang="scss" scoped>
+.codeblock-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.codeblock {
+  position: relative;
+  overflow-y: auto;
+
+  height: 100%;
 }
 </style>

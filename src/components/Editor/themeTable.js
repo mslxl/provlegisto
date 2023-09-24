@@ -40,8 +40,8 @@ const themes = {
     theme: async () => (await import("@ddietr/codemirror-themes/tokyo-night-storm")).tokyoNightStorm,
   },
   tokyoNightDay: {
-    name: "Tokyo Night Dark",
-    dark: true,
+    name: "Tokyo Night Day",
+    dark: false,
     theme: async () => (await import("@ddietr/codemirror-themes/tokyo-night-day")).tokyoNightDay,
   },
 }

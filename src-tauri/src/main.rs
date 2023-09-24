@@ -1,5 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use std::process::exit;
+
 use cp::CompileCache;
 use net::RemoteState;
 use tauri_plugin_log::LogTarget;
@@ -29,10 +31,18 @@ fn main() {
             lsp::enable_lsp_adapter,
             presist::get_presist_item,
             presist::set_presist_item,
-            cp::cp_compile_file,
-            cp::cp_run_detached,
-            cp::cp_compile_run,
+            cp::cp_compile_src,
+            cp::cp_run_detached_src,
+            cp::cp_compile_run_src,
         ])
+        .on_window_event(|event| match event.event() {
+            tauri::WindowEvent::CloseRequested { .. } => {
+                if event.window().label() == "main" {
+                    exit(0)
+                }
+            }
+            _ => {}
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -38,9 +38,10 @@
     },
     "windows": [
       {
+        "label": "main",
         "fullscreen": false,
         "resizable": true,
-        "title": "provlegisto",
+        "title": "Provlegisto",
         "width": 800,
         "height": 600
       }

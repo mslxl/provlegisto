@@ -2,7 +2,7 @@
 import Number from "./common/Number.vue"
 import Select from "./common/Select.vue"
 import { useSettingStore } from "../../store/settings"
-import themes from "../Editor/themeTable"
+import themes from "../../codemirror/themeTable"
 import { keys, map } from "ramda"
 const store = useSettingStore()
 

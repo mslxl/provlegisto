@@ -4,19 +4,26 @@ import { EditorView, keymap, type ViewUpdate } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { onMounted, onUnmounted, ref } from "vue"
 import bus from "../../bus"
-import { type Mode, languageSupport, languageServerSupport, setMode } from "./mode"
-import { setTheme, themeCompartment } from "./theme"
+import { type Mode, setMode } from "../../codemirror/mode"
+import { setTheme } from "../../codemirror/theme"
 import { useEditorStore } from "../../store/editor"
-import themes from "./themeTable"
+import themes from "../../codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
+import { Compartment } from "@codemirror/state"
 
 type Props = {
   codeId: string
 }
+
 const props = defineProps<Props>()
 const block = ref<Element | null>(null)
 const editorStore = useEditorStore()
 const settingsStore = useSettingStore()
+
+const languageCompartment = new Compartment()
+const languageServerCompartment = new Compartment()
+const themeCompartment = new Compartment()
+
 let codemirror: EditorView
 
 editorStore.createIfNotExists(props.codeId)
@@ -30,8 +37,8 @@ onMounted(() => {
         editorStore.editors.get(props.codeId)!.code = codemirror.state.doc.toString()
       }),
       keymap.of([indentWithTab]),
-      languageSupport.of([]),
-      languageServerSupport.of([]),
+      languageCompartment.of([]),
+      languageServerCompartment.of([]),
       themeCompartment.of([]),
       EditorView.theme({
         "&": {
@@ -46,18 +53,18 @@ onMounted(() => {
     parent: block.value!,
   })
 
-  setTheme((themes as any)[settingsStore.theme], codemirror).catch(console.error)
+  setTheme((themes as any)[settingsStore.theme], codemirror, themeCompartment).catch(console.error)
 
   bus.on("pref:theme", (v) => {
     const value = String(v)
     settingsStore.theme = value
-    void setTheme((themes as any)[value], codemirror)
+    void setTheme((themes as any)[value], codemirror, themeCompartment)
   })
 
   bus.on(`externalChange:${props.codeId}`, () => {
     const state = editorStore.editors.get(props.codeId)!
     // 设置语言
-    setMode(state.mode, codemirror, props.codeId).catch(console.error)
+    setMode(state.mode, codemirror, props.codeId, languageCompartment, languageServerCompartment).catch(console.error)
     // 替换编辑器中所有内容
     codemirror.dispatch({
       changes: [
@@ -74,7 +81,13 @@ onMounted(() => {
     editorStore.$patch((state) => {
       state.editors.get(props.codeId)!.mode = e as Mode
     })
-    setMode(editorStore.currentEditorValue!.mode, codemirror, props.codeId).catch(console.error)
+    setMode(
+      editorStore.currentEditorValue!.mode,
+      codemirror,
+      props.codeId,
+      languageCompartment,
+      languageServerCompartment,
+    ).catch(console.error)
   })
 })
 
@@ -91,14 +104,15 @@ onUnmounted(() => {
 </template>
 <style lang="scss" scoped>
 .codeblock-wrapper {
-  flex: 1;
+  position: absolute;
+  left: 0;
+  width: calc(100% - 4px);
+  height: 100%;
   overflow-y: auto;
 }
 
 .codeblock {
   position: relative;
-  overflow-y: auto;
-
   height: 100%;
 }
 </style>

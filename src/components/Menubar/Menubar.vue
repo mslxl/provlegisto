@@ -5,7 +5,7 @@ import bus from "../../bus"
 import { reject, equals } from "ramda"
 import NativeMenubar from "./Native.vue"
 import Select from "../Popup/Select.vue"
-import { Mode } from "../Editor/mode"
+import { Mode } from "../../codemirror/mode"
 import { useEditorStore } from "../../store/editor"
 import { WebviewWindow } from "@tauri-apps/api/window"
 const settingStore = useSettingStore()
@@ -44,3 +44,4 @@ bus.on("menu:preference", () => {
 </template>
 
 <style lang="scss" scoped></style>
+../../codemirror/mode

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue"
+import { onMounted, onUnmounted, ref } from "vue"
 import Editor from "../Editor/Editor.vue"
+import HSplit from "../SplitPane/HSplitPane.vue"
 import bus from "../../bus"
 import * as file from "./file"
 import { useEditorStore } from "../../store/editor"
 import { compileFile, runDetached } from "../../lib/cp"
+import TestcaseBox from "../Testcase/Testcase.vue"
 
 const editorStore = useEditorStore()
+
+const sideWith = ref(450)
 
 onMounted(() => {
   file.listen()
@@ -39,5 +43,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Editor code-id="main" />
+  <HSplit v-model:side-width="sideWith" class="editor-split-pane">
+    <template #main>
+      <Editor code-id="main" />
+    </template>
+    <template #right>
+      <TestcaseBox code-id="main" />
+    </template>
+  </HSplit>
 </template>
+
+<style scoped lang="scss">
+.editor-split-pane {
+  flex: 1;
+}
+</style>

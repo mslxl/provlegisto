@@ -1,4 +1,4 @@
-import { Mode } from "../components/Editor/mode"
+import { Mode } from "../codemirror/mode"
 import { defineStore } from "pinia"
 
 interface State {
@@ -32,15 +32,34 @@ export const useEditorStore = defineStore("editor", {
           path: null,
           isSaved: false,
           mode,
+          testcase: [],
         })
+      })
+    },
+    updateTestcase(id: string, index: number, updater: (value: Testcase) => void) {
+      this.$patch((state) => {
+        const v = state.editors.get(id)!
+        updater(v.testcase[index])
+      })
+    },
+    addTestcase(id: string) {
+      this.$patch((state) => {
+        const v = state.editors.get(id)!
+        v.testcase.push({ input: "", output: "" })
       })
     },
   },
 })
+
+interface Testcase {
+  input: string
+  output: string
+}
 
 interface EditorState {
   code: string
   mode: Mode
   isSaved: boolean
   path: string | null
+  testcase: Testcase[]
 }

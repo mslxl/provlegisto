@@ -1,12 +1,10 @@
 mod gcc_provider;
 
-use std::path::PathBuf;
-
 use log::info;
 use tauri::Runtime;
-use tempfile::{tempdir, TempDir};
+use tempfile::tempdir;
 
-use crate::net::RemoteState;
+use crate::{net::RemoteState, AppCache};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct UserSourceFile {
@@ -18,16 +16,6 @@ pub struct UserSourceFile {
 pub struct UserSourceCode {
     lang: String,
     src: String,
-}
-
-pub struct CompileCache {
-    cache_dir: TempDir,
-}
-impl Default for CompileCache {
-    fn default() -> Self {
-        let cache_dir = tempfile::tempdir().unwrap();
-        Self { cache_dir }
-    }
 }
 
 #[async_trait::async_trait]
@@ -62,6 +50,7 @@ pub enum CheckerStatus {
     AC,
     WA,
     RE,
+    CE,
     TLE,
     MLE,
     UKE,
@@ -100,7 +89,7 @@ impl LanguageRegister {
 #[tauri::command]
 pub async fn cp_compile_src(
     _state: tauri::State<'_, RemoteState>,
-    cache: tauri::State<'_, CompileCache>,
+    cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
     compile_args: Vec<String>,
 ) -> Result<String, String> {
@@ -138,7 +127,7 @@ pub async fn cp_compile_src(
 pub async fn cp_run_detached_src<R: Runtime>(
     app: tauri::AppHandle<R>,
     state: tauri::State<'_, RemoteState>,
-    cache: tauri::State<'_, CompileCache>,
+    cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
     compile_args: Vec<String>,
 ) -> Result<(), String> {
@@ -164,16 +153,28 @@ pub async fn cp_run_detached_src<R: Runtime>(
 #[tauri::command]
 pub async fn cp_compile_run_src(
     state: tauri::State<'_, RemoteState>,
-    cache: tauri::State<'_, CompileCache>,
+    cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
     compile_args: Vec<String>,
     input_from: &str,
     output_to: &str,
-) -> Result<String, String> {
+) -> Result<(), (CheckerStatus, String)> {
     let provider = LanguageRegister
         .get(&src.lang)
-        .ok_or_else(|| String::from("Language is unsupported"))?;
+        .ok_or_else(|| (CheckerStatus::UKE, String::from("Language is unsupported")))?;
 
-    let exe = cp_compile_src(state, cache, src, compile_args).await?;
-    provider.executaor().run(&exe, input_from, output_to).await
+    let exe = cp_compile_src(state, cache, src, compile_args).await;
+    if exe.is_err() {
+        return Err((CheckerStatus::CE, String::from("")));
+    }
+
+    let run = provider
+        .executaor()
+        .run(&exe.unwrap(), input_from, output_to)
+        .await;
+    if run.is_err() {
+        return Err((CheckerStatus::RE, String::from("")));
+    }
+
+    Ok(())
 }

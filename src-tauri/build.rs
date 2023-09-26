@@ -8,7 +8,7 @@ fn main() {
     Command::new("g++")
         .args([
             "-O2",
-            "util/prov_console_run.cpp",
+            "bin_src/prov_console_run.cpp",
             "-o",
             "bin/prov_console_run",
         ])

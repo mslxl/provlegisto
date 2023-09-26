@@ -1,11 +1,8 @@
 import type { EditorView } from "codemirror"
-import { Compartment } from "@codemirror/state"
+import { type Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
 import { map } from "ramda"
 import { languageServer } from "codemirror-languageserver"
-
-export const languageSupport = new Compartment()
-export const languageServerSupport = new Compartment()
 
 export enum Mode {
   c = "cpp",
@@ -66,21 +63,29 @@ export function getExtensionByMode(mode: Mode): string {
   return (modeTable as any)[mode].extension
 }
 
-export async function setMode(mode: Mode, editor: EditorView, id: string): Promise<void> {
+export async function setMode(
+  mode: Mode,
+  editor: EditorView,
+  id: string,
+  languageCompartment: Compartment,
+  lspCompartment?: Compartment,
+): Promise<void> {
   console.log(`use ${mode} language support`)
   const language = modeTable[mode]
   const support = await language.syntax()
   editor.dispatch({
-    effects: languageSupport.reconfigure(support()),
+    effects: languageCompartment.reconfigure(support()),
   })
   // 应用 lsp
-  if (language.lsp !== undefined) {
-    editor.dispatch({
-      effects: languageServerSupport.reconfigure(language.lsp(id)),
-    })
-  } else {
-    editor.dispatch({
-      effects: languageServerSupport.reconfigure([]),
-    })
+  if (lspCompartment !== undefined) {
+    if (language.lsp !== undefined) {
+      editor.dispatch({
+        effects: lspCompartment.reconfigure(language.lsp(id)),
+      })
+    } else {
+      editor.dispatch({
+        effects: lspCompartment.reconfigure([]),
+      })
+    }
   }
 }

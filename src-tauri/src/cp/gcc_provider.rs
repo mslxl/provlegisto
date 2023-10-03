@@ -1,12 +1,15 @@
-use std::{path::PathBuf, process::Stdio};
+use std::{path::PathBuf, process::Stdio, time::Duration};
 
 use futures_util::TryFutureExt;
+use log::info;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
+    process::Command,
+    time::timeout,
 };
 
-use super::{CompilerCaller, ExecuatorCaller, LanguageProvider};
+use super::{CheckerStatus, CompilerCaller, ExecuatorCaller, LanguageProvider};
 
 pub struct GccCompiler;
 #[async_trait::async_trait]
@@ -52,31 +55,74 @@ impl ExecuatorCaller for ExeExecuator {
             .spawn()
             .unwrap();
     }
-    async fn run(&self, target: &str, input_from: &str, output_to: &str) -> Result<String, String> {
+    async fn run(
+        &self,
+        target: &str,
+        input_from: &str,
+        output_to: &str,
+        time_limits: u64,
+    ) -> Result<(), (CheckerStatus, String)> {
         let oup = PathBuf::from(output_to);
         let inp = File::open(PathBuf::from(input_from)).await.unwrap();
         if oup.exists() {
             tokio::fs::remove_file(&oup)
                 .await
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| (CheckerStatus::UKE, e.to_string()))?;
         }
-        let oup = File::create(oup).await.map_err(|e| e.to_string())?;
+        let oup = File::create(oup)
+            .await
+            .map_err(|e| (CheckerStatus::UKE, e.to_string()))?;
 
         let mut proc = tokio::process::Command::new(target)
             .stdin(Stdio::from(inp.into_std().await))
             .stdout(Stdio::from(oup.into_std().await))
             .stderr(Stdio::piped())
             .spawn()
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| (CheckerStatus::UKE, e.to_string()))?;
 
         let mut err_msg = String::new();
+
+        let timeout_res =
+            tokio::time::timeout(Duration::from_millis(time_limits), proc.wait()).await;
+
         let mut reader = BufReader::new(proc.stderr.take().unwrap());
+
+        if timeout_res.is_err() {
+            if cfg!(windows) {
+                let taskkill = Command::new("cmd.exe")
+                    .args([
+                        "/C",
+                        "taskkill",
+                        "/F",
+                        "/PID",
+                        &proc.id().unwrap().to_string(),
+                    ])
+                    .spawn()
+                    .unwrap();
+                info!("{:?}", taskkill.wait_with_output().await);
+                let _ = proc.wait().await;
+            } else {
+                proc.kill().await.unwrap();
+            }
+            return Err((CheckerStatus::TLE, String::new()));
+        }
         reader
             .read_to_string(&mut err_msg)
             .await
-            .map_err(|e| e.to_string())?;
-        proc.wait().map_err(|e| e.to_string()).await?;
-        Ok(err_msg)
+            .map_err(|e| (CheckerStatus::RE, e.to_string()))?;
+
+        match timeout_res.unwrap() {
+            Ok(exit_code) => {
+                if exit_code.success() {
+                    return Ok(());
+                } else {
+                    return Err((CheckerStatus::RE, String::new()));
+                }
+            }
+            Err(err) => {
+                return Err((CheckerStatus::UKE, err.to_string()));
+            }
+        }
     }
 }
 

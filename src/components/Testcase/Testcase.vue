@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, watch } from "vue"
 import { useEditorStore } from "../../store/editor"
 import TestcaseItem from "./TestcaseItem.vue"
 import { NButton, NButtonGroup, NCollapse, NProgress } from "naive-ui"
+import { runCode } from "../../lib/cp"
+import { saveToTempfile } from "../../lib/tempfile"
+import { error } from "tauri-plugin-log-api"
+import { fs } from "@tauri-apps/api"
 
 type Props = {
   codeId: string
@@ -12,13 +16,37 @@ const props = defineProps<Props>()
 const editorStore = useEditorStore()
 const state = editorStore.editors.get(props.codeId)!
 
-const task = ref({
+interface Testdata {
+  output: string
+  status: "accpeted" | "rejected" | "untested" | "testing"
+}
+
+const taskAbbr = ref({
   total: state.testcase.length,
   complete: 0,
-  state: "untested",
+  status: "untested",
+})
+const tasks = ref<Testdata[]>([])
+watch(editorStore, () => {
+  while (tasks.value.length < state.testcase.length) {
+    tasks.value.push({ output: "", status: "untested" })
+  }
 })
 
-const tempOutput = ref("")
+async function runTest(testcaseIndex: number): Promise<void> {
+  tasks.value[testcaseIndex].status = "testing"
+  tasks.value[testcaseIndex].output = ""
+  const inputFile = await saveToTempfile(state.testcase[testcaseIndex].input, "in")
+  try {
+    const outputFile = await runCode(state.mode, state.code, [], inputFile, 3000)
+    const ouf = await fs.readTextFile(outputFile)
+    tasks.value[testcaseIndex].output = ouf
+    tasks.value[testcaseIndex].status = "accpeted"
+  } catch (e: any) {
+    void error(e.toString())
+    tasks.value[testcaseIndex].status = "rejected"
+  }
+}
 </script>
 <template>
   <div class="testcase-wrapper">
@@ -27,7 +55,7 @@ const tempOutput = ref("")
         type="line"
         :border-radius="0"
         :fill-border-radius="0"
-        :percentage="Math.ceil(task.complete / task.total)"
+        :percentage="Math.ceil(taskAbbr.complete / taskAbbr.total)"
         :show-indicator="false"
       />
       <NButtonGroup class="button-group">
@@ -39,22 +67,12 @@ const tempOutput = ref("")
           :code-id="props.codeId"
           :key="index"
           :index="index"
-          :input="testcase.input"
-          :expect="testcase.output"
-          v-model:actual="tempOutput"
-          status="untested"
-          @update:input="
-            (v) =>
-              editorStore.updateTestcase(props.codeId, index, (origin) => {
-                origin.input = v
-              })
-          "
-          @update:expect="
-            (v) =>
-              editorStore.updateTestcase(props.codeId, index, (origin) => {
-                origin.output = v
-              })
-          "
+          :status="tasks[index].status"
+          :running="tasks[index].status == 'testing'"
+          v-model:input="testcase.input"
+          v-model:expect="testcase.output"
+          v-model:actual="tasks[index].output"
+          @on-run="runTest(index)"
         />
       </NCollapse>
     </div>

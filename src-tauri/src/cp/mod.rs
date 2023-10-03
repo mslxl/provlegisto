@@ -1,5 +1,7 @@
 mod gcc_provider;
 
+use std::time::Duration;
+
 use log::info;
 use tauri::Runtime;
 use tempfile::tempdir;
@@ -42,7 +44,13 @@ pub trait CompilerCaller: Sync + Send {
 #[async_trait::async_trait]
 pub trait ExecuatorCaller: Sync + Send {
     fn run_detached(&self, prov_run_prog: &str, target: &str);
-    async fn run(&self, target: &str, input_from: &str, output_to: &str) -> Result<String, String>;
+    async fn run(
+        &self,
+        target: &str,
+        input_from: &str,
+        output_to: &str,
+        time_limits: u64,
+    ) -> Result<(), (CheckerStatus, String)>;
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
@@ -100,12 +108,10 @@ pub async fn cp_compile_src(
 
     // 通过内容计算文件名
     let hash = sha256::digest(&src.src);
-    let src_file = cache
-        .cache_dir
-        .path()
-        .join(format!("{}.{}", hash, provider.compiler().ext()));
+
+    let src_file = cache.file_with_name(&format!("{}.{}", hash, provider.compiler().ext()));
     let src_filename = src_file.to_str().to_owned().unwrap();
-    let target_file = cache.cache_dir.path().join(format!("{}.exe", hash));
+    let target_file = cache.file_with_name(&format!("{}.exe", hash));
     let target_filename = target_file.to_str().to_owned().unwrap();
 
     if !target_file.exists() {
@@ -150,31 +156,35 @@ pub async fn cp_run_detached_src<R: Runtime>(
     Ok(())
 }
 
+/// Compile src and run with input_file
+/// Return output filename if the program end in time
+/// Or return error enum and error message if an error was throw
 #[tauri::command]
 pub async fn cp_compile_run_src(
     state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
+    time_limits: Option<u64>,
     compile_args: Vec<String>,
-    input_from: &str,
-    output_to: &str,
-) -> Result<(), (CheckerStatus, String)> {
+    input_file: &str,
+) -> Result<String, (CheckerStatus, String)> {
     let provider = LanguageRegister
         .get(&src.lang)
         .ok_or_else(|| (CheckerStatus::UKE, String::from("Language is unsupported")))?;
+
+    let output_pathbuf = cache.file(Some("out"));
+    let output_file = output_pathbuf.to_str().unwrap().to_owned();
 
     let exe = cp_compile_src(state, cache, src, compile_args).await;
     if exe.is_err() {
         return Err((CheckerStatus::CE, String::from("")));
     }
 
-    let run = provider
-        .executaor()
-        .run(&exe.unwrap(), input_from, output_to)
-        .await;
-    if run.is_err() {
-        return Err((CheckerStatus::RE, String::from("")));
-    }
+    let time_limits = time_limits.unwrap_or(3000);
 
-    Ok(())
+    provider
+        .executaor()
+        .run(&exe.unwrap(), input_file, &output_file, time_limits)
+        .await?;
+    Ok(output_file.to_owned())
 }

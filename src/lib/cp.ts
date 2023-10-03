@@ -1,5 +1,4 @@
-import { fs, invoke } from "@tauri-apps/api"
-import { newTempfile, saveToTempfile } from "./tempfile"
+import { invoke } from "@tauri-apps/api"
 
 export async function compileFile(language: string, src: string, args: string[]): Promise<string> {
   return await invoke("cp_compile_src", {
@@ -25,23 +24,21 @@ export enum CheckStatus {
   UKE = "UKE",
 }
 
-export async function runAndCheck(
+export async function runCode(
   language: string,
   src: string,
   args: string[],
-  inputData: string,
-  expectData: string,
+  inputFile: string,
+  timeLimits?: number,
 ): Promise<string> {
-  const inputFrom = await saveToTempfile(inputData, "in.txt")
-  const outputTo = await newTempfile()
-  await invoke<CheckStatus>("cp_compile_run_src", {
+  const outputFile = await invoke<CheckStatus>("cp_compile_run_src", {
     src: {
       lang: language,
       src,
     },
     compileArgs: args,
-    inputFrom,
-    outputTo,
+    inputFile,
+    timeLimits,
   })
-  return await fs.readTextFile(outputTo)
+  return outputFile
 }

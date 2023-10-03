@@ -26,6 +26,7 @@ tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", br
 log = "0.4.20"
 tempfile = "3.8.0"
 sha256 = "1.4.0"
+rand = "0.8.5"
 
 
 [features]

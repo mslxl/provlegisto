@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { error, info } from "tauri-plugin-log-api"
-import { runAndCheck } from "../../lib/cp"
-import { useEditorStore } from "../../store/editor"
+import { computed } from "vue"
 import TextBox from "../TextBox/TextBox.vue"
-import { NCard, NCollapseItem, NText, NSpace, NButton, NH6 } from "naive-ui"
+import { NCard, NCollapseItem, NText, NSpace, NButton, NH6, NSpin } from "naive-ui"
 type Props = {
   codeId: string
   index: number
@@ -11,12 +9,14 @@ type Props = {
   input?: string
   expect?: string
   actual?: string
+  running?: boolean
 }
 
 type Emits = {
   (e: "update:input", value: string): void
   (e: "update:expect", value: string): void
   (e: "update:actual", value: string): void
+  (e: "onRun"): void
 }
 
 const props = defineProps<Props>()
@@ -28,67 +28,61 @@ const barTypeDict = {
   untested: "default",
   testing: "info",
 }
-const titleBarType = barTypeDict[props.status]
+const titleBarType = computed(() => {
+  return barTypeDict[props.status]
+})
 
-const editorStore = useEditorStore()
 function run(e: MouseEvent): void {
-  const state = editorStore.editors.get(props.codeId)!
-  runAndCheck(state.mode, state.code, [], props.input!, props.expect!)
-    .then((v) => {
-      void info(v)
-      emits("update:actual", v)
-    })
-    .catch((e) => {
-      void error(e)
-    })
-
+  emits("onRun")
   e.stopPropagation()
 }
 </script>
 <template>
-  <NCollapseItem :name="props.index" pla>
-    <!-- <template #arrow><i style="width: 1em"></i></template> -->
-    <template #header>
-      <NH6 prefix="bar" align-text :type="titleBarType as any" class="header">
-        <NText strong class="title"> Testcase #{{ props.index }} </NText>
-      </NH6>
-    </template>
-    <template #header-extra>
-      <NSpace class="header-extra">
-        <NButton @click="run">Run</NButton>
-        <NButton @click="(e) => e.stopPropagation()">More</NButton>
-      </NSpace>
-    </template>
-    <div class="testcase-row">
-      <NCard
-        title="Input"
-        class="testcase-item"
-        size="small"
-        content-style="padding: 0;"
-        header-style="padding:0; text-align: center;"
-      >
-        <TextBox :editable="true" :content="props.input" @update:content="(v) => emits('update:input', v)" />
-      </NCard>
-      <NCard
-        title="Expect"
-        class="testcase-item"
-        size="small"
-        content-style="padding: 0;"
-        header-style="padding:0; text-align: center;"
-      >
-        <TextBox :editable="true" :content="props.expect" @update:content="(v) => emits('update:expect', v)" />
-      </NCard>
-      <NCard
-        title="Actual"
-        class="testcase-item"
-        size="small"
-        content-style="padding: 0;"
-        header-style="padding:0; text-align: center;"
-      >
-        <TextBox :editable="false" :content="props.actual" :control-by-content="true" />
-      </NCard>
-    </div>
-  </NCollapseItem>
+  <NSpin :show="running">
+    <NCollapseItem :name="props.index" pla>
+      <!-- <template #arrow><i style="width: 1em"></i></template> -->
+      <template #header>
+        <NH6 prefix="bar" align-text :type="titleBarType as any" class="header">
+          <NText strong class="title"> Testcase #{{ props.index }} </NText>
+        </NH6>
+      </template>
+      <template #header-extra>
+        <NSpace class="header-extra">
+          <NButton @click="run">Run</NButton>
+          <NButton @click="(e) => e.stopPropagation()">More</NButton>
+        </NSpace>
+      </template>
+      <div class="testcase-row">
+        <NCard
+          title="Input"
+          class="testcase-item"
+          size="small"
+          content-style="padding: 0;"
+          header-style="padding:0; text-align: center;"
+        >
+          <TextBox :editable="true" :content="props.input" @update:content="(v) => emits('update:input', v)" />
+        </NCard>
+        <NCard
+          title="Expect"
+          class="testcase-item"
+          size="small"
+          content-style="padding: 0;"
+          header-style="padding:0; text-align: center;"
+        >
+          <TextBox :editable="true" :content="props.expect" @update:content="(v) => emits('update:expect', v)" />
+        </NCard>
+        <NCard
+          title="Actual"
+          class="testcase-item"
+          size="small"
+          content-style="padding: 0;"
+          header-style="padding:0; text-align: center;"
+        >
+          <TextBox :editable="false" :content="props.actual" :control-by-content="true" />
+        </NCard>
+      </div>
+    </NCollapseItem>
+  </NSpin>
 </template>
 
 <style scoped lang="scss">

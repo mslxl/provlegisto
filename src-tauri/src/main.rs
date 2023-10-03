@@ -1,13 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use std::process::exit;
+use std::{env::temp_dir, fs, path::PathBuf, process::exit};
 
 use net::RemoteState;
+use rand::distributions::{Alphanumeric, DistString};
+
 use tauri_plugin_log::LogTarget;
 
 use lsp::LSPState;
 use tauri::Manager;
-use tempfile::TempDir;
 
 mod cp;
 mod lsp;
@@ -15,14 +16,30 @@ mod net;
 mod presist;
 
 pub struct AppCache {
-    cache_dir: TempDir,
+    dir: PathBuf,
 }
 impl Default for AppCache {
     fn default() -> Self {
-        let cache_dir = tempfile::tempdir().unwrap();
-        Self { cache_dir }
+        let dir = temp_dir().join("provlegisto");
+        if !dir.exists() {
+            fs::create_dir_all(&dir).unwrap();
+        }
+        Self { dir: dir }
     }
 }
+impl AppCache {
+    fn file(&self, ext: Option<&str>) -> PathBuf {
+        let mut rand_str = Alphanumeric.sample_string(&mut rand::thread_rng(), 32);
+        if let Some(ext) = ext {
+            rand_str.push_str(&ext);
+        }
+        self.file_with_name(&rand_str)
+    }
+    fn file_with_name(&self, name: &str) -> PathBuf {
+        self.dir.join(name)
+    }
+}
+
 #[tauri::command]
 async fn save_to_tempfile(
     cache: tauri::State<'_, AppCache>,
@@ -30,22 +47,11 @@ async fn save_to_tempfile(
     ext: &str,
 ) -> Result<String, String> {
     let name = sha256::digest(content);
-    let path = cache.cache_dir.path().join(format!("{}.{}", name, ext));
+    let path = cache.file_with_name(&format!("{}.{}", name, ext));
     tokio::fs::write(&path, content)
         .await
         .map_err(|e| e.to_string())?;
 
-    Ok(path.to_str().unwrap().to_owned())
-}
-
-#[tauri::command]
-async fn new_tempfile(cache: tauri::State<'_, AppCache>) -> Result<String, String> {
-    let file =
-        tempfile::NamedTempFile::new_in(cache.cache_dir.path()).map_err(|e| e.to_string())?;
-    let (_, path) = file.keep().unwrap();
-    tokio::fs::write(&path, "")
-        .await
-        .map_err(|e| e.to_string())?;
     Ok(path.to_str().unwrap().to_owned())
 }
 
@@ -70,7 +76,6 @@ fn main() {
             cp::cp_run_detached_src,
             cp::cp_compile_run_src,
             save_to_tempfile,
-            new_tempfile
         ])
         .on_window_event(|event| match event.event() {
             tauri::WindowEvent::CloseRequested { .. } => {

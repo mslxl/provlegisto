@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue"
 import TextBox from "../TextBox/TextBox.vue"
-import { NCard, NCollapseItem, NText, NSpace, NButton, NH6, NSpin } from "naive-ui"
+import { NCard, NCollapseItem, NText, NSpace, NButton, NH6, NSpin, NTag } from "naive-ui"
 type Props = {
   codeId: string
   index: number
@@ -9,6 +9,7 @@ type Props = {
   input?: string
   expect?: string
   actual?: string
+  label?: string
   running?: boolean
 }
 
@@ -29,7 +30,7 @@ const barTypeDict = {
   testing: "info",
 }
 const titleBarType = computed(() => {
-  return barTypeDict[props.status]
+  return barTypeDict[props.status] as any
 })
 
 function run(e: MouseEvent): void {
@@ -42,8 +43,9 @@ function run(e: MouseEvent): void {
     <NCollapseItem :name="props.index" pla>
       <!-- <template #arrow><i style="width: 1em"></i></template> -->
       <template #header>
-        <NH6 prefix="bar" align-text :type="titleBarType as any" class="header">
+        <NH6 prefix="bar" align-text :type="titleBarType" class="header">
           <NText strong class="title"> Testcase #{{ props.index }} </NText>
+          <NTag :bordered="false" :type="titleBarType" v-if="props.label"> {{ props.label }}</NTag>
         </NH6>
       </template>
       <template #header-extra>
@@ -104,5 +106,8 @@ function run(e: MouseEvent): void {
 .header {
   display: flex;
   margin: 0 0 0 1em;
+  .title {
+    margin-right: 6px;
+  }
 }
 </style>

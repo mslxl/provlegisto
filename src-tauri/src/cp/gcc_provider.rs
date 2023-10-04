@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Stdio, time::Duration};
+use std::{os::windows::prelude::MetadataExt, path::PathBuf, process::Stdio, time::Duration};
 
 use futures_util::TryFutureExt;
 use log::info;
@@ -9,7 +9,9 @@ use tokio::{
     time::timeout,
 };
 
-use super::{CheckerStatus, CompilerCaller, ExecuatorCaller, LanguageProvider};
+use crate::AppCache;
+
+use super::{CheckerStatus, CompilerCaller, ExecuatorCaller, ExecuatorStatus, LanguageProvider};
 
 pub struct GccCompiler;
 #[async_trait::async_trait]
@@ -20,13 +22,16 @@ impl CompilerCaller for GccCompiler {
 
     async fn compile_file(
         &self,
+        app_cache: &AppCache,
         path: &str,
         args: Vec<String>,
-        output: &str,
-    ) -> Result<(), String> {
+    ) -> Result<String, String> {
+        let output_filepath = app_cache.file_with_name(&sha256::try_digest(path).unwrap());
+        let output = output_filepath.to_str().unwrap().to_owned();
+
         let mut proc = tokio::process::Command::new("g++")
             .arg(path)
-            .args(["-o", output])
+            .args(["-o", &output])
             .args(&args)
             .stderr(Stdio::piped())
             .stdout(Stdio::piped())
@@ -37,7 +42,7 @@ impl CompilerCaller for GccCompiler {
         reader.read_to_string(&mut err_msg).await.unwrap();
         let exit_status = proc.wait().map_err(|e| e.to_string()).await?;
         if exit_status.success() {
-            Ok(())
+            Ok(output)
         } else {
             Err(err_msg)
         }
@@ -61,24 +66,24 @@ impl ExecuatorCaller for ExeExecuator {
         input_from: &str,
         output_to: &str,
         time_limits: u64,
-    ) -> Result<(), (CheckerStatus, String)> {
+    ) -> Result<(), (ExecuatorStatus, String)> {
         let oup = PathBuf::from(output_to);
         let inp = File::open(PathBuf::from(input_from)).await.unwrap();
         if oup.exists() {
             tokio::fs::remove_file(&oup)
                 .await
-                .map_err(|e| (CheckerStatus::UKE, e.to_string()))?;
+                .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
         }
         let oup = File::create(oup)
             .await
-            .map_err(|e| (CheckerStatus::UKE, e.to_string()))?;
+            .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
 
         let mut proc = tokio::process::Command::new(target)
             .stdin(Stdio::from(inp.into_std().await))
             .stdout(Stdio::from(oup.into_std().await))
             .stderr(Stdio::piped())
             .spawn()
-            .map_err(|e| (CheckerStatus::UKE, e.to_string()))?;
+            .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
 
         let mut err_msg = String::new();
 
@@ -104,23 +109,23 @@ impl ExecuatorCaller for ExeExecuator {
             } else {
                 proc.kill().await.unwrap();
             }
-            return Err((CheckerStatus::TLE, String::new()));
+            return Err((ExecuatorStatus::TLE, String::new()));
         }
         reader
             .read_to_string(&mut err_msg)
             .await
-            .map_err(|e| (CheckerStatus::RE, e.to_string()))?;
+            .map_err(|e| (ExecuatorStatus::RE, e.to_string()))?;
 
         match timeout_res.unwrap() {
             Ok(exit_code) => {
                 if exit_code.success() {
                     return Ok(());
                 } else {
-                    return Err((CheckerStatus::RE, String::new()));
+                    return Err((ExecuatorStatus::RE, String::new()));
                 }
             }
             Err(err) => {
-                return Err((CheckerStatus::UKE, err.to_string()));
+                return Err((ExecuatorStatus::UKE, err.to_string()));
             }
         }
     }
@@ -138,13 +143,5 @@ impl LanguageProvider for GccProvider {
 
     fn executaor(&self) -> Box<dyn ExecuatorCaller> {
         Box::new(ExeExecuator)
-    }
-
-    fn checker(&self) -> Box<dyn super::CheckerCaller> {
-        todo!()
-    }
-
-    fn validator(&self) -> Box<dyn super::CheckerCaller> {
-        todo!()
     }
 }

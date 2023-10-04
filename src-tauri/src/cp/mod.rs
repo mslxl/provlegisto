@@ -1,10 +1,11 @@
 mod gcc_provider;
 
-use std::time::Duration;
+use std::{path::PathBuf, process::Stdio, time::Duration};
 
 use log::info;
 use tauri::Runtime;
 use tempfile::tempdir;
+use tokio::process::Command;
 
 use crate::{net::RemoteState, AppCache};
 
@@ -23,20 +24,26 @@ pub struct UserSourceCode {
 #[async_trait::async_trait]
 pub trait CompilerCaller: Sync + Send {
     fn ext(&self) -> &'static str;
-    async fn compile_file(&self, path: &str, args: Vec<String>, output: &str)
-        -> Result<(), String>;
+    /// Return compile output file if success
+    /// Or return error message if failed
+    async fn compile_file(
+        &self,
+        app_cache: &AppCache,
+        path: &str,
+        args: Vec<String>,
+    ) -> Result<String, String>;
     async fn compile_code(
         &self,
+        app_cache: &AppCache,
         code: &str,
         args: Vec<String>,
-        output: &str,
-    ) -> Result<(), String> {
+    ) -> Result<String, String> {
         let tmp_dir = tempdir().unwrap();
         let code_file = tmp_dir.path().join(format!("code.{}", self.ext()));
         tokio::fs::write(&code_file, code)
             .await
             .map_err(|e| e.to_string())?;
-        self.compile_file(code_file.to_str().unwrap(), args, output)
+        self.compile_file(app_cache, code_file.to_str().unwrap(), args)
             .await
     }
 }
@@ -50,20 +57,52 @@ pub trait ExecuatorCaller: Sync + Send {
         input_from: &str,
         output_to: &str,
         time_limits: u64,
-    ) -> Result<(), (CheckerStatus, String)>;
+    ) -> Result<(), (ExecuatorStatus, String)>;
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub enum ExecuatorStatus {
+    PASS,
+    TLE,
+    CE,
+    RE,
+    MLE,
+    UKE,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ExecuatorMessage {
+    status: ExecuatorStatus,
+    message: String,
+    output: Option<String>,
+}
+impl ExecuatorMessage {
+    fn new(status: ExecuatorStatus, message: String, output_file: Option<String>) -> Self {
+        Self {
+            status,
+            message,
+            output: output_file,
+        }
+    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub enum CheckerStatus {
     AC,
     WA,
-    RE,
-    CE,
-    TLE,
-    MLE,
     UKE,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct CheckerMessage {
+    status: CheckerStatus,
+    message: String,
+}
+impl CheckerMessage {
+    fn new(status: CheckerStatus, message: String) -> Self {
+        Self { status, message }
+    }
+}
 pub trait CheckerCaller: Sync + Send {
     fn check(
         &self,
@@ -76,8 +115,6 @@ pub trait LanguageProvider: Sync + Send {
     fn generator(&self) -> Box<dyn ExecuatorCaller>;
     fn compiler(&self) -> Box<dyn CompilerCaller>;
     fn executaor(&self) -> Box<dyn ExecuatorCaller>;
-    fn checker(&self) -> Box<dyn CheckerCaller>;
-    fn validator(&self) -> Box<dyn CheckerCaller>;
 }
 
 pub struct LanguageRegister;
@@ -121,7 +158,7 @@ pub async fn cp_compile_src(
             .map_err(|e| e.to_string())?;
         provider
             .compiler()
-            .compile_file(src_filename, compile_args, target_filename)
+            .compile_file(&cache, src_filename, compile_args)
             .await?;
     }
     info!("compile {} to {}", &src_filename, &target_filename);
@@ -137,7 +174,7 @@ pub async fn cp_run_detached_src<R: Runtime>(
     src: UserSourceCode,
     compile_args: Vec<String>,
 ) -> Result<(), String> {
-    let prov_run_prog = if cfg!(target_os = "windows") {
+    let prov_run_prog = if cfg!(window) {
         app.path_resolver()
             .resolve_resource("bin/prov_console_run.exe")
     } else {
@@ -167,24 +204,93 @@ pub async fn cp_compile_run_src(
     time_limits: Option<u64>,
     compile_args: Vec<String>,
     input_file: &str,
-) -> Result<String, (CheckerStatus, String)> {
+) -> Result<ExecuatorMessage, String> {
     let provider = LanguageRegister
         .get(&src.lang)
-        .ok_or_else(|| (CheckerStatus::UKE, String::from("Language is unsupported")))?;
+        .ok_or_else(|| (String::from("Language is unsupported")))?;
 
     let output_pathbuf = cache.file(Some("out"));
     let output_file = output_pathbuf.to_str().unwrap().to_owned();
 
     let exe = cp_compile_src(state, cache, src, compile_args).await;
     if exe.is_err() {
-        return Err((CheckerStatus::CE, String::from("")));
+        return Ok(ExecuatorMessage::new(
+            ExecuatorStatus::CE,
+            String::new(),
+            None,
+        ));
     }
 
     let time_limits = time_limits.unwrap_or(3000);
 
-    provider
+    let execuator_res = provider
         .executaor()
         .run(&exe.unwrap(), input_file, &output_file, time_limits)
-        .await?;
-    Ok(output_file.to_owned())
+        .await;
+    if let Err(err) = execuator_res {
+        Ok(ExecuatorMessage {
+            status: err.0,
+            message: err.1,
+            output: None,
+        })
+    } else {
+        Ok(ExecuatorMessage::new(
+            ExecuatorStatus::PASS,
+            String::new(),
+            Some(output_file),
+        ))
+    }
+}
+
+#[tauri::command]
+pub async fn cp_run_checker<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    cache: tauri::State<'_, AppCache>,
+    checker: String,
+    input_file: String,
+    output_file: String,
+    answer_file: String,
+) -> Result<CheckerMessage, String> {
+    let checker = if checker.starts_with("res:") {
+        let rel_path = format!("bin/{}.exe", &checker[4..]);
+        app.path_resolver()
+            .resolve_resource(rel_path)
+            .expect("failed to resolve checker resource")
+    } else {
+        PathBuf::from(checker)
+    };
+    let report_file = cache.file(Some("report"));
+    let mut proc = Command::new(checker)
+        .args([
+            &input_file,
+            &output_file,
+            &answer_file,
+            report_file.to_str().unwrap(),
+        ])
+        .stderr(Stdio::null())
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    match tokio::time::timeout(Duration::from_millis(5000), proc.wait()).await {
+        Err(_) => {
+            let _ = proc.kill().await;
+            return Ok(CheckerMessage::new(
+                CheckerStatus::UKE,
+                String::from("Checker timeout"),
+            ));
+        }
+        Ok(status) => {
+            let report = tokio::fs::read_to_string(report_file)
+                .await
+                .unwrap_or(String::new());
+            let status = status.map_err(|e| e.to_string())?;
+            if status.success() {
+                Ok(CheckerMessage::new(CheckerStatus::AC, report))
+            } else {
+                Ok(CheckerMessage::new(CheckerStatus::WA, report))
+            }
+        }
+    }
 }

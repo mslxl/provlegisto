@@ -2,7 +2,7 @@
 import { type NotificationType, useNotification } from "naive-ui"
 import bus from "../../bus"
 import { onMounted, onUnmounted } from "vue"
-interface NotifyBusMsg {
+export interface NotifyBusMsg {
   title: string
   content: string
 }

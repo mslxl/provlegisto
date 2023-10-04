@@ -31,6 +31,7 @@ impl AppCache {
     fn file(&self, ext: Option<&str>) -> PathBuf {
         let mut rand_str = Alphanumeric.sample_string(&mut rand::thread_rng(), 32);
         if let Some(ext) = ext {
+            rand_str.push('.');
             rand_str.push_str(&ext);
         }
         self.file_with_name(&rand_str)
@@ -75,6 +76,7 @@ fn main() {
             cp::cp_compile_src,
             cp::cp_run_detached_src,
             cp::cp_compile_run_src,
+            cp::cp_run_checker,
             save_to_tempfile,
         ])
         .on_window_event(|event| match event.event() {

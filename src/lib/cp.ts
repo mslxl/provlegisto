@@ -20,8 +20,22 @@ export async function runDetached(language: string, src: string, args: string[])
   })
 }
 
-export enum CheckStatus {
-  UKE = "UKE",
+export interface CheckerMessage {
+  status: CheckStatus
+  message: string
+}
+
+export interface RunCodeMessage {
+  status: ExecuatorStatus
+  message: string
+  output?: string
+}
+
+export enum ExecuatorStatus {
+  PASS = "PASS",
+  TLE = "TLE",
+  RE = "RE",
+  MLE = "MLE",
 }
 
 export async function runCode(
@@ -30,8 +44,8 @@ export async function runCode(
   args: string[],
   inputFile: string,
   timeLimits?: number,
-): Promise<string> {
-  const outputFile = await invoke<CheckStatus>("cp_compile_run_src", {
+): Promise<RunCodeMessage> {
+  const outputFile = await invoke<RunCodeMessage>("cp_compile_run_src", {
     src: {
       lang: language,
       src,
@@ -41,4 +55,20 @@ export async function runCode(
     timeLimits,
   })
   return outputFile
+}
+
+export enum CheckStatus {
+  UKE = "UKE",
+  AC = "AC",
+  WA = "WA",
+}
+
+export async function runChecker(
+  checker: string,
+  inputFile: string,
+  outputFile: string,
+  answerFile: string,
+): Promise<CheckerMessage> {
+  const checkerMessage = await invoke<CheckerMessage>("cp_run_checker", { checker, inputFile, outputFile, answerFile })
+  return checkerMessage
 }

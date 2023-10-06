@@ -1,7 +1,5 @@
 use tokio::sync::Mutex;
 
-use crate::net::RemoteState;
-
 use self::adapter::{LSPAdpaterT, LocalLSPAdapter};
 
 pub mod adapter;
@@ -19,28 +17,24 @@ impl Default for LSPState {
     }
 }
 impl LSPState {
-    pub async fn close(&self) {
-        let mut guard = self.mu.lock().await;
-        *guard = None;
-    }
-
-    pub async fn use_local(&self) {
+    pub async fn start_local(&self) -> Result<u16, String> {
         let mut guard = self.mu.lock().await;
         *guard = Some(Box::new(LocalLSPAdapter::new()));
-        guard.as_mut().unwrap().start().await;
+        guard.as_mut().unwrap().start().await
     }
 }
 
+/// Start lsp adapter
+/// If target_ip is none, it will start local lsp adpater
+/// Or it will try to connect remote lsp adapter via UDP tunnel(if exists)
 #[tauri::command]
-pub async fn enable_lsp_adapter(
+pub async fn start_lsp_adapter(
     state: tauri::State<'_, LSPState>,
-    net_state: tauri::State<'_, RemoteState>,
-    status: i32,
-) -> Result<(), String> {
-    match status {
-        0 => state.close().await,
-        1 => state.use_local().await,
-        _ => unreachable!(),
+    target_ip: Option<String>,
+) -> Result<u16, String> {
+    if let Some(target_ip) = target_ip {
+        unimplemented!()
+    } else {
+        state.start_local().await
     }
-    Ok(())
 }

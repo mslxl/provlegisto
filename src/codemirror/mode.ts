@@ -3,6 +3,7 @@ import { type Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
 import { map } from "ramda"
 import { languageServer } from "codemirror-languageserver"
+import { useEditorStore } from "../store/editor"
 
 export enum Mode {
   c = "cpp",
@@ -12,7 +13,11 @@ export enum Mode {
   go = "go",
   default = cpp,
 }
-const LOCAL_LSP_ADAPTER_ADDR = "ws://127.0.0.1:3000"
+
+function getLSPAdapterAddr(): string {
+  const port = useEditorStore().lspPort
+  return `ws://127.0.0.1:${port}`
+}
 
 const modeTable = {
   cpp: {
@@ -20,9 +25,9 @@ const modeTable = {
     extension: ".cpp",
     lsp: (id: string) =>
       languageServer({
-        serverUri: (LOCAL_LSP_ADAPTER_ADDR + `/clangd/${id}`) as any,
+        serverUri: (getLSPAdapterAddr() + `/clangd/${id}`) as any,
         rootUri: "file:///",
-        documentUri: "file:///a",
+        documentUri: `file:///${id}`,
         languageId: "cpp",
         workspaceFolders: null,
       }),

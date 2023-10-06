@@ -7,7 +7,7 @@ use tauri::Runtime;
 use tempfile::tempdir;
 use tokio::process::Command;
 
-use crate::{net::RemoteState, AppCache};
+use crate::AppCache;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct UserSourceFile {
@@ -133,7 +133,6 @@ impl LanguageRegister {
 
 #[tauri::command]
 pub async fn cp_compile_src(
-    _state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
     compile_args: Vec<String>,
@@ -169,7 +168,6 @@ pub async fn cp_compile_src(
 #[tauri::command]
 pub async fn cp_run_detached_src<R: Runtime>(
     app: tauri::AppHandle<R>,
-    state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
     compile_args: Vec<String>,
@@ -186,7 +184,7 @@ pub async fn cp_run_detached_src<R: Runtime>(
         .get(&src.lang)
         .ok_or_else(|| String::from("Language is unsupported"))?;
 
-    let exe = cp_compile_src(state, cache, src, compile_args).await?;
+    let exe = cp_compile_src(cache, src, compile_args).await?;
     provider
         .executaor()
         .run_detached(prov_run_prog.to_str().unwrap(), &exe);
@@ -198,7 +196,6 @@ pub async fn cp_run_detached_src<R: Runtime>(
 /// Or return error enum and error message if an error was throw
 #[tauri::command]
 pub async fn cp_compile_run_src(
-    state: tauri::State<'_, RemoteState>,
     cache: tauri::State<'_, AppCache>,
     src: UserSourceCode,
     time_limits: Option<u64>,
@@ -212,7 +209,7 @@ pub async fn cp_compile_run_src(
     let output_pathbuf = cache.file(Some("out"));
     let output_file = output_pathbuf.to_str().unwrap().to_owned();
 
-    let exe = cp_compile_src(state, cache, src, compile_args).await;
+    let exe = cp_compile_src(cache, src, compile_args).await;
     if exe.is_err() {
         return Ok(ExecuatorMessage::new(
             ExecuatorStatus::CE,

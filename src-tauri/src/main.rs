@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{env::temp_dir, fs, path::PathBuf, process::exit};
 
-use net::RemoteState;
 use rand::distributions::{Alphanumeric, DistString};
 
 use tauri_plugin_log::LogTarget;
@@ -12,7 +11,6 @@ use tauri::Manager;
 
 mod cp;
 mod lsp;
-mod net;
 mod presist;
 
 pub struct AppCache {
@@ -60,7 +58,6 @@ fn main() {
     tauri::Builder::default()
         .setup(|app| {
             app.manage(LSPState::default());
-            app.manage(RemoteState::default());
             app.manage(AppCache::default());
             Ok(())
         })
@@ -70,7 +67,7 @@ fn main() {
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
-            lsp::enable_lsp_adapter,
+            lsp::start_lsp_adapter,
             presist::get_presist_item,
             presist::set_presist_item,
             cp::cp_compile_src,

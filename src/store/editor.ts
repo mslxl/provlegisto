@@ -2,6 +2,7 @@ import { Mode } from "../codemirror/mode"
 import { defineStore } from "pinia"
 
 interface State {
+  lspPort: number
   editors: Map<string, EditorState>
   currentEditor: string | null
 }
@@ -9,6 +10,7 @@ interface State {
 export const useEditorStore = defineStore("editor", {
   state: (): State => {
     return {
+      lspPort: 0,
       currentEditor: null,
       editors: new Map<string, EditorState>(),
     }

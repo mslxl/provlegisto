@@ -7,10 +7,9 @@ use tokio_tungstenite::tungstenite::handshake::server::{ErrorResponse, Request, 
 
 use crate::lsp::service::LSPRegister;
 
-const PORT: u16 = 3000;
 #[async_trait]
 pub trait LSPAdpaterT: Send + Sync {
-    async fn start(&mut self);
+    async fn start(&mut self) -> Result<u16, String>;
 }
 
 pub struct LocalLSPAdapter {
@@ -33,11 +32,11 @@ impl LocalLSPAdapter {
 
 #[async_trait]
 impl LSPAdpaterT for LocalLSPAdapter {
-    async fn start(&mut self) {
-        info!("Local LSP Adapter started");
-        let tcp = TcpListener::bind(format!("127.0.0.1:{}", PORT))
-            .await
-            .unwrap();
+    async fn start(&mut self) -> Result<u16, String> {
+        let tcp = TcpListener::bind(format!("127.0.0.1:{}", 0)).await.unwrap();
+
+        let tcp_port = tcp.local_addr().unwrap().port();
+        info!("Local LSP Adapter started on port {}", tcp_port);
 
         let handle = tokio::spawn(async move {
             let extract_info_regex = Regex::new(r"/(\w+?)/(\w+)").unwrap();
@@ -63,6 +62,7 @@ impl LSPAdpaterT for LocalLSPAdapter {
                 });
             }
         });
-        self.handle = Arc::new(Some(handle))
+        self.handle = Arc::new(Some(handle));
+        Ok(tcp_port)
     }
 }

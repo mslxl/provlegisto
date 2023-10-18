@@ -7,6 +7,10 @@ import * as file from "./file"
 import { useEditorStore } from "../../store/editor"
 import { compileFile, runDetached } from "../../lib/cp"
 import TestcaseBox from "../Testcase/Testcase.vue"
+import { NTabs, NTabPane } from "naive-ui"
+import { Mode } from "../../codemirror/mode"
+import { error } from "tauri-plugin-log-api"
+import { dialog } from "@tauri-apps/api"
 
 const editorStore = useEditorStore()
 
@@ -34,27 +38,95 @@ onMounted(() => {
       })
     })
   })
+  bus.on("menu:fileNew", addNewEditor)
 })
 onUnmounted(() => {
   file.unlisten()
   bus.off("menu:compile")
   bus.off("menu:runDetached")
+  bus.off("menu:fileNew")
 })
+
+function addNewEditor(): void {
+  const num = editorStore.editors.size
+  const id = new Date().getTime().toString()
+  editorStore.create(id, Mode.cpp)
+  editorStore.$patch((state) => {
+    state.editors.get(id)!.name = `Unamed-${num + 1}`
+  })
+}
+function updateCurrentEditor(targetName: string): void {
+  for (const id of editorStore.ids) {
+    if (editorStore.editors.get(id)?.name === targetName) {
+      editorStore.currentEditor = id
+      return
+    }
+  }
+  void error(`target name ${targetName} is not exists`)
+}
+
+async function closeEditor(targetName: string): Promise<void> {
+  for (const id of editorStore.ids) {
+    if (editorStore.editors.get(id)?.name === targetName) {
+      const editor = editorStore.editors.get(id)!
+
+      let closeConfirm = editor.isSaved
+      if (!editor.isSaved) {
+        closeConfirm = await dialog.confirm("Close the file without save")
+      }
+
+      if (closeConfirm) {
+        editorStore.remove(id)
+      }
+
+      return
+    }
+  }
+  void error(`target name ${targetName} is not exists`)
+}
 </script>
 
 <template>
-  <HSplit v-model:side-width="sideWith" class="editor-split-pane">
-    <template #main>
-      <Editor code-id="main" />
-    </template>
-    <template #right>
-      <TestcaseBox code-id="main" />
-    </template>
-  </HSplit>
+  <NTabs
+    type="card"
+    closable
+    tab-style="min-width: 80px"
+    class="editor-tabs"
+    addable
+    @add="addNewEditor"
+    @update:value="updateCurrentEditor"
+    @close="closeEditor"
+  >
+    <NTabPane
+      v-for="key of editorStore.ids"
+      class="editor-tabpane"
+      display-directive="show"
+      :key="key"
+      :name="editorStore.editors.get(key)!.name"
+    >
+      <HSplit :side-width="sideWith" class="editor">
+        <template #main>
+          <Editor :code-id="key" />
+        </template>
+        <template #right>
+          <TestcaseBox :code-id="key" />
+        </template>
+      </HSplit>
+    </NTabPane>
+  </NTabs>
 </template>
 
 <style scoped lang="scss">
-.editor-split-pane {
+.editor-tabs {
   flex: 1;
+}
+.editor-tabpane {
+  display: flex;
+  padding: 0 !important;
+  height: 100%;
+
+  .editor {
+    flex: 1;
+  }
 }
 </style>

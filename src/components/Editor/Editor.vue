@@ -4,12 +4,13 @@ import { EditorView, keymap, type ViewUpdate } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { onMounted, onUnmounted, ref } from "vue"
 import bus from "../../bus"
-import { type Mode, setMode } from "../../codemirror/mode"
+import { Mode, setMode } from "../../codemirror/mode"
 import { setTheme } from "../../codemirror/theme"
 import { useEditorStore } from "../../store/editor"
 import themes from "../../codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
 import { Compartment } from "@codemirror/state"
+import { error } from "tauri-plugin-log-api"
 
 type Props = {
   codeId: string
@@ -26,7 +27,7 @@ const themeCompartment = new Compartment()
 
 let codemirror: EditorView
 
-editorStore.createIfNotExists(props.codeId)
+editorStore.createIfNotExists(props.codeId, Mode.cpp)
 
 onMounted(() => {
   codemirror = new EditorView({
@@ -34,7 +35,9 @@ onMounted(() => {
       basicSetup,
       EditorView.updateListener.of((v: ViewUpdate) => {
         if (!v.docChanged) return
-        editorStore.editors.get(props.codeId)!.code = codemirror.state.doc.toString()
+        const editorState = editorStore.editors.get(props.codeId)!
+        editorState.code = codemirror.state.doc.toString()
+        editorState.isSaved = false
       }),
       keymap.of([indentWithTab]),
       languageCompartment.of([]),
@@ -78,6 +81,7 @@ onMounted(() => {
   })
 
   bus.on(`modeChange:${props.codeId}`, (e) => {
+    console.log(e)
     editorStore.$patch((state) => {
       state.editors.get(props.codeId)!.mode = e as Mode
     })
@@ -87,8 +91,18 @@ onMounted(() => {
       props.codeId,
       languageCompartment,
       languageServerCompartment,
-    ).catch(console.error)
+    ).catch(error)
   })
+
+  if (editorStore.editors.get(props.codeId)!.mode != null) {
+    setMode(
+      editorStore.editors.get(props.codeId)!.mode,
+      codemirror,
+      props.codeId,
+      languageCompartment,
+      languageServerCompartment,
+    ).catch(error)
+  }
 })
 
 onUnmounted(() => {

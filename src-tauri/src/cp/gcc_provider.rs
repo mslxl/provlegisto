@@ -9,7 +9,7 @@ use tokio::{
     time::timeout,
 };
 
-use crate::AppCache;
+use crate::{winproc_flag, AppCache};
 
 use super::{CheckerStatus, CompilerCaller, ExecuatorCaller, ExecuatorStatus, LanguageProvider};
 
@@ -35,6 +35,7 @@ impl CompilerCaller for GccCompiler {
             .args(&args)
             .stderr(Stdio::piped())
             .stdout(Stdio::piped())
+            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| e.to_string())?;
         let mut err_msg = String::new();
@@ -82,6 +83,7 @@ impl ExecuatorCaller for ExeExecuator {
             .stdin(Stdio::from(inp.into_std().await))
             .stdout(Stdio::from(oup.into_std().await))
             .stderr(Stdio::piped())
+            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
 
@@ -102,6 +104,7 @@ impl ExecuatorCaller for ExeExecuator {
                         "/PID",
                         &proc.id().unwrap().to_string(),
                     ])
+                    .creation_flags(winproc_flag::CREATE_NO_WINDOW)
                     .spawn()
                     .unwrap();
                 info!("{:?}", taskkill.wait_with_output().await);

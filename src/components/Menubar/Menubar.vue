@@ -23,6 +23,11 @@ bus.on("menu:preference", () => {
   })
   webview.show().catch(console.error)
 })
+
+function emitModeChange(mode: string): void {
+  const id = editorStore.currentEditor!
+  bus.emit(`modeChange:${id}`, (Mode as any)[mode])
+}
 </script>
 
 <template>
@@ -35,8 +40,8 @@ bus.on("menu:preference", () => {
     :defaultValue="editorStore.currentEditorValue?.mode"
     @commit="
       (mode: string) => {
-        bus.emit('modeChange:main', (Mode as any)[mode])
         showModeModal = false
+        emitModeChange(mode)
       }
     "
   >

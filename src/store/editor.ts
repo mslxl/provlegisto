@@ -1,4 +1,4 @@
-import { Mode } from "../codemirror/mode"
+import { type Mode } from "../codemirror/mode"
 import { defineStore } from "pinia"
 
 interface State {
@@ -20,22 +20,40 @@ export const useEditorStore = defineStore("editor", {
       if (state.currentEditor == null) return null
       return state.editors.get(state.currentEditor) as EditorState
     },
+    /**
+     * Return all keys of editor
+     * @param state
+     * @returns keys
+     */
+    ids(state): string[] {
+      return Array.from(state.editors.keys())
+    },
   },
   actions: {
-    createIfNotExists(id: string, mode: Mode = Mode.cpp) {
+    createIfNotExists(id: string, mode: Mode) {
       if (!this.editors.has(id)) {
         this.create(id, mode)
       }
     },
-    create(id: string, mode: Mode = Mode.cpp) {
+    create(id: string, mode: Mode) {
       this.$patch((state) => {
         state.editors.set(id, {
+          name: id,
           code: "",
           path: null,
-          isSaved: false,
+          isSaved: true,
           mode,
           testcase: [],
         })
+      })
+    },
+    remove(id: string) {
+      this.$patch((state) => {
+        if (state.currentEditor === id) {
+          // TODO: 倒退到上一个编辑器
+          state.currentEditor = null
+        }
+        state.editors.delete(id)
       })
     },
     updateTestcase(id: string, index: number, updater: (value: Testcase) => void) {
@@ -59,6 +77,7 @@ interface Testcase {
 }
 
 interface EditorState {
+  name: string
   code: string
   mode: Mode
   isSaved: boolean

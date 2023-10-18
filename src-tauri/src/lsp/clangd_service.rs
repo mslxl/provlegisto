@@ -9,6 +9,8 @@ use tokio::{
 };
 use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
 
+use crate::winproc_flag;
+
 use super::service::{LSPService, LSPServiceBuilder};
 
 pub struct ClangdServiceBuilder;
@@ -24,6 +26,7 @@ impl LSPService for ClangdService {
     async fn is_available(&self) -> Result<bool, String> {
         let proc = process::Command::new("clangd")
             .args(["--version"])
+            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| e.to_string())?;
         let output = proc.wait_with_output().await.map_err(|e| e.to_string())?;
@@ -41,6 +44,7 @@ impl LSPService for ClangdService {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
+            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
             .spawn()
             .unwrap();
         let stdout = proc.stdout.unwrap();

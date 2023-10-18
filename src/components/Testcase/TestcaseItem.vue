@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue"
 import TextBox from "../TextBox/TextBox.vue"
-import { NCard, NCollapseItem, NText, NSpace, NButton, NH6, NSpin, NTag } from "naive-ui"
+import { NCard, NCollapseItem, NText, NButton, NH6, NSpin, NTag, NButtonGroup } from "naive-ui"
 type Props = {
   codeId: string
   index: number
@@ -49,10 +49,10 @@ function run(e: MouseEvent): void {
         </NH6>
       </template>
       <template #header-extra>
-        <NSpace class="header-extra">
+        <NButtonGroup class="header-extra">
           <NButton @click="run">Run</NButton>
           <NButton @click="(e) => e.stopPropagation()">More</NButton>
-        </NSpace>
+        </NButtonGroup>
       </template>
       <div class="testcase-row">
         <NCard

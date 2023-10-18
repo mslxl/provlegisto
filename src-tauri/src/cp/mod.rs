@@ -7,7 +7,7 @@ use tauri::Runtime;
 use tempfile::tempdir;
 use tokio::process::Command;
 
-use crate::AppCache;
+use crate::{winproc_flag, AppCache};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct UserSourceFile {
@@ -267,6 +267,7 @@ pub async fn cp_run_checker<R: Runtime>(
         .stderr(Stdio::null())
         .stdin(Stdio::null())
         .stderr(Stdio::null())
+        .creation_flags(winproc_flag::CREATE_NO_WINDOW)
         .spawn()
         .map_err(|e| e.to_string())?;
 

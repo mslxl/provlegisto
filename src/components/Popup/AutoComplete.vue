@@ -24,7 +24,7 @@ const focusOwner = ref<HTMLDivElement | null>(null)
 const filteredOptions = computed(() => {
   const drop = props.filter ? dropWhile(compose(identical(-1), prop(0))) : identity
   const sort = sortBy(prop(0))
-  const recover = map(prop(1))
+  const recover = map(prop(1) as any)
   const cover = map((x: string) => pair(x.indexOf(value.value), x))
   return recover(drop(sort(cover(props.options)))) as unknown as string[]
 })
@@ -67,7 +67,7 @@ watch(
         :get-show="() => true"
         :placeholder="placeholder"
         :options="filteredOptions"
-        @select="(v) => emit('commit', v.toString())"
+        @select="(v: string) => emit('commit', v.toString())"
       />
     </div>
   </NModal>

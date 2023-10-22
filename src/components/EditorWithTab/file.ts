@@ -12,7 +12,7 @@ async function menuFileOpen(): Promise<void> {
     filters: [
       {
         name: "Code",
-        extensions: map(slice(1, Infinity), allowExtension),
+        extensions: map(slice(1, Infinity), allowExtension) as any as string[],
       },
     ],
   })

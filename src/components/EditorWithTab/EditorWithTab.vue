@@ -9,42 +9,44 @@ import { compileFile, runDetached } from "../../lib/cp"
 import TestcaseBox from "../Testcase/Testcase.vue"
 import { NTabs, NTabPane } from "naive-ui"
 import { Mode } from "../../codemirror/mode"
-import { error } from "tauri-plugin-log-api"
 import { dialog } from "@tauri-apps/api"
+import { useSettingStore } from "../../store/settings"
+import * as notify from "../../lib/notify"
 
 const editorStore = useEditorStore()
+const settingsStore = useSettingStore()
 
 const sideWith = ref(450)
+bus.$on("menu:compile", () => {
+  const cur = editorStore.currentEditorValue!
+  bus.emit("notify:info", { title: "Start Compile" })
+  compileFile(cur.mode, cur.code, []).catch((e) => {
+    notify.error({
+      title: "Compile Error",
+      content: e,
+    })
+  })
+})
+bus.$on("emnu:runDetached", () => {
+  const cur = editorStore.currentEditorValue!
+  notify.info({
+    title: "Start Compile",
+    content: "",
+  })
+  runDetached(cur.mode, cur.code, settingsStore).catch((e) => {
+    notify.error({
+      title: "Compile Error",
+      content: e,
+    })
+  })
+})
+bus.$on("menu:fileNew", addNewEditor)
 
 onMounted(() => {
   file.listen()
-  bus.on("menu:compile", () => {
-    const cur = editorStore.currentEditorValue!
-    bus.emit("notify:info", { title: "Start Compile" })
-    compileFile(cur.mode, cur.code, []).catch((e) => {
-      bus.emit("notify:error", {
-        title: "Compile Error",
-        content: e,
-      })
-    })
-  })
-  bus.on("menu:runDetached", () => {
-    const cur = editorStore.currentEditorValue!
-    bus.emit("notify:info", { title: "Start Compile" })
-    runDetached(cur.mode, cur.code, []).catch((e) => {
-      bus.emit("notify:error", {
-        title: "Compile Error",
-        content: e,
-      })
-    })
-  })
-  bus.on("menu:fileNew", addNewEditor)
 })
 onUnmounted(() => {
   file.unlisten()
-  bus.off("menu:compile")
-  bus.off("menu:runDetached")
-  bus.off("menu:fileNew")
 })
 
 function addNewEditor(): void {
@@ -62,7 +64,7 @@ function updateCurrentEditor(targetName: string): void {
       return
     }
   }
-  void error(`target name ${targetName} is not exists`)
+  console.error(`target name ${targetName} is not exists`)
 }
 
 async function closeEditor(targetName: string): Promise<void> {
@@ -82,7 +84,7 @@ async function closeEditor(targetName: string): Promise<void> {
       return
     }
   }
-  void error(`target name ${targetName} is not exists`)
+  console.error(`target name ${targetName} is not exists`)
 }
 </script>
 

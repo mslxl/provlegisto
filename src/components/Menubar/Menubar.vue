@@ -13,11 +13,11 @@ const settingStore = useSettingStore()
 const showModeModal = ref(false)
 const editorStore = useEditorStore()
 
-bus.on("menu:changeLanguage", () => {
+bus.$on("menu:changeLanguage", () => {
   showModeModal.value = true
 })
 
-bus.on("menu:preference", () => {
+bus.$on("menu:preference", () => {
   const webview = new WebviewWindow("preference", {
     url: "/pref",
   })
@@ -47,6 +47,3 @@ function emitModeChange(mode: string): void {
   >
   </Select>
 </template>
-
-<style lang="scss" scoped></style>
-../../codemirror/mode

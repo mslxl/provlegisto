@@ -1,5 +1,8 @@
 import bus from "../bus"
-import { type NotifyBusMsg } from "../components/Notification/BusNotifcation.vue"
+export interface NotifyBusMsg {
+  title: string
+  content: string
+}
 
 function wrapNotify(ty: string): (message: NotifyBusMsg) => void {
   return (message: NotifyBusMsg) => {

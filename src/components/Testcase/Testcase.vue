@@ -5,7 +5,6 @@ import TestcaseItem from "./TestcaseItem.vue"
 import { NButton, NButtonGroup, NCollapse, NProgress } from "naive-ui"
 import { CheckStatus, ExecuatorStatus, runChecker, runCode } from "../../lib/cp"
 import { saveToTempfile } from "../../lib/tempfile"
-import { error } from "tauri-plugin-log-api"
 import { fs } from "@tauri-apps/api"
 import { all, identity, map, range } from "ramda"
 import * as notify from "../../lib/notify"
@@ -80,7 +79,7 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
   } catch (e: any) {
     // runCode error
     // maybe is UKE or RE
-    void error(e.toString())
+    console.error(e.toString())
     notify.error({ title: "Error", content: e.toString() })
     tasks.value[testcaseIndex].status = "rejected"
     tasks.value[testcaseIndex].label = "UKE"

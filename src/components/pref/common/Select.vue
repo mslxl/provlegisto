@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 async function updateValue(value: string): Promise<void> {
   emits("update:value", value)
   if (props.globalEvent !== undefined) {
-    await bus.emitGlobal(`pref:${props.globalEvent}`, value)
+    await bus.emitCrossWindows(`pref:${props.globalEvent}`, value)
   }
 }
 </script>

@@ -32,3 +32,6 @@ onUnmounted(() => {
   }
 })
 </script>
+<template>
+  <span></span>
+</template>

@@ -71,10 +71,10 @@ fn main() {
             lsp::start_lsp_adapter,
             presist::get_presist_item,
             presist::set_presist_item,
-            cp::cp_compile_src,
-            cp::cp_run_detached_src,
-            cp::cp_compile_run_src,
-            cp::cp_run_checker,
+            cp::cmd::cp_compile_src,
+            cp::cmd::cp_run_detached_src,
+            cp::cmd::cp_compile_run_src,
+            cp::cmd::cp_run_checker,
             save_to_tempfile,
         ])
         .on_window_event(|event| match event.event() {

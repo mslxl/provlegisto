@@ -1,7 +1,6 @@
 import { type Pinia, createPinia } from "pinia"
 import { useSettingStore } from "../store/settings"
 import { invoke } from "@tauri-apps/api"
-import { error } from "tauri-plugin-log-api"
 import { map } from "ramda"
 
 async function getPresistItem(name: string): Promise<string | null> {
@@ -27,7 +26,7 @@ export async function createPresistedPinia(): Promise<Pinia> {
         }
 
         store.$subscribe(() => {
-          setPresistItem(store.$id, JSON.stringify(store.$state)).catch(error)
+          setPresistItem(store.$id, JSON.stringify(store.$state)).catch(console.error)
         })
       }, stores),
     )

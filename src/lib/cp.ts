@@ -10,13 +10,21 @@ export async function compileFile(language: string, src: string, args: string[])
   })
 }
 
-export async function runDetached(language: string, src: string, args: string[]): Promise<string> {
+interface RunDetachedOption {
+  terminalProgram: string
+  terminalArguments: string[]
+}
+
+export async function runDetached(language: string, src: string, option: RunDetachedOption): Promise<string> {
   return await invoke("cp_run_detached_src", {
     src: {
       lang: language,
       src,
     },
-    compileArgs: args,
+    option: {
+      terminal_program: option.terminalProgram,
+      terminal_arguments: option.terminalArguments,
+    },
   })
 }
 

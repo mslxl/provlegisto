@@ -10,7 +10,6 @@ import { useEditorStore } from "../../store/editor"
 import themes from "../../codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
 import { Compartment } from "@codemirror/state"
-import { error } from "tauri-plugin-log-api"
 
 type Props = {
   codeId: string
@@ -28,6 +27,44 @@ const themeCompartment = new Compartment()
 let codemirror: EditorView
 
 editorStore.createIfNotExists(props.codeId, Mode.cpp)
+
+// 编辑器主题设置更新
+// 由于该事件可能来自其他窗口，因此不能从设置项中直接读取
+bus.$on("pref:theme", (value) => {
+  void setTheme((themes as any)[value], codemirror, themeCompartment)
+})
+
+// 文件因外部修改更新
+bus.$on(`externalChange:${props.codeId}`, () => {
+  const state = editorStore.editors.get(props.codeId)!
+  // 设置语言
+  setMode(state.mode, codemirror, props.codeId, languageCompartment, languageServerCompartment).catch(console.error)
+  // 替换编辑器中所有内容
+  codemirror.dispatch({
+    changes: [
+      {
+        from: 0,
+        to: codemirror.state.doc.length,
+        insert: state.code,
+      },
+    ],
+  })
+})
+
+// 语言更新
+bus.$on(`modeChange:${props.codeId}`, (e) => {
+  console.log(e)
+  editorStore.$patch((state) => {
+    state.editors.get(props.codeId)!.mode = e as Mode
+  })
+  setMode(
+    editorStore.currentEditorValue!.mode,
+    codemirror,
+    props.codeId,
+    languageCompartment,
+    languageServerCompartment,
+  ).catch(console.error)
+})
 
 onMounted(() => {
   codemirror = new EditorView({
@@ -58,42 +95,6 @@ onMounted(() => {
 
   setTheme((themes as any)[settingsStore.theme], codemirror, themeCompartment).catch(console.error)
 
-  bus.on("pref:theme", (v) => {
-    const value = String(v)
-    settingsStore.theme = value
-    void setTheme((themes as any)[value], codemirror, themeCompartment)
-  })
-
-  bus.on(`externalChange:${props.codeId}`, () => {
-    const state = editorStore.editors.get(props.codeId)!
-    // 设置语言
-    setMode(state.mode, codemirror, props.codeId, languageCompartment, languageServerCompartment).catch(console.error)
-    // 替换编辑器中所有内容
-    codemirror.dispatch({
-      changes: [
-        {
-          from: 0,
-          to: codemirror.state.doc.length,
-          insert: state.code,
-        },
-      ],
-    })
-  })
-
-  bus.on(`modeChange:${props.codeId}`, (e) => {
-    console.log(e)
-    editorStore.$patch((state) => {
-      state.editors.get(props.codeId)!.mode = e as Mode
-    })
-    setMode(
-      editorStore.currentEditorValue!.mode,
-      codemirror,
-      props.codeId,
-      languageCompartment,
-      languageServerCompartment,
-    ).catch(error)
-  })
-
   if (editorStore.editors.get(props.codeId)!.mode != null) {
     setMode(
       editorStore.editors.get(props.codeId)!.mode,
@@ -101,14 +102,12 @@ onMounted(() => {
       props.codeId,
       languageCompartment,
       languageServerCompartment,
-    ).catch(error)
+    ).catch(console.error)
   }
 })
 
 onUnmounted(() => {
   codemirror.destroy()
-  bus.off(`modeChange:${props.codeId}`)
-  bus.off(`externalChange:${props.codeId}`)
 })
 </script>
 <template>

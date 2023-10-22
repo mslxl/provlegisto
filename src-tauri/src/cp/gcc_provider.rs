@@ -1,17 +1,19 @@
-use std::{os::windows::prelude::MetadataExt, path::PathBuf, process::Stdio, time::Duration};
+use std::{path::PathBuf, process::Stdio, time::Duration};
 
 use futures_util::TryFutureExt;
-use log::info;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
-    process::Command,
-    time::timeout,
 };
 
-use crate::{winproc_flag, AppCache};
+use crate::{
+    winproc_flag::{self, apply_win_flags},
+    AppCache,
+};
 
-use super::{CheckerStatus, CompilerCaller, ExecuatorCaller, ExecuatorStatus, LanguageProvider};
+use super::{
+    cmd::CPRunDetachedOption, CompilerCaller, ExecuatorCaller, ExecuatorStatus, LanguageProvider,
+};
 
 pub struct GccCompiler;
 #[async_trait::async_trait]
@@ -29,15 +31,17 @@ impl CompilerCaller for GccCompiler {
         let output_filepath = app_cache.file_with_name(&sha256::try_digest(path).unwrap());
         let output = output_filepath.to_str().unwrap().to_owned();
 
-        let mut proc = tokio::process::Command::new("g++")
-            .arg(path)
-            .args(["-o", &output])
-            .args(&args)
-            .stderr(Stdio::piped())
-            .stdout(Stdio::piped())
-            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        let mut proc = apply_win_flags(
+            tokio::process::Command::new("g++")
+                .arg(path)
+                .args(["-o", &output])
+                .args(&args)
+                .stderr(Stdio::piped())
+                .stdout(Stdio::piped()),
+            winproc_flag::CREATE_NO_WINDOW,
+        )
+        .spawn()
+        .map_err(|e| e.to_string())?;
         let mut err_msg = String::new();
         let mut reader = BufReader::new(proc.stderr.take().unwrap());
         reader.read_to_string(&mut err_msg).await.unwrap();
@@ -54,13 +58,15 @@ pub struct ExeExecuator;
 
 #[async_trait::async_trait]
 impl ExecuatorCaller for ExeExecuator {
-    #[cfg(target_os = "windows")]
-    fn run_detached(&self, prov_run_prog: &str, target: &str) {
-        std::process::Command::new("cmd")
-            .args(["/C", "start", prov_run_prog, target])
+    fn run_detached(&self, prov_run_prog: &str, target: &str, mut option: CPRunDetachedOption) {
+        option.terminal_arguments.push(String::from(prov_run_prog));
+        option.terminal_arguments.push(String::from(target));
+        std::process::Command::new(option.terminal_program)
+            .args(&option.terminal_arguments)
             .spawn()
             .unwrap();
     }
+
     async fn run(
         &self,
         target: &str,
@@ -79,13 +85,15 @@ impl ExecuatorCaller for ExeExecuator {
             .await
             .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
 
-        let mut proc = tokio::process::Command::new(target)
-            .stdin(Stdio::from(inp.into_std().await))
-            .stdout(Stdio::from(oup.into_std().await))
-            .stderr(Stdio::piped())
-            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
-            .spawn()
-            .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
+        let mut proc = apply_win_flags(
+            tokio::process::Command::new(target)
+                .stdin(Stdio::from(inp.into_std().await))
+                .stdout(Stdio::from(oup.into_std().await))
+                .stderr(Stdio::piped()),
+            winproc_flag::CREATE_NO_WINDOW,
+        )
+        .spawn()
+        .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;
 
         let mut err_msg = String::new();
 
@@ -95,23 +103,7 @@ impl ExecuatorCaller for ExeExecuator {
         let mut reader = BufReader::new(proc.stderr.take().unwrap());
 
         if timeout_res.is_err() {
-            if cfg!(windows) {
-                let taskkill = Command::new("cmd.exe")
-                    .args([
-                        "/C",
-                        "taskkill",
-                        "/F",
-                        "/PID",
-                        &proc.id().unwrap().to_string(),
-                    ])
-                    .creation_flags(winproc_flag::CREATE_NO_WINDOW)
-                    .spawn()
-                    .unwrap();
-                info!("{:?}", taskkill.wait_with_output().await);
-                let _ = proc.wait().await;
-            } else {
-                proc.kill().await.unwrap();
-            }
+            proc.kill().await.unwrap();
             return Err((ExecuatorStatus::TLE, String::new()));
         }
         reader

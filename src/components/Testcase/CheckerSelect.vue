@@ -2,7 +2,6 @@
 import { ref } from "vue"
 import { NSelect, NText } from "naive-ui"
 import { dialog } from "@tauri-apps/api"
-import { error } from "tauri-plugin-log-api"
 import { insert } from "ramda"
 
 type Props = {
@@ -51,7 +50,7 @@ const options = ref([
 
 function onSelectChange(value: string): void {
   if (value === "custom") {
-    selectCustomChecker().catch(error)
+    selectCustomChecker().catch(console.error)
     return
   }
 

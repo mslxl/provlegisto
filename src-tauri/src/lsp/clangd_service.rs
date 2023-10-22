@@ -5,11 +5,11 @@ use futures_util::{SinkExt, StreamExt};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     net::TcpStream,
-    process,
+    process::Command,
 };
 use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
 
-use crate::winproc_flag;
+use crate::winproc_flag::{self, apply_win_flags};
 
 use super::service::{LSPService, LSPServiceBuilder};
 
@@ -24,29 +24,32 @@ pub struct ClangdService;
 #[async_trait]
 impl LSPService for ClangdService {
     async fn is_available(&self) -> Result<bool, String> {
-        let proc = process::Command::new("clangd")
-            .args(["--version"])
-            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        let proc = apply_win_flags(
+            Command::new("clangd").args(["--version"]),
+            winproc_flag::CREATE_NO_WINDOW,
+        )
+        .spawn()
+        .map_err(|e| e.to_string())?;
         let output = proc.wait_with_output().await.map_err(|e| e.to_string())?;
         Ok(output.status.success())
     }
     async fn init(&mut self) {}
     async fn accept(&mut self, ws: WebSocketStream<TcpStream>) {
-        let proc = process::Command::new("clangd")
-            .args([
-                "--pch-storage=memory",
-                "--clang-tidy",
-                "--header-insertion=iwyu",
-                "--completion-style=detailed",
-            ])
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .creation_flags(winproc_flag::CREATE_NO_WINDOW)
-            .spawn()
-            .unwrap();
+        let proc = apply_win_flags(
+            Command::new("clangd")
+                .args([
+                    "--pch-storage=memory",
+                    "--clang-tidy",
+                    "--header-insertion=iwyu",
+                    "--completion-style=detailed",
+                ])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null()),
+            winproc_flag::CREATE_NO_WINDOW,
+        )
+        .spawn()
+        .unwrap();
         let stdout = proc.stdout.unwrap();
         let mut stdin = proc.stdin.unwrap();
         let (ws_outcoming, mut ws_incoming) = ws.split();

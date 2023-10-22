@@ -42,6 +42,8 @@ function updateTheme(): void {
   setTheme((themes as any)[settingsStore.theme], codemirror, themeCompartment).catch(console.error)
 }
 
+bus.$on("pref:theme", updateTheme)
+
 onMounted(() => {
   codemirror = new EditorView({
     doc: props.content,
@@ -69,12 +71,10 @@ onMounted(() => {
   })
 
   updateTheme()
-  bus.on("pref:theme", updateTheme)
 })
 
 onUnmounted(() => {
   codemirror?.destroy()
-  bus.off("pref:theme", updateTheme)
 })
 </script>
 <template>

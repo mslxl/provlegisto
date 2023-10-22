@@ -14,7 +14,7 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ fenix.overlay ];
+          overlays = [ fenix.overlays.default ];
         };
         toolchain = pkgs.fenix.complete;
         buildInputs = with pkgs; [
@@ -29,6 +29,7 @@
             rust-src
             clippy
             rustfmt
+            rust-analyzer
           ])
           pkg-config
           openssl

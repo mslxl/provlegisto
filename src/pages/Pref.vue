@@ -5,6 +5,7 @@ import { NMenu } from "naive-ui"
 import { ref } from "vue"
 
 import PrefAppearance from "../components/pref/Appearance.vue"
+import PrefExecuate from "../components/pref/Execuate.vue"
 
 useDocumentTitle("Preference")
 
@@ -13,6 +14,10 @@ const menuOption: MenuOption[] = [
   {
     label: "Appearance",
     key: "appearance",
+  },
+  {
+    label: "Execuate",
+    key: "exec",
   },
   {
     label: "Language",
@@ -35,6 +40,7 @@ const menuOption: MenuOption[] = [
     <NLayoutContent content-style="padding: 24px;">
       <NList>
         <PrefAppearance v-if="activeMenu == 'appearance'" />
+        <PrefExecuate v-else-if="activeMenu == 'exec'" />
       </NList>
     </NLayoutContent>
   </NLayout>

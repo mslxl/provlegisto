@@ -1,26 +1,22 @@
 <script setup lang="ts">
-import { NListItem, NThing, NInputNumber } from "naive-ui"
+import { NListItem, NThing, NInput } from "naive-ui"
 import bus from "../../../bus/index"
 type Props = {
   title: string
   secondary?: string
   suffix?: string
   globalEvent?: string
-  defaultValue?: number
-  value?: number
-  min?: number
-  max?: number
-  step?: number
+  defaultValue?: string
+  value?: string
   disabled?: boolean
 }
-type Emits = (e: "update:value", value: number) => void
+type Emits = (e: "update:value", value: string) => void
 const emits = defineEmits<Emits>()
 const props = withDefaults(defineProps<Props>(), {
-  step: 1,
   disabled: false,
 })
 
-async function updateValue(value: number): Promise<void> {
+async function updateValue(value: string): Promise<void> {
   emits("update:value", value)
   if (props.globalEvent !== undefined) {
     await bus.emitCrossWindows(`pref:${props.globalEvent}`, value)
@@ -32,21 +28,18 @@ async function updateValue(value: number): Promise<void> {
   <NListItem>
     <NThing :title="props.title" :description="props.secondary" />
     <template #suffix>
-      <NInputNumber
+      <NInput
         :value="value"
         @update:value="(value) => updateValue(value!)"
         class="input"
         :update-value-on-input="false"
-        :min="props.min"
-        :max="props.max"
-        :step="props.step"
         :disabled="disabled"
         :default-value="props.defaultValue"
       >
         <template #suffix>
           {{ props.suffix }}
         </template>
-      </NInputNumber>
+      </NInput>
     </template>
   </NListItem>
 </template>

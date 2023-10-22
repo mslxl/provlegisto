@@ -15,7 +15,7 @@ const themeOptions = map(
 )
 </script>
 <template>
-  <Select title="Theme" global-event="theme" :options="themeOptions" :default-value="store.theme" />
+  <Select title="Theme" global-event="theme" :options="themeOptions" v-model:value="store.theme" />
   <Number
     title="Zoom UI"
     secondary="Not available, track on tauri-apps/tauri #3310"

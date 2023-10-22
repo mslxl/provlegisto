@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use log::info;
 use regex::Regex;
 use std::sync::Arc;
 use tokio::{net::TcpListener, task::JoinHandle};
@@ -36,7 +35,7 @@ impl LSPAdpaterT for LocalLSPAdapter {
         let tcp = TcpListener::bind(format!("127.0.0.1:{}", 0)).await.unwrap();
 
         let tcp_port = tcp.local_addr().unwrap().port();
-        info!("Local LSP Adapter started on port {}", tcp_port);
+        dbg!("Local LSP Adapter started on port {}", tcp_port);
 
         let handle = tokio::spawn(async move {
             let extract_info_regex = Regex::new(r"/(\w+?)/(\w+)").unwrap();
@@ -54,7 +53,7 @@ impl LSPAdpaterT for LocalLSPAdapter {
 
                 let ls_name = captures.get(1).unwrap().as_str().to_owned();
                 let code_id = captures.get(2).unwrap().as_str().to_owned();
-                info!("{}: {}({})", &addr, &ls_name, &code_id);
+                dbg!("Client connected: {} {}({})", &addr, &ls_name, &code_id);
                 tokio::spawn(async move {
                     let register = LSPRegister::default();
                     let mut lsp = register.create_by_id(&ls_name).unwrap();

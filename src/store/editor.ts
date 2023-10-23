@@ -1,3 +1,4 @@
+import { map, prop, sortBy } from "ramda"
 import { type Mode } from "../codemirror/mode"
 import { defineStore } from "pinia"
 
@@ -26,7 +27,19 @@ export const useEditorStore = defineStore("editor", {
      * @returns keys
      */
     ids(state): string[] {
-      return Array.from(state.editors.keys())
+      return map(
+        prop("name"),
+        sortBy(
+          prop("sort"),
+          map(
+            (entry): any => ({
+              name: entry[0],
+              sort: entry[1].indexSort,
+            }),
+            Array.from(state.editors.entries()),
+          ),
+        ),
+      )
     },
   },
   actions: {
@@ -38,7 +51,7 @@ export const useEditorStore = defineStore("editor", {
     create(id: string, mode: Mode) {
       this.$patch((state) => {
         state.editors.set(id, {
-          name: id,
+          indexSort: state.editors.size,
           code: "",
           path: null,
           isSaved: true,
@@ -77,7 +90,7 @@ interface Testcase {
 }
 
 interface EditorState {
-  name: string
+  indexSort: number
   code: string
   mode: Mode
   isSaved: boolean

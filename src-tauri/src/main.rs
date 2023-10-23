@@ -4,8 +4,6 @@ use std::{env::temp_dir, fs, path::PathBuf, process::exit};
 
 use rand::distributions::{Alphanumeric, DistString};
 
-use tauri_plugin_log::LogTarget;
-
 use lsp::LSPState;
 use tauri::Manager;
 
@@ -62,11 +60,6 @@ fn main() {
             app.manage(AppCache::default());
             Ok(())
         })
-        .plugin(
-            tauri_plugin_log::Builder::default()
-                .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
-                .build(),
-        )
         .invoke_handler(tauri::generate_handler![
             lsp::start_lsp_adapter,
             presist::get_presist_item,

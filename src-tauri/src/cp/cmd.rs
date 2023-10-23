@@ -4,7 +4,7 @@ use tauri::Runtime;
 use tokio::process::Command;
 
 use crate::{
-    winproc_flag::{self, apply_win_flags},
+    platform::{self, apply_win_flags},
     AppCache,
 };
 
@@ -29,10 +29,9 @@ pub async fn cp_compile_src(
 
     let src_file = cache.file_with_name(&format!("{}.{}", hash, provider.compiler().ext()));
     let src_filename = src_file.to_str().to_owned().unwrap();
-    let target_file = cache.file_with_name(&format!("{}.exe", hash));
-    let target_filename = target_file.to_str().to_owned().unwrap();
+    let target_file = cache.file_with_name(&platform::resolve_exe_or_elf_str(&hash));
 
-    if !target_file.exists() {
+    let target_filename = if !target_file.exists() {
         // 文件不存在则编译
         tokio::fs::write(&src_file, &src.src)
             .await
@@ -40,8 +39,10 @@ pub async fn cp_compile_src(
         provider
             .compiler()
             .compile_file(&cache, src_filename, compile_args)
-            .await?;
-    }
+            .await?
+    } else {
+        target_file.to_str().unwrap().to_owned()
+    };
     println!("compile {} to {}", &src_filename, &target_filename);
 
     Ok(target_filename.to_owned())
@@ -60,13 +61,10 @@ pub async fn cp_run_detached_src<R: Runtime>(
     src: UserSourceCode,
     option: CPRunDetachedOption,
 ) -> Result<(), String> {
-    let prov_run_prog = if cfg!(window) {
-        app.path_resolver()
-            .resolve_resource("bin/prov_console_run.exe")
-    } else {
-        app.path_resolver().resolve_resource("bin/prov_console_run")
-    }
-    .expect("failed to resolve bin/prov_console_run binary");
+    let prov_run_prog = app
+        .path_resolver()
+        .resolve_resource(platform::resolve_exe_or_elf_str("bin/prov_console_run"))
+        .expect("failed to resolve bin/prov_console_run binary");
 
     let provider = LanguageRegister
         .get(&src.lang)
@@ -138,7 +136,7 @@ pub async fn cp_run_checker<R: Runtime>(
     answer_file: String,
 ) -> Result<CheckerMessage, String> {
     let checker = if checker.starts_with("res:") {
-        let rel_path = format!("bin/{}.exe", &checker[4..]);
+        let rel_path = platform::resolve_exe_or_elf_str(&format!("bin/{}", &checker[4..]));
         app.path_resolver()
             .resolve_resource(rel_path)
             .expect("failed to resolve checker resource")
@@ -157,7 +155,7 @@ pub async fn cp_run_checker<R: Runtime>(
             .stderr(Stdio::null())
             .stdin(Stdio::null())
             .stderr(Stdio::null()),
-        winproc_flag::CREATE_NO_WINDOW,
+        platform::CREATE_NO_WINDOW,
     )
     .spawn()
     .map_err(|e| e.to_string())?;

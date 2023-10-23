@@ -9,8 +9,8 @@ use tauri::Manager;
 
 mod cp;
 mod lsp;
+mod platform;
 mod presist;
-mod winproc_flag;
 
 pub struct AppCache {
     dir: PathBuf,

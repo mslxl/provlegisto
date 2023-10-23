@@ -7,7 +7,7 @@ use tokio::{
 };
 
 use crate::{
-    winproc_flag::{self, apply_win_flags},
+    platform::{self, apply_win_flags},
     AppCache,
 };
 
@@ -38,7 +38,7 @@ impl CompilerCaller for GccCompiler {
                 .args(&args)
                 .stderr(Stdio::piped())
                 .stdout(Stdio::piped()),
-            winproc_flag::CREATE_NO_WINDOW,
+            platform::CREATE_NO_WINDOW,
         )
         .spawn()
         .map_err(|e| e.to_string())?;
@@ -90,7 +90,7 @@ impl ExecuatorCaller for ExeExecuator {
                 .stdin(Stdio::from(inp.into_std().await))
                 .stdout(Stdio::from(oup.into_std().await))
                 .stderr(Stdio::piped()),
-            winproc_flag::CREATE_NO_WINDOW,
+            platform::CREATE_NO_WINDOW,
         )
         .spawn()
         .map_err(|e| (ExecuatorStatus::UKE, e.to_string()))?;

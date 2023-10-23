@@ -12,6 +12,7 @@ type Props = {
   max?: number
   step?: number
   disabled?: boolean
+  onChange?: (data: number) => void
 }
 type Emits = (e: "update:value", value: number) => void
 const emits = defineEmits<Emits>()
@@ -22,6 +23,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 async function updateValue(value: number): Promise<void> {
   emits("update:value", value)
+  if (props.onChange !== undefined) {
+    props.onChange(value)
+  }
   if (props.globalEvent !== undefined) {
     await bus.emitCrossWindows(`pref:${props.globalEvent}`, value)
   }

@@ -9,6 +9,7 @@ type Props = {
   program?: string
   args?: string[]
   disabled?: boolean
+  onChange?: (program: string, args: string[]) => void
 }
 type Emits = {
   (e: "update:program", value: string): void
@@ -21,12 +22,18 @@ const props = withDefaults(defineProps<Props>(), {
 async function updateArgs(value: any): Promise<void> {
   const args = value as string[]
   emits("update:args", args)
+  if (props.onChange !== undefined) {
+    props.onChange(props.program ?? "", value)
+  }
   if (props.globalEvent !== undefined) {
     await bus.emitCrossWindows(`pref:${props.globalEvent}`, value)
   }
 }
 async function updateProgram(value: string): Promise<void> {
   emits("update:program", value)
+  if (props.onChange !== undefined) {
+    props.onChange(value, props.args ?? [])
+  }
   if (props.globalEvent !== undefined) {
     await bus.emitCrossWindows(`pref:${props.globalEvent}`, value)
   }

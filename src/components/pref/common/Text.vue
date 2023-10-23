@@ -9,6 +9,7 @@ type Props = {
   defaultValue?: string
   value?: string
   disabled?: boolean
+  onChange?: (text: string) => void
 }
 type Emits = (e: "update:value", value: string) => void
 const emits = defineEmits<Emits>()
@@ -18,6 +19,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 async function updateValue(value: string): Promise<void> {
   emits("update:value", value)
+  if (props.onChange !== undefined) {
+    props.onChange(value)
+  }
   if (props.globalEvent !== undefined) {
     await bus.emitCrossWindows(`pref:${props.globalEvent}`, value)
   }

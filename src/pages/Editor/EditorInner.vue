@@ -2,16 +2,11 @@
 import EditorWithTab from "../../components/EditorWithTab/EditorWithTab.vue"
 import { startLanguageServerProtocolServer } from "../../lib/lsp"
 import * as notify from "../../lib/notify"
+import { useListenPreferenceChangeHook } from "../../lib/syncPref"
 import { useEditorStore } from "../../store/editor"
-import bus from "../../bus"
 import { useSettingStore } from "../../store/settings"
 
 const editorStore = useEditorStore()
-const settingStore = useSettingStore()
-
-bus.$on("pref:theme", (theme) => {
-  settingStore.theme = theme
-})
 
 editorStore.currentEditor = "main"
 try {
@@ -19,6 +14,9 @@ try {
 } catch (e: any) {
   notify.error(e.toString())
 }
+
+const settingsStore = useSettingStore()
+useListenPreferenceChangeHook(settingsStore.$patch)
 </script>
 
 <template>

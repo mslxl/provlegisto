@@ -2,6 +2,7 @@
 import { basicSetup } from "codemirror"
 import { EditorView, keymap, type ViewUpdate } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
+import { Compartment } from "@codemirror/state"
 import { onMounted, onUnmounted, ref } from "vue"
 import bus from "../../bus"
 import { Mode, setMode } from "../../codemirror/mode"
@@ -9,7 +10,7 @@ import { setTheme } from "../../codemirror/theme"
 import { useEditorStore } from "../../store/editor"
 import themes from "../../codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
-import { Compartment } from "@codemirror/state"
+import { filterCSSQuote } from "../../lib/style"
 
 type Props = {
   codeId: string
@@ -23,19 +24,41 @@ const settingsStore = useSettingStore()
 const languageCompartment = new Compartment()
 const languageServerCompartment = new Compartment()
 const themeCompartment = new Compartment()
+const fontSizeCompartment = new Compartment()
 
 let codemirror: EditorView
+
+function updateFont(): void {
+  const style: any = {
+    fontSize: `${settingsStore.fontSize}px`,
+  }
+  if (settingsStore.fontFamily.trim().length !== 0) {
+    style.fontFamily = filterCSSQuote(settingsStore.fontFamily.trim())
+  }
+
+  codemirror.dispatch({
+    effects: fontSizeCompartment.reconfigure(
+      EditorView.theme({
+        ".cm-scroller": style,
+      }),
+    ),
+  })
+}
 
 editorStore.createIfNotExists(props.codeId, Mode.cpp)
 
 // 编辑器主题设置更新
 // 由于该事件可能来自其他窗口，因此不能从设置项中直接读取
-bus.$on("pref:theme", (value) => {
-  void setTheme((themes as any)[value], codemirror, themeCompartment)
+bus.$on("pref:theme", () => {
+  void setTheme((themes as any)[settingsStore.theme], codemirror, themeCompartment)
 })
 
+bus.$on("pref:font-size", updateFont)
+bus.$on("pref:font-family", updateFont)
+
 // 文件因外部修改更新
-bus.$on(`externalChange:${props.codeId}`, () => {
+bus.$on(`sync:code`, (id: string) => {
+  if (id !== props.codeId) return
   const state = editorStore.editors.get(props.codeId)!
   // 设置语言
   setMode(state.mode, codemirror, props.codeId, languageCompartment, languageServerCompartment).catch(console.error)
@@ -80,6 +103,7 @@ onMounted(() => {
       languageCompartment.of([]),
       languageServerCompartment.of([]),
       themeCompartment.of([]),
+      fontSizeCompartment.of(EditorView.theme({})),
       EditorView.theme({
         "&": {
           height: "100%",
@@ -90,10 +114,12 @@ onMounted(() => {
         },
       }),
     ],
+    doc: editorStore.editors.get(props.codeId)?.code ?? "",
     parent: block.value!,
   })
 
   setTheme((themes as any)[settingsStore.theme], codemirror, themeCompartment).catch(console.error)
+  updateFont()
 
   if (editorStore.editors.get(props.codeId)!.mode != null) {
     setMode(

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue"
 import { dialog } from "@tauri-apps/api"
-import { NTabs, NTabPane, NButton } from "naive-ui"
+import { NTabs, NTabPane, NButton, NButtonGroup } from "naive-ui"
 
 import Editor from "../Editor/Editor.vue"
 import HSplit from "../SplitPane/HSplitPane.vue"
@@ -91,7 +91,7 @@ async function closeEditor(targetName: string): Promise<void> {
         @close="closeEditor"
       >
         <NTabPane v-for="key of editorStore.ids" class="editor-tabpane" display-directive="show" :key="key" :name="key">
-          <HSplit :side-width="sideWith" class="editor">
+          <HSplit v-model:side-width="sideWith" class="editor">
             <template #main>
               <Editor :code-id="key" />
             </template>
@@ -103,7 +103,10 @@ async function closeEditor(targetName: string): Promise<void> {
       </NTabs>
     </template>
     <template #extra>
-      <NButton size="small" @click="addNewEditor"> 新建文件 </NButton>
+      <NButtonGroup>
+        <NButton size="small" @click="addNewEditor"> 独自上号 </NButton>
+        <NButton size="small"> 组团开黑 </NButton>
+      </NButtonGroup>
     </template>
   </EmptyTabPane>
 </template>

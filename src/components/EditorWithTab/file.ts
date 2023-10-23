@@ -21,17 +21,19 @@ async function menuFileOpen(): Promise<void> {
   const file = userFile as string
   const mode = getModeByExtension(file.substring(file.lastIndexOf(".")))
   const code = await fs.readTextFile(file)
-  const id = "main"
+
+  const id = file
+  editorStore.create(id, mode ?? Mode.cpp)
   // TODO: 应该打开到新 id 编辑器
   editorStore.$patch((state) => {
-    const e = state.editors.get("main")!
+    const e = state.editors.get(id)!
     e.code = code
     e.isSaved = true
     e.mode = mode ?? Mode.cpp
     e.path = file
   })
   // 通知 editor 更新
-  bus.emit(`externalChange:${id}`)
+  bus.emit(`sync:code`, id)
 }
 async function menuFileSave(): Promise<void> {
   const editorStore = useEditorStore()

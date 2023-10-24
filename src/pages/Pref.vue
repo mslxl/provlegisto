@@ -6,6 +6,7 @@ import { ref } from "vue"
 
 import PrefAppearance from "../components/pref/Appearance.vue"
 import PrefExecuate from "../components/pref/Execuate.vue"
+import PrefKeymap from "../components/pref/Keymap.vue"
 
 useDocumentTitle("Preference")
 
@@ -16,8 +17,18 @@ const menuOption: MenuOption[] = [
     key: "appearance",
   },
   {
-    label: "Execuate",
-    key: "exec",
+    label: "Editor",
+    key: "editor",
+    children: [
+      {
+        label: "Keymap",
+        key: "editor.keymap",
+      },
+      {
+        label: "Execuate",
+        key: "editor.exec",
+      },
+    ],
   },
   {
     label: "Language",
@@ -40,7 +51,8 @@ const menuOption: MenuOption[] = [
     <NLayoutContent content-style="padding: 24px;">
       <NList>
         <PrefAppearance v-if="activeMenu == 'appearance'" />
-        <PrefExecuate v-else-if="activeMenu == 'exec'" />
+        <PrefExecuate v-else-if="activeMenu == 'editor.exec'" />
+        <PrefKeymap v-else-if="activeMenu == 'editor.keymap'" />
       </NList>
     </NLayoutContent>
   </NLayout>

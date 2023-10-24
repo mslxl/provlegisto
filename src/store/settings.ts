@@ -5,6 +5,7 @@ export interface SettingsState {
   fontSize: number
   fontFamily: string
   zoom: number
+  cursorKeymap: string
   menubarStyle: "native" | "zen"
   terminalProgram: string
   terminalArguments: string[]
@@ -17,6 +18,7 @@ export const useSettingStore = defineStore("settings", {
       fontFamily:
         'v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
       zoom: 100,
+      cursorKeymap: "none",
       menubarStyle: "native",
       terminalProgram: "",
       terminalArguments: [],

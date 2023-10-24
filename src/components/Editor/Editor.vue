@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { basicSetup } from "codemirror"
-import { EditorView, keymap, type ViewUpdate } from "@codemirror/view"
+import { EditorView, keymap, lineNumbers, type ViewUpdate } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { Compartment } from "@codemirror/state"
 import { onMounted, onUnmounted, ref } from "vue"
 import bus from "../../bus"
 import { Mode, setMode } from "../../codemirror/mode"
 import { setTheme } from "../../codemirror/theme"
+import { setCursorKeymap } from "../../codemirror/keymap"
 import { useEditorStore } from "../../store/editor"
 import themes from "../../codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
@@ -25,6 +26,8 @@ const languageCompartment = new Compartment()
 const languageServerCompartment = new Compartment()
 const themeCompartment = new Compartment()
 const fontSizeCompartment = new Compartment()
+const lineNumCompartment = new Compartment()
+const cursorKeymapCompartment = new Compartment()
 
 let codemirror: EditorView
 
@@ -55,6 +58,10 @@ bus.$on("pref:theme", () => {
 
 bus.$on("pref:font-size", updateFont)
 bus.$on("pref:font-family", updateFont)
+bus.$on("pref:cursor-keymap", () => {
+  console.log(settingsStore.cursorKeymap)
+  setCursorKeymap(settingsStore.cursorKeymap, codemirror, cursorKeymapCompartment)
+})
 
 // 文件因外部修改更新
 bus.$on(`sync:code`, (id: string) => {
@@ -104,6 +111,8 @@ onMounted(() => {
       languageServerCompartment.of([]),
       themeCompartment.of([]),
       fontSizeCompartment.of(EditorView.theme({})),
+      lineNumCompartment.of(lineNumbers()),
+      cursorKeymapCompartment.of([]),
       EditorView.theme({
         "&": {
           height: "100%",
@@ -120,6 +129,7 @@ onMounted(() => {
 
   setTheme((themes as any)[settingsStore.theme], codemirror, themeCompartment).catch(console.error)
   updateFont()
+  setCursorKeymap(settingsStore.cursorKeymap, codemirror, cursorKeymapCompartment)
 
   if (editorStore.editors.get(props.codeId)!.mode != null) {
     setMode(

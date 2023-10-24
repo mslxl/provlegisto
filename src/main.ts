@@ -1,3 +1,5 @@
+import "normalize.css"
+import "@fontsource/noto-sans-mono"
 import "./styles.scss"
 import { createApp } from "vue"
 

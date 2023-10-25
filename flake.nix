@@ -2,6 +2,7 @@
   description = "Tauri Javascript App";
 
   inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     fenix = {
       url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -63,8 +64,7 @@
 
         # Used by `nix develop`
         devShell = pkgs.mkShell {
-          inherit buildInputs;
-
+          buildInputs = buildInputs ++ [ pkgs.gtk3 pkgs.act];
           # Specify the rust-src path (many editors rely on this)
           RUST_SRC_PATH = "${toolchain.rust-src}/lib/rustlib/src/rust/library";
         };

@@ -8,11 +8,12 @@ import { Mode, allowExtension, getExtensionByMode, getModeByExtension } from "..
 import { map, slice } from "ramda"
 import { type Testcase, useEditorStore } from "../../store/editor"
 import { onMounted, onUnmounted } from "vue"
-import { saveSourceCode, saveTextfileFromExternalFile, saveTextfileTestcase } from "../../lib/srcStore"
+import { readTestcases, saveSourceCode, saveTextfileFromExternalFile, saveTextfileTestcase } from "../../lib/srcStore"
 import { useSettingStore } from "../../store/settings"
 
 async function menuFileOpen(): Promise<void> {
   const editorStore = useEditorStore()
+  const settingsStore = useSettingStore()
   const userFile = await dialog.open({
     multiple: false,
     directory: false,
@@ -25,30 +26,37 @@ async function menuFileOpen(): Promise<void> {
   })
 
   if (userFile == null) return
+
+  // 读代码文件
   const file = userFile as string
   const mode = getModeByExtension(file.substring(file.lastIndexOf(".")))
   const code = await fs.readTextFile(file)
 
   const id = file
   editorStore.create(id, mode ?? Mode.cpp)
-  // TODO: 应该打开到新 id 编辑器
+
+  // 读测试样例
+  const testcases = await readTestcases(file, settingsStore)
+
   editorStore.$patch((state) => {
     const e = state.editors.get(id)!
     e.code = code
     e.isSaved = true
     e.mode = mode ?? Mode.cpp
     e.path = file
+    e.testcase = testcases
   })
+
   // 通知 editor 更新
   bus.emit(`sync:code`, id)
 }
 /**
  * 保存用户测试样例
- * 如果文件过大，或文件是由外部保存产生，不会触发保存动作
  */
 async function saveMutableTestcase(sourcePath: string, testcase: Testcase[]): Promise<void> {
   const config = useSettingStore()
   for (const [idx, item] of testcase.entries()) {
+    console.log(`Save testcase${idx} of ${sourcePath}`)
     if (item.multable) {
       await saveTextfileTestcase(sourcePath, item.input, item.output, idx, config)
     } else {
@@ -65,6 +73,9 @@ async function menuFileSave(): Promise<void> {
     await menuFileSaveAs()
     return
   }
+  editorStore.$patch((state) => {
+    state.editors.get(state.currentEditor!)!.isSaved = true
+  })
   await saveSourceCode(state.path, editorStore.currentEditorValue.code)
   await saveMutableTestcase(state.path, editorStore.currentEditorValue.testcase)
 }
@@ -80,7 +91,12 @@ async function menuFileSaveAs(): Promise<void> {
     ],
   })
   if (userFile == null) return
-  editorStore.editors.get(editorStore.currentEditor!)!.path = userFile
+
+  editorStore.$patch((state) => {
+    const value = state.editors.get(state.currentEditor!)!
+    value.isSaved = true
+    value.path = userFile
+  })
   await saveSourceCode(userFile, editorStore.currentEditorValue.code)
   await saveMutableTestcase(userFile, editorStore.currentEditorValue.testcase)
 }

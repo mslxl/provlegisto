@@ -102,9 +102,11 @@ onMounted(() => {
       basicSetup,
       EditorView.updateListener.of((v: ViewUpdate) => {
         if (!v.docChanged) return
-        const editorState = editorStore.editors.get(props.codeId)!
-        editorState.code = codemirror.state.doc.toString()
-        editorState.isSaved = false
+        editorStore.$patch((state) => {
+          const editorState = state.editors.get(props.codeId)!
+          editorState.code = codemirror.state.doc.toString()
+          editorState.isSaved = false
+        })
       }),
       keymap.of([indentWithTab]),
       languageCompartment.of([]),

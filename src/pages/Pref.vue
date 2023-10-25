@@ -7,6 +7,7 @@ import { ref } from "vue"
 import PrefAppearance from "../components/pref/Appearance.vue"
 import PrefExecuate from "../components/pref/Execuate.vue"
 import PrefKeymap from "../components/pref/Keymap.vue"
+import PrefTestcase from "../components/pref/Testcase.vue"
 
 useDocumentTitle("Preference")
 
@@ -27,6 +28,10 @@ const menuOption: MenuOption[] = [
       {
         label: "Execuate",
         key: "editor.exec",
+      },
+      {
+        label: "Testcase",
+        key: "editor.testcase",
       },
     ],
   },
@@ -53,6 +58,7 @@ const menuOption: MenuOption[] = [
         <PrefAppearance v-if="activeMenu == 'appearance'" />
         <PrefExecuate v-else-if="activeMenu == 'editor.exec'" />
         <PrefKeymap v-else-if="activeMenu == 'editor.keymap'" />
+        <PrefTestcase v-else-if="activeMenu == 'editor.testcase'" />
       </NList>
     </NLayoutContent>
   </NLayout>

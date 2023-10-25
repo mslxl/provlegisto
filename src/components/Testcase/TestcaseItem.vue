@@ -6,6 +6,7 @@ type Props = {
   codeId: string
   index: number
   status: "accpeted" | "rejected" | "untested" | "testing"
+  immutable?: boolean
   input?: string
   expect?: string
   actual?: string
@@ -62,7 +63,11 @@ function run(e: MouseEvent): void {
           content-style="padding: 0;"
           header-style="padding:0; text-align: center;"
         >
-          <TextBox :editable="true" :content="props.input" @update:content="(v) => emits('update:input', v)" />
+          <TextBox
+            :editable="!props.immutable"
+            :content="props.input"
+            @update:content="(v) => emits('update:input', v)"
+          />
         </NCard>
         <NCard
           title="Expect"
@@ -71,7 +76,11 @@ function run(e: MouseEvent): void {
           content-style="padding: 0;"
           header-style="padding:0; text-align: center;"
         >
-          <TextBox :editable="true" :content="props.expect" @update:content="(v) => emits('update:expect', v)" />
+          <TextBox
+            :editable="!props.immutable"
+            :content="props.expect"
+            @update:content="(v) => emits('update:expect', v)"
+          />
         </NCard>
         <NCard
           title="Actual"

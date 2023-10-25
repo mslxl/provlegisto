@@ -29,7 +29,7 @@ bus.$on("menu:compile", () => {
     })
   })
 })
-bus.$on("emnu:runDetached", () => {
+bus.$on("menu:runDetached", () => {
   const cur = editorStore.currentEditorValue!
   notify.info({
     title: "Start Compile",

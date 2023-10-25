@@ -14,7 +14,7 @@ pub fn apply_win_flags(command: &mut Command, flag: u32) -> &mut Command {
     command
 }
 pub fn resolve_exe_or_elf_str(path: &str) -> String {
-    if cfg!(window) {
+    if cfg!(windows) {
         if path.ends_with(".exe") {
             path.to_owned()
         } else {

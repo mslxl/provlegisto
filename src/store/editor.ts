@@ -78,16 +78,26 @@ export const useEditorStore = defineStore("editor", {
     addTestcase(id: string) {
       this.$patch((state) => {
         const v = state.editors.get(id)!
-        v.testcase.push({ input: "", output: "" })
+        v.testcase.push({ multable: true, input: "", output: "" })
       })
     },
   },
 })
 
-interface Testcase {
+interface UserTestcase {
+  multable: true
   input: string
   output: string
 }
+interface ExternalTestcase {
+  multable: false
+  inputFlie: string
+  inputOverview: string
+  outputFile: string
+  outputOverview: string
+}
+
+export type Testcase = UserTestcase | ExternalTestcase
 
 interface EditorState {
   indexSort: number

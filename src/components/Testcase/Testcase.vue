@@ -19,7 +19,7 @@ const editorStore = useEditorStore()
 const state = editorStore.editors.get(props.codeId)!
 
 interface Testdata {
-  output: string
+  outputOverview: string
   status: "accpeted" | "rejected" | "untested" | "testing"
   label?: string
 }
@@ -31,7 +31,7 @@ const taskSucceed = ref(true)
 const tasks = ref<Testdata[]>([])
 watch(editorStore, () => {
   while (tasks.value.length < state.testcase.length) {
-    tasks.value.push({ output: "", status: "untested" })
+    tasks.value.push({ outputOverview: "", status: "untested" })
   }
 })
 
@@ -56,24 +56,38 @@ async function runAll(): Promise<void> {
 }
 
 async function runTest(testcaseIndex: number): Promise<boolean> {
-  tasks.value[testcaseIndex].label = "Running"
-  tasks.value[testcaseIndex].status = "testing"
-  tasks.value[testcaseIndex].output = ""
-  const inputFile = await saveToTempfile(state.testcase[testcaseIndex].input, "in")
-  const answerFile = await saveToTempfile(state.testcase[testcaseIndex].output, "ans")
+  const taskValue = tasks.value[testcaseIndex]
+  taskValue.label = "Running"
+  taskValue.status = "testing"
+  taskValue.outputOverview = ""
+
+  const testcase = state.testcase[testcaseIndex]
+  const { inputFile, answerFile } = testcase.multable
+    ? {
+        inputFile: await saveToTempfile(testcase.input, "in"),
+        answerFile: await saveToTempfile(testcase.output, "ans"),
+      }
+    : {
+        inputFile: testcase.inputFlie,
+        answerFile: testcase.outputFile,
+      }
+
   try {
     const runCodeRes = await runCode(state.mode, state.code, [], inputFile, 3000)
     if (runCodeRes.status === ExecuatorStatus.PASS) {
       const outputFile = runCodeRes.output!
       const checkerMessage = await runChecker(checker.value, inputFile, outputFile, answerFile)
-      const ouf = await fs.readTextFile(outputFile)
-      tasks.value[testcaseIndex].output = ouf
-      tasks.value[testcaseIndex].status = checkerMessage.status === CheckStatus.AC ? "accpeted" : "rejected"
-      tasks.value[testcaseIndex].label = checkerMessage.status
+      let ouf = await fs.readTextFile(outputFile)
+      if (ouf.length > 1000) {
+        ouf = ouf.substring(0, 1000)
+      }
+      taskValue.outputOverview = ouf
+      taskValue.status = checkerMessage.status === CheckStatus.AC ? "accpeted" : "rejected"
+      taskValue.label = checkerMessage.status
       return true
     } else {
-      tasks.value[testcaseIndex].status = "rejected"
-      tasks.value[testcaseIndex].label = runCodeRes.status
+      taskValue.status = "rejected"
+      taskValue.label = runCodeRes.status
       return false
     }
   } catch (e: any) {
@@ -81,8 +95,8 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
     // maybe is UKE or RE
     console.error(e.toString())
     notify.error({ title: "Error", content: e.toString() })
-    tasks.value[testcaseIndex].status = "rejected"
-    tasks.value[testcaseIndex].label = "UKE"
+    taskValue.status = "rejected"
+    taskValue.label = "UKE"
     return false
   }
 }
@@ -104,19 +118,32 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
         <NButton type="primary" :disabled="running" @click="runAll"> Run All </NButton>
       </NButtonGroup>
       <NCollapse arrow-placement="right">
-        <TestcaseItem
-          v-for="(testcase, index) of state.testcase"
-          :code-id="props.codeId"
-          :key="index"
-          :index="index"
-          :status="tasks[index].status"
-          :running="tasks[index].status == 'testing'"
-          :label="tasks[index].label"
-          v-model:input="testcase.input"
-          v-model:expect="testcase.output"
-          v-model:actual="tasks[index].output"
-          @on-run="runTest(index)"
-        />
+        <template v-for="(testcase, index) of state.testcase" :key="index">
+          <TestcaseItem
+            v-if="testcase.multable"
+            :code-id="props.codeId"
+            :index="index"
+            :status="tasks[index].status"
+            :running="tasks[index].status == 'testing'"
+            :label="tasks[index].label"
+            v-model:input="testcase.input"
+            v-model:expect="testcase.output"
+            v-model:actual="tasks[index].outputOverview"
+            @on-run="runTest(index)"
+          />
+          <TestcaseItem
+            v-else
+            :code-id="props.codeId"
+            :index="index"
+            :status="tasks[index].status"
+            :running="tasks[index].status == 'testing'"
+            :label="tasks[index].label"
+            :input="testcase.inputOverview"
+            :expect="testcase.outputOverview"
+            v-model:actual="tasks[index].outputOverview"
+            @on-run="runTest(index)"
+          />
+        </template>
       </NCollapse>
     </div>
   </div>

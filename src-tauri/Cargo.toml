@@ -14,7 +14,7 @@ tauri-build = { version = "1.4", features = [] }
 
 [dependencies]
 futures-util = { version = "0.3.28", features = ["sink", "std"] }
-tauri = { version = "1.4", features = [ "window-all", "dialog-all", "fs-all", "shell-open"] }
+tauri = { version = "1.4", features = [ "path-all", "window-all", "dialog-all", "fs-all", "shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.32.0", features = ["full"] }

@@ -1,30 +1,23 @@
 import { invoke } from "@tauri-apps/api"
+import { type SettingsState } from "../store/settings"
 
-export async function compileFile(language: string, src: string, args: string[]): Promise<string> {
+export async function compileFile(language: string, src: string, settings: SettingsState): Promise<string> {
   return await invoke("cp_compile_src", {
     src: {
       lang: language,
       src,
     },
-    compileArgs: args,
+    settings,
   })
 }
 
-interface RunDetachedOption {
-  terminalProgram: string
-  terminalArguments: string[]
-}
-
-export async function runDetached(language: string, src: string, option: RunDetachedOption): Promise<string> {
+export async function runDetached(language: string, src: string, settings: SettingsState): Promise<string> {
   return await invoke("cp_run_detached_src", {
     src: {
       lang: language,
       src,
     },
-    option: {
-      terminal_program: option.terminalProgram,
-      terminal_arguments: option.terminalArguments,
-    },
+    settings,
   })
 }
 
@@ -49,8 +42,8 @@ export enum ExecuatorStatus {
 export async function runCode(
   language: string,
   src: string,
-  args: string[],
   inputFile: string,
+  settings: SettingsState,
   timeLimits?: number,
 ): Promise<RunCodeMessage> {
   const outputFile = await invoke<RunCodeMessage>("cp_compile_run_src", {
@@ -58,7 +51,7 @@ export async function runCode(
       lang: language,
       src,
     },
-    compileArgs: args,
+    settings,
     inputFile,
     timeLimits,
   })
@@ -76,7 +69,14 @@ export async function runChecker(
   inputFile: string,
   outputFile: string,
   answerFile: string,
+  settings: SettingsState,
 ): Promise<CheckerMessage> {
-  const checkerMessage = await invoke<CheckerMessage>("cp_run_checker", { checker, inputFile, outputFile, answerFile })
+  const checkerMessage = await invoke<CheckerMessage>("cp_run_checker", {
+    checker,
+    inputFile,
+    outputFile,
+    answerFile,
+    settings,
+  })
   return checkerMessage
 }

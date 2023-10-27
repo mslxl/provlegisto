@@ -25,6 +25,7 @@ regex = "1.9.5"
 tempfile = "3.8.0"
 sha256 = "1.4.0"
 rand = "0.8.5"
+dunce = "1.0.4"
 
 
 [features]

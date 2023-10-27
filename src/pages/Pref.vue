@@ -8,6 +8,7 @@ import PrefAppearance from "../components/pref/Appearance.vue"
 import PrefExecuate from "../components/pref/Execuate.vue"
 import PrefKeymap from "../components/pref/Keymap.vue"
 import PrefTestcase from "../components/pref/Testcase.vue"
+import PrefLangC from "../components/pref/LangC.vue"
 
 useDocumentTitle("Preference")
 
@@ -59,6 +60,7 @@ const menuOption: MenuOption[] = [
         <PrefExecuate v-else-if="activeMenu == 'editor.exec'" />
         <PrefKeymap v-else-if="activeMenu == 'editor.keymap'" />
         <PrefTestcase v-else-if="activeMenu == 'editor.testcase'" />
+        <PrefLangC v-else-if="activeMenu == 'language.cxx'" />
       </NList>
     </NLayoutContent>
   </NLayout>

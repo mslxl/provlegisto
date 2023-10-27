@@ -28,13 +28,6 @@ impl LSPState {
 /// If target_ip is none, it will start local lsp adpater
 /// Or it will try to connect remote lsp adapter via UDP tunnel(if exists)
 #[tauri::command]
-pub async fn start_lsp_adapter(
-    state: tauri::State<'_, LSPState>,
-    target_ip: Option<String>,
-) -> Result<u16, String> {
-    if let Some(target_ip) = target_ip {
-        unimplemented!()
-    } else {
-        state.start_local().await
-    }
+pub async fn start_lsp_adapter(state: tauri::State<'_, LSPState>) -> Result<u16, String> {
+    state.start_local().await
 }

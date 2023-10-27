@@ -5,7 +5,7 @@ import { createApp } from "vue"
 
 import App from "./App.vue"
 import router from "./router"
-import { createPresistedPinia } from "./lib/presistedPinia"
+import { createPresistedPinia } from "./lib/presistedSettings"
 ;(async () => {
   const app = createApp(App)
   const pinia = await createPresistedPinia()

@@ -1,4 +1,5 @@
 import { defineStore } from "pinia"
+import { syncPreferenceToLocal } from "../lib/syncPref"
 
 export interface SettingsState {
   theme: string
@@ -10,6 +11,9 @@ export interface SettingsState {
   testcaseInputFormat: string
   testcaseOutputFormat: string
   testcaseDatabaseFormat: string
+  cxxCompilerProgram: string
+  cxxCompilerArguments: string[]
+  clangdProgram: string
   menubarStyle: "native" | "zen"
   terminalProgram: string
   terminalArguments: string[]
@@ -26,10 +30,18 @@ export const useSettingStore = defineStore("settings", {
       testcaseInputFormat: "{name}_{index}.in",
       testcaseOutputFormat: "{name}_{index}.out",
       testcaseDatabaseFormat: "{name}.db",
+      cxxCompilerProgram: "g++",
+      cxxCompilerArguments: ["-Wall", "-O2", "-std=c++17"],
+      clangdProgram: "clangd",
       cursorKeymap: "none",
       menubarStyle: "native",
       terminalProgram: "",
       terminalArguments: [],
     }
+  },
+  actions: {
+    async syncToLocal() {
+      await syncPreferenceToLocal(this.$state)
+    },
   },
 })

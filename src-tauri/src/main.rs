@@ -10,7 +10,7 @@ use tauri::Manager;
 mod cp;
 mod lsp;
 mod platform;
-mod presist;
+mod settings;
 
 pub struct AppCache {
     dir: PathBuf,
@@ -62,8 +62,8 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             lsp::start_lsp_adapter,
-            presist::get_presist_item,
-            presist::set_presist_item,
+            settings::get_presist_settings,
+            settings::set_presist_settings,
             cp::cmd::cp_compile_src,
             cp::cmd::cp_run_detached_src,
             cp::cmd::cp_compile_run_src,

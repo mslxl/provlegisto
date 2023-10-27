@@ -3,9 +3,7 @@ mod gcc_provider;
 
 use tempfile::tempdir;
 
-use crate::AppCache;
-
-use self::cmd::CPRunDetachedOption;
+use crate::{settings::Settings, AppCache};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct UserSourceFile {
@@ -26,31 +24,32 @@ pub trait CompilerCaller: Sync + Send {
     /// Or return error message if failed
     async fn compile_file(
         &self,
+        settings: &Settings,
         app_cache: &AppCache,
         path: &str,
-        args: Vec<String>,
     ) -> Result<String, String>;
     async fn compile_code(
         &self,
+        settings: &Settings,
         app_cache: &AppCache,
         code: &str,
-        args: Vec<String>,
     ) -> Result<String, String> {
         let tmp_dir = tempdir().unwrap();
         let code_file = tmp_dir.path().join(format!("code.{}", self.ext()));
         tokio::fs::write(&code_file, code)
             .await
             .map_err(|e| e.to_string())?;
-        self.compile_file(app_cache, code_file.to_str().unwrap(), args)
+        self.compile_file(settings, app_cache, code_file.to_str().unwrap())
             .await
     }
 }
 
 #[async_trait::async_trait]
 pub trait ExecuatorCaller: Sync + Send {
-    fn run_detached(&self, prov_run_prog: &str, target: &str, option: CPRunDetachedOption);
+    fn run_detached(&self, settings: &Settings, prov_run_prog: &str, target: &str);
     async fn run(
         &self,
+        settings: &Settings,
         target: &str,
         input_from: &str,
         output_to: &str,

@@ -5,6 +5,7 @@ use tokio::process::Command;
 
 use crate::{
     platform::{self, apply_win_flags},
+    settings::Settings,
     AppCache,
 };
 
@@ -16,8 +17,8 @@ use super::{
 #[tauri::command]
 pub async fn cp_compile_src(
     cache: tauri::State<'_, AppCache>,
+    settings: Settings,
     src: UserSourceCode,
-    compile_args: Vec<String>,
 ) -> Result<String, String> {
     // 获取需要的编译器
     let provider = LanguageRegister
@@ -38,7 +39,7 @@ pub async fn cp_compile_src(
             .map_err(|e| e.to_string())?;
         provider
             .compiler()
-            .compile_file(&cache, src_filename, compile_args)
+            .compile_file(&settings, &cache, src_filename)
             .await?
     } else {
         target_file.to_str().unwrap().to_owned()
@@ -48,33 +49,28 @@ pub async fn cp_compile_src(
     Ok(target_filename.to_owned())
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct CPRunDetachedOption {
-    pub terminal_program: String,
-    pub terminal_arguments: Vec<String>,
-}
-
 #[tauri::command]
 pub async fn cp_run_detached_src<R: Runtime>(
     app: tauri::AppHandle<R>,
     cache: tauri::State<'_, AppCache>,
+    settings: Settings,
     src: UserSourceCode,
-    option: CPRunDetachedOption,
 ) -> Result<(), String> {
-    let prov_run_prog = app
-        .path_resolver()
-        .resolve_resource(platform::resolve_exe_or_elf_str("bin/prov_console_run"))
-        .expect("failed to resolve bin/prov_console_run binary");
+    let prov_run_prog = dunce::canonicalize(
+        app.path_resolver()
+            .resolve_resource(platform::resolve_exe_or_elf_str("bin/prov_console_run"))
+            .ok_or("failed to resolve bin/prov_console_run binary")?,
+    )
+    .map_err(|e| e.to_string())?;
 
     let provider = LanguageRegister
         .get(&src.lang)
         .ok_or_else(|| String::from("Language is unsupported"))?;
 
-    // TODO: compile_args
-    let exe = cp_compile_src(cache, src, Vec::new()).await?;
+    let exe = cp_compile_src(cache, settings.clone(), src).await?;
     provider
         .executaor()
-        .run_detached(prov_run_prog.to_str().unwrap(), &exe, option);
+        .run_detached(&settings, prov_run_prog.to_str().unwrap(), &exe);
     Ok(())
 }
 
@@ -84,9 +80,9 @@ pub async fn cp_run_detached_src<R: Runtime>(
 #[tauri::command]
 pub async fn cp_compile_run_src(
     cache: tauri::State<'_, AppCache>,
+    settings: Settings,
     src: UserSourceCode,
     time_limits: Option<u64>,
-    compile_args: Vec<String>,
     input_file: &str,
 ) -> Result<ExecuatorMessage, String> {
     let provider = LanguageRegister
@@ -96,7 +92,7 @@ pub async fn cp_compile_run_src(
     let output_pathbuf = cache.file(Some("out"));
     let output_file = output_pathbuf.to_str().unwrap().to_owned();
 
-    let exe = cp_compile_src(cache, src, compile_args).await;
+    let exe = cp_compile_src(cache, settings.clone(), src).await;
     if exe.is_err() {
         return Ok(ExecuatorMessage::new(
             ExecuatorStatus::CE,
@@ -109,7 +105,13 @@ pub async fn cp_compile_run_src(
 
     let execuator_res = provider
         .executaor()
-        .run(&exe.unwrap(), input_file, &output_file, time_limits)
+        .run(
+            &settings,
+            &exe.unwrap(),
+            input_file,
+            &output_file,
+            time_limits,
+        )
         .await;
     if let Err(err) = execuator_res {
         Ok(ExecuatorMessage {
@@ -130,6 +132,7 @@ pub async fn cp_compile_run_src(
 pub async fn cp_run_checker<R: Runtime>(
     app: tauri::AppHandle<R>,
     cache: tauri::State<'_, AppCache>,
+    settings: Settings,
     checker: String,
     input_file: String,
     output_file: String,

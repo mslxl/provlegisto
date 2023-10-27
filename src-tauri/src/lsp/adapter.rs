@@ -35,7 +35,7 @@ impl LSPAdpaterT for LocalLSPAdapter {
         let tcp = TcpListener::bind(format!("127.0.0.1:{}", 0)).await.unwrap();
 
         let tcp_port = tcp.local_addr().unwrap().port();
-        dbg!("Local LSP Adapter started on port {}", tcp_port);
+        println!("LSP Adapter started on port {}", tcp_port);
 
         let handle = tokio::spawn(async move {
             let extract_info_regex = Regex::new(r"/(\w+?)/(\w+)").unwrap();

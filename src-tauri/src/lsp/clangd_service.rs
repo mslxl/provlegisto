@@ -9,7 +9,10 @@ use tokio::{
 };
 use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
 
-use crate::platform::{self, apply_win_flags};
+use crate::{
+    platform::{self, apply_win_flags},
+    settings::GLOBAL_SETTINGS,
+};
 
 use super::service::{LSPService, LSPServiceBuilder};
 
@@ -25,7 +28,15 @@ pub struct ClangdService;
 impl LSPService for ClangdService {
     async fn is_available(&self) -> Result<bool, String> {
         let proc = apply_win_flags(
-            Command::new("clangd").args(["--version"]),
+            Command::new(
+                &GLOBAL_SETTINGS
+                    .read()
+                    .await
+                    .as_ref()
+                    .unwrap()
+                    .clangd_program,
+            )
+            .args(["--version"]),
             platform::CREATE_NO_WINDOW,
         )
         .spawn()
@@ -36,16 +47,23 @@ impl LSPService for ClangdService {
     async fn init(&mut self) {}
     async fn accept(&mut self, ws: WebSocketStream<TcpStream>) {
         let proc = apply_win_flags(
-            Command::new("clangd")
-                .args([
-                    "--pch-storage=memory",
-                    "--clang-tidy",
-                    "--header-insertion=iwyu",
-                    "--completion-style=detailed",
-                ])
-                .stdin(Stdio::piped())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::null()),
+            Command::new(
+                &GLOBAL_SETTINGS
+                    .read()
+                    .await
+                    .as_ref()
+                    .unwrap()
+                    .clangd_program,
+            )
+            .args([
+                "--pch-storage=memory",
+                "--clang-tidy",
+                "--header-insertion=iwyu",
+                "--completion-style=detailed",
+            ])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null()),
             platform::CREATE_NO_WINDOW,
         )
         .spawn()

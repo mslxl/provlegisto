@@ -4,16 +4,16 @@ use futures_util::TryFutureExt;
 use tokio::{
     fs::File,
     io::{AsyncReadExt, BufReader},
+    process::Command,
 };
 
 use crate::{
     platform::{self, apply_win_flags},
+    settings::Settings,
     AppCache,
 };
 
-use super::{
-    cmd::CPRunDetachedOption, CompilerCaller, ExecuatorCaller, ExecuatorStatus, LanguageProvider,
-};
+use super::{CompilerCaller, ExecuatorCaller, ExecuatorStatus, LanguageProvider};
 
 pub struct GccCompiler;
 #[async_trait::async_trait]
@@ -24,18 +24,18 @@ impl CompilerCaller for GccCompiler {
 
     async fn compile_file(
         &self,
+        settings: &Settings,
         app_cache: &AppCache,
         path: &str,
-        args: Vec<String>,
     ) -> Result<String, String> {
         let output_filepath = app_cache.file_with_name(&sha256::try_digest(path).unwrap());
         let output = output_filepath.to_str().unwrap().to_owned();
 
         let mut proc = apply_win_flags(
-            tokio::process::Command::new("g++")
+            tokio::process::Command::new(&settings.cxx_compiler_program)
                 .arg(path)
                 .args(["-o", &output])
-                .args(&args)
+                .args(&settings.cxx_compiler_arguments)
                 .stderr(Stdio::piped())
                 .stdout(Stdio::piped()),
             platform::CREATE_NO_WINDOW,
@@ -58,17 +58,24 @@ pub struct ExeExecuator;
 
 #[async_trait::async_trait]
 impl ExecuatorCaller for ExeExecuator {
-    fn run_detached(&self, prov_run_prog: &str, target: &str, mut option: CPRunDetachedOption) {
-        option.terminal_arguments.push(String::from(prov_run_prog));
-        option.terminal_arguments.push(String::from(target));
-        std::process::Command::new(option.terminal_program)
-            .args(&option.terminal_arguments)
+    fn run_detached(&self, settings: &Settings, prov_run_prog: &str, target: &str) {
+        let (term, args) = if settings.terminal_program.is_empty() {
+            (prov_run_prog, vec![target.to_owned()])
+        } else {
+            let mut args = settings.terminal_arguments.clone();
+            args.push(String::from(prov_run_prog));
+            args.push(String::from(target));
+            (settings.terminal_program.as_str(), args)
+        };
+
+        platform::apply_win_flags(Command::new(term).args(&args), platform::CREATE_NEW_CONSOLE)
             .spawn()
             .unwrap();
     }
 
     async fn run(
         &self,
+        _settings: &Settings,
         target: &str,
         input_from: &str,
         output_to: &str,

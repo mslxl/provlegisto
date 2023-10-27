@@ -22,7 +22,7 @@ const sideWith = ref(450)
 bus.$on("menu:compile", () => {
   const cur = editorStore.currentEditorValue!
   bus.emit("notify:info", { title: "Start Compile" })
-  compileFile(cur.mode, cur.code, []).catch((e) => {
+  compileFile(cur.mode, cur.code, settingsStore).catch((e) => {
     notify.error({
       title: "Compile Error",
       content: e,

@@ -1,10 +1,12 @@
 use std::{fs, path::PathBuf, process::Command};
 
 fn gcc_compile(file: &str) {
-    if PathBuf::from(format!("bin/{}.exe", file)).exists() {
+    if (cfg!(windows) && PathBuf::from(format!("bin/{}.exe", file)).exists())
+        || (cfg!(not(windows)) && PathBuf::from(format!("bin/{}", file)).exists())
+    {
         return;
     }
-    Command::new("g++")
+    let status = Command::new("g++")
         .args([
             "-O2",
             &format!("bin_src/{}.cpp", file),
@@ -15,6 +17,7 @@ fn gcc_compile(file: &str) {
         .expect("fail to spawn g++")
         .wait()
         .expect("g++ compile file");
+    assert!(status.success());
 }
 
 fn main() {

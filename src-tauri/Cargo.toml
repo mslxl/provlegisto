@@ -1,10 +1,10 @@
 [package]
 name = "provlegisto"
-version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+version = "0.0.1"
+description = "A simple IDE for ACMer/OIer"
+authors = ["mslxl"]
+license = "agpl3"
+repository = "https://github.com/sdufeACM/provlegisto/"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -14,7 +14,13 @@ tauri-build = { version = "1.4", features = [] }
 
 [dependencies]
 futures-util = { version = "0.3.28", features = ["sink", "std"] }
-tauri = { version = "1.4", features = [ "path-all", "window-all", "dialog-all", "fs-all", "shell-open"] }
+tauri = { version = "1.4", features = [
+  "path-all",
+  "window-all",
+  "dialog-all",
+  "fs-all",
+  "shell-open",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.32.0", features = ["full"] }

@@ -7,8 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "provlegisto",
-    "version": "0.0.0"
+    "productName": "provlegisto"
   },
   "tauri": {
     "allowlist": {

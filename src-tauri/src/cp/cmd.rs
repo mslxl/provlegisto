@@ -56,10 +56,10 @@ pub async fn cp_run_detached_src<R: Runtime>(
     settings: Settings,
     src: UserSourceCode,
 ) -> Result<(), String> {
-    let prov_run_prog = dunce::canonicalize(
+    let consolepauser = dunce::canonicalize(
         app.path_resolver()
-            .resolve_resource(platform::resolve_exe_or_elf_str("bin/prov_console_run"))
-            .ok_or("failed to resolve bin/prov_console_run binary")?,
+            .resolve_resource(platform::resolve_exe_or_elf_str("bin/consolepauser"))
+            .ok_or("failed to resolve bin/consolepauser binary file")?,
     )
     .map_err(|e| e.to_string())?;
 
@@ -70,7 +70,7 @@ pub async fn cp_run_detached_src<R: Runtime>(
     let exe = cp_compile_src(cache, settings.clone(), src).await?;
     provider
         .executaor()
-        .run_detached(&settings, prov_run_prog.to_str().unwrap(), &exe);
+        .run_detached(&settings, consolepauser.to_str().unwrap(), &exe);
     Ok(())
 }
 

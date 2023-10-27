@@ -46,7 +46,7 @@ pub trait CompilerCaller: Sync + Send {
 
 #[async_trait::async_trait]
 pub trait ExecuatorCaller: Sync + Send {
-    fn run_detached(&self, settings: &Settings, prov_run_prog: &str, target: &str);
+    fn run_detached(&self, settings: &Settings, consolepauser: &str, target: &str);
     async fn run(
         &self,
         settings: &Settings,

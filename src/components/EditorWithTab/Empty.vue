@@ -7,7 +7,7 @@ const props = defineProps<Props>()
 </script>
 
 <template>
-  <NEmpty v-if="props.empty" size="large" description="英仙座 写点什么吧" class="empty-panel">
+  <NEmpty v-if="props.empty" size="large" description="Empty" class="empty-panel">
     <template #extra>
       <slot name="extra" />
     </template>

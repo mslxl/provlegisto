@@ -50,11 +50,11 @@ const cmd = [
         type: "menuItem",
         command: "compile",
       },
-      {
-        name: "Run",
-        type: "menuItem",
-        command: "run",
-      },
+      // {
+      //   name: "Run",
+      //   type: "menuItem",
+      //   command: "run",
+      // },
       {
         name: "Run detached",
         type: "menuItem",

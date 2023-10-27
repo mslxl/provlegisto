@@ -104,8 +104,8 @@ async function closeEditor(targetName: string): Promise<void> {
     </template>
     <template #extra>
       <NButtonGroup>
-        <NButton size="small" @click="addNewEditor"> 独自上号 </NButton>
-        <NButton size="small"> 组团开黑 </NButton>
+        <NButton size="small" @click="addNewEditor"> 创建新文件 </NButton>
+        <!-- <NButton size="small"> 组团开黑 </NButton> -->
       </NButtonGroup>
     </template>
   </EmptyTabPane>

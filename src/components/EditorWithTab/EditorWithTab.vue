@@ -22,10 +22,10 @@ const sideWith = ref(450)
 bus.$on("menu:compile", () => {
   const cur = editorStore.currentEditorValue!
   bus.emit("notify:info", { title: "Start Compile" })
-  compileFile(cur.mode, cur.code, settingsStore).catch((e) => {
+  compileFile(cur.mode, cur.code, settingsStore.$state).catch((e) => {
     notify.error({
       title: "Compile Error",
-      content: e,
+      content: e.toString(),
     })
   })
 })
@@ -35,10 +35,10 @@ bus.$on("menu:runDetached", () => {
     title: "Start Compile",
     content: "",
   })
-  runDetached(cur.mode, cur.code, settingsStore).catch((e) => {
+  runDetached(cur.mode, cur.code, settingsStore.$state).catch((e) => {
     notify.error({
       title: "Compile Error",
-      content: e,
+      content: e.toString(),
     })
   })
 })

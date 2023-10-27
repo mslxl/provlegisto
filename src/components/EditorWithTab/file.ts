@@ -36,7 +36,7 @@ async function menuFileOpen(): Promise<void> {
   editorStore.create(id, mode ?? Mode.cpp)
 
   // 读测试样例
-  const testcases = await readTestcases(file, settingsStore)
+  const testcases = await readTestcases(file, settingsStore.$state)
 
   editorStore.$patch((state) => {
     const e = state.editors.get(id)!

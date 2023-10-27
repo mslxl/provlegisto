@@ -75,10 +75,10 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
       }
 
   try {
-    const runCodeRes = await runCode(state.mode, state.code, inputFile, settingsStore, 3000)
+    const runCodeRes = await runCode(state.mode, state.code, inputFile, settingsStore.$state, 3000)
     if (runCodeRes.status === ExecuatorStatus.PASS) {
       const outputFile = runCodeRes.output!
-      const checkerMessage = await runChecker(checker.value, inputFile, outputFile, answerFile, settingsStore)
+      const checkerMessage = await runChecker(checker.value, inputFile, outputFile, answerFile, settingsStore.$state)
       let ouf = await fs.readTextFile(outputFile)
       if (ouf.length > 1000) {
         ouf = ouf.substring(0, 1000)

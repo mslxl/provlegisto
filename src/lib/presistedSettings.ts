@@ -11,7 +11,7 @@ async function setPresistItem(name: string, value: string): Promise<void> {
 }
 
 // Reference: https://github.com/prazdevs/pinia-plugin-persistedstate/issues/214#issuecomment-1605923720
-export async function createPresistedPinia(): Promise<Pinia> {
+export async function createPresistedSettings(): Promise<Pinia> {
   const pinia = createPinia()
 
   async function recoverStore(): Promise<void> {
@@ -23,6 +23,8 @@ export async function createPresistedPinia(): Promise<Pinia> {
         console.log(data)
         if (data !== null) {
           store.$patch(JSON.parse(data))
+        } else {
+          setPresistItem(store.$id, JSON.stringify(store.$state)).catch(console.error)
         }
 
         /// 仅由主窗口写配置

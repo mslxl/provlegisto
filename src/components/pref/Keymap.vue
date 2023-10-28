@@ -4,7 +4,7 @@ import { useSettingStore } from "../../store/settings"
 import { syncPreferenceCrossWindows } from "../../lib/syncPref"
 const store = useSettingStore()
 function sync(): void {
-  syncPreferenceCrossWindows(store).catch(console.error)
+  syncPreferenceCrossWindows(store.$state).catch(console.error)
 }
 
 const cursorKeymapOptions = [

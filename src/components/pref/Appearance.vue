@@ -16,7 +16,7 @@ const themeOptions = map(
   keys(themes),
 )
 function sync(): void {
-  syncPreferenceCrossWindows(store).catch(console.error)
+  syncPreferenceCrossWindows(store.$state).catch(console.error)
 }
 </script>
 <template>

@@ -33,7 +33,7 @@ let codemirror: EditorView
 
 function updateFont(): void {
   const style: any = {
-    fontSize: `${settingsStore.fontSize}px`,
+    fontSize: `${settingsStore.fontSize}pt`,
   }
   if (settingsStore.fontFamily.trim().length !== 0) {
     style.fontFamily = filterCSSQuote(settingsStore.fontFamily.trim())

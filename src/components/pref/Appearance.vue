@@ -21,7 +21,7 @@ const themeOptions = map(
   <Number
     title="Font Size"
     global-event="font-size"
-    suffix="px"
+    suffix="pt"
     :min="1"
     :step="1"
     v-model:value="store.fontSize"

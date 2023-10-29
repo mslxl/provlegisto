@@ -23,8 +23,7 @@ export const useSettingStore = defineStore("settings", {
     return {
       theme: "githubLight",
       fontSize: 12,
-      fontFamily:
-        'v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+      fontFamily: '"Fira Code", system-ui, -apple-system',
       zoom: 100,
       testcaseStorageMethod: "text",
       testcaseInputFormat: "{name}_{index}.in",

@@ -2,7 +2,7 @@
 import { ref, watch } from "vue"
 import TestcaseItem from "./TestcaseItem.vue"
 import { NButton, NButtonGroup, NCollapse, NProgress } from "naive-ui"
-import { CheckStatus, ExecuatorStatus, runChecker, runCode } from "../../lib/cp"
+import { CheckStatus, ExecuatorStatus, runChecker, runCode } from "../../lib/compiler"
 import { saveToTempfile } from "../../lib/tempfile"
 import { fs } from "@tauri-apps/api"
 import { all, identity, map, range } from "ramda"
@@ -178,4 +178,4 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
   }
 }
 </style>
-../../store/tab
+../../store/tab ../../lib/compiler

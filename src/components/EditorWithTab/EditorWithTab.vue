@@ -9,7 +9,7 @@ import EmptyTabPane from "./Empty.vue"
 import TestcaseBox from "../Testcase/Testcase.vue"
 import bus from "../../bus"
 import { useSettingStore } from "../../store/settings"
-import { compileFile, runDetached } from "../../lib/cp"
+import { compileFile, runDetached } from "../../lib/compiler"
 import { Mode } from "../../codemirror/mode"
 import { useTabs } from "../../store/tab"
 import * as file from "./file"
@@ -125,4 +125,4 @@ async function closeEditor(targetName: string): Promise<void> {
   }
 }
 </style>
-../../store/tab
+../../store/tab ../../lib/compiler

@@ -54,7 +54,7 @@ vector<string> GetCommand(int argc, char **argv, bool &reInp,
   int flags = atoi(argv[1]);
   reInp = flags & RPF_REDIRECT_INPUT;
   pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
-  for (int i = 3; i < argc; i++) {
+  for (int i = 2; i < argc; i++) {
     // result += string("\"") + string(argv[i]) + string("\"");
     std::string s(argv[i]);
 
@@ -153,20 +153,14 @@ int ExecuteCommand(vector<string> &command, bool reInp, long int &peakMemory) {
 }
 
 int main(int argc, char **argv) {
-  char *sharedMemoryId;
   // First make sure we aren't going to read nonexistent arrays
-  if (argc < 4) {
+  if (argc < 3) {
     printf("\n--------------------------------");
-    printf("\nUsage: consolepauser <0|1> <shared_memory_id> <filename> "
+    printf("\nUsage: consolepauser <0|1> <filename> "
            "<parameters>\n");
-    printf(
-        "\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
+    printf("\n 1 means the STDIN is redirected by provlegisto; 0 means not\n");
     PauseExit(EXIT_SUCCESS, false);
   }
-
-  // Make us look like the paused program
-  // SetConsoleTitleA(argv[3]);
-  sharedMemoryId = argv[2];
 
   bool reInp;
   bool pauseAfterExit;
@@ -177,22 +171,6 @@ int main(int argc, char **argv) {
     freopen("/dev/tty", "w+", stderr);
   } else {
     fflush(stdin);
-  }
-
-  int BUF_SIZE = 1024;
-  char *pBuf = nullptr;
-  int fd_shm = shm_open(sharedMemoryId, O_RDWR, S_IRWXU);
-  if (fd_shm == -1) {
-    // todo: handle error
-    printf("shm open failed %d:%s\n", errno, strerror(errno));
-  } else {
-    // `ftruncate` has already done in RedPandaIDE
-    pBuf = (char *)mmap(NULL, BUF_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
-                        fd_shm, 0);
-    if (pBuf == MAP_FAILED) {
-      printf("mmap failed %d:%s\n", errno, strerror(errno));
-      pBuf = nullptr;
-    }
   }
 
   // Save starting timestamp
@@ -208,14 +186,6 @@ int main(int argc, char **argv) {
   auto milliseconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(difftime);
   double seconds = milliseconds.count() / 1000.0;
-
-  if (pBuf) {
-    strcpy(pBuf, "FINISHED");
-    munmap(pBuf, BUF_SIZE);
-  }
-  if (fd_shm != -1) {
-    shm_unlink(sharedMemoryId);
-  }
 
   // Done? Print return value of executed program
   printf("\n--------------------------------");

@@ -107,7 +107,7 @@ string GetCommand(int argc, char **argv, bool &reInp, bool &pauseAfterExit,
   reInp = flags & RPF_REDIRECT_INPUT;
   pauseAfterExit = flags & RPF_PAUSE_CONSOLE;
   enableVisualTerminalSeq = flags & RPF_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-  for (int i = 3; i < argc; i++) {
+  for (int i = 2; i < argc; i++) {
     // Quote the argument in case the path name contains spaces
     result += string("\"") + string(argv[i]) + string("\"");
 
@@ -190,21 +190,17 @@ void EnableVtSequence() {
 
 int main(int argc, char **argv) {
 
-  const char *sharedMemoryId;
   // First make sure we aren't going to read nonexistent arrays
-  if (argc < 4) {
+  if (argc < 3) {
     printf("\n--------------------------------");
-    printf("\nUsage: consolepauser.exe <0|1> <shared_memory_id> <filename> "
+    printf("\nUsage: consolepauser.exe <0|1> <filename> "
            "<parameters>\n");
-    printf(
-        "\n 1 means the STDIN is redirected by Red Panda C++; 0 means not\n");
+    printf("\n 1 means the STDIN is redirected by provlegisto; 0 means not\n");
     PauseExit(EXIT_SUCCESS, false);
   }
 
   // Make us look like the paused program
-  SetConsoleTitleA(argv[3]);
-
-  sharedMemoryId = argv[2];
+  SetConsoleTitleA(argv[2]);
 
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
@@ -255,18 +251,6 @@ int main(int argc, char **argv) {
     EnableVtSequence();
   }
 
-  HANDLE hSharedMemory = INVALID_HANDLE_VALUE;
-  int BUF_SIZE = 1024;
-  char *pBuf = nullptr;
-  hSharedMemory = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, sharedMemoryId);
-  if (hSharedMemory != NULL) {
-    pBuf = (char *)MapViewOfFile(hSharedMemory,       // handle to map object
-                                 FILE_MAP_ALL_ACCESS, // read/write permission
-                                 0, 0, BUF_SIZE);
-    //    } else {
-    //        printf("can't open shared memory!\n");
-  }
-
   // Save starting timestamp
   LONGLONG starttime = GetClockTick();
 
@@ -279,14 +263,6 @@ int main(int argc, char **argv) {
   LONGLONG endtime = GetClockTick();
   double seconds = (endtime - starttime) / (double)GetClockFrequency();
   double execSeconds = (double)execTime / 10000;
-
-  if (pBuf) {
-    strcpy(pBuf, "FINISHED");
-    UnmapViewOfFile(pBuf);
-  }
-  if (hSharedMemory != NULL && hSharedMemory != INVALID_HANDLE_VALUE) {
-    CloseHandle(hSharedMemory);
-  }
 
   // Done? Print return value of executed program
   printf("\n--------------------------------");

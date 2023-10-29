@@ -6,7 +6,6 @@ use tokio::{
     io::{AsyncReadExt, BufReader},
     process::Command,
 };
-use uuid::Uuid;
 
 use crate::{
     platform::{self, apply_win_flags},
@@ -60,15 +59,16 @@ pub struct ExeExecuator;
 #[async_trait::async_trait]
 impl ExecuatorCaller for ExeExecuator {
     fn run_detached(&self, settings: &Settings, consolepauser: &str, target: &str) {
-        let mut consolepauser_args = vec![String::from("1"), Uuid::new_v4().to_string()];
+        let mut consolepauser_args = vec![String::from("1")];
         let (term, args) = if settings.terminal_program.is_empty() {
             consolepauser_args.push(target.to_owned());
             (consolepauser, consolepauser_args)
         } else {
-            consolepauser_args.append(&mut settings.terminal_arguments.clone());
-            consolepauser_args.push(String::from(consolepauser));
-            consolepauser_args.push(String::from(target));
-            (settings.terminal_program.as_str(), consolepauser_args)
+            let mut terminal_arguments = settings.terminal_arguments.clone();
+            terminal_arguments.push(String::from(consolepauser));
+            terminal_arguments.append(&mut consolepauser_args);
+            terminal_arguments.push(String::from(target));
+            (settings.terminal_program.as_str(), terminal_arguments)
         };
 
         platform::apply_win_flags(Command::new(term).args(&args), platform::CREATE_NEW_CONSOLE)

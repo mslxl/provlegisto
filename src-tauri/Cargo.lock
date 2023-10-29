@@ -2010,7 +2010,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-tungstenite",
- "uuid",
 ]
 
 [[package]]
@@ -3232,7 +3231,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88ad59a7560b41a70d191093a945f0b87bc1deeda46fb237479708a1d6b6cdfc"
 dependencies = [
  "getrandom 0.2.10",
- "rand 0.8.5",
 ]
 
 [[package]]

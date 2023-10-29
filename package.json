@@ -27,7 +27,7 @@
     "@codemirror/view": "^6.21.3",
     "@ddietr/codemirror-themes": "^1.4.2",
     "@fontsource/fira-code": "^5.0.15",
-    "@fontsource/noto-sans-mono": "^5.0.17",
+    "@fontsource/noto-sans": "^5.0.17",
     "@replit/codemirror-emacs": "^6.0.1",
     "@replit/codemirror-vim": "^6.0.14",
     "@tauri-apps/api": "^1.5.1",

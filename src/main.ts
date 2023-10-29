@@ -1,5 +1,5 @@
 import "normalize.css"
-import "@fontsource/noto-sans-mono"
+import "@fontsource/noto-sans"
 import "@fontsource/fira-code"
 import "./styles.scss"
 import { createApp } from "vue"

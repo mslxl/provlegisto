@@ -35,7 +35,7 @@ dependencies:
   '@fontsource/fira-code':
     specifier: ^5.0.15
     version: 5.0.15
-  '@fontsource/noto-sans-mono':
+  '@fontsource/noto-sans':
     specifier: ^5.0.17
     version: 5.0.17
   '@replit/codemirror-emacs':
@@ -873,8 +873,8 @@ packages:
     resolution: {integrity: sha512-mcQQX2Pwlbt8NwBB+kCyldYy1eLY9hsLZ3EvWf2ciVTk1rmYZ734CU9v70qs7rTXrNLYKz8+Q9b7DLEgwsKW6A==}
     dev: false
 
-  /@fontsource/noto-sans-mono@5.0.17:
-    resolution: {integrity: sha512-jzOP/feipXm9aF1HYYkjuQrmW/gLChh9oFl6v7h+646NNwMYQPkHhlx3nBSaGQbjrBiWyeTXGu2D4kOsQ0XtZQ==}
+  /@fontsource/noto-sans@5.0.17:
+    resolution: {integrity: sha512-VcnKA99cE8OgRiy6O3T6xCKirsguD5+MYrGrbBWYA3m3fqDArCr66eEvR3iuTngGLbTODJq4bzc6yfaiGZu/pQ==}
     dev: false
 
   /@humanwhocodes/config-array@0.11.13:

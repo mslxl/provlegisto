@@ -3,14 +3,14 @@ import EditorWithTab from "../../components/EditorWithTab/EditorWithTab.vue"
 import { startLanguageServerProtocolServer } from "../../lib/lsp"
 import * as notify from "../../lib/notify"
 import { useListenPreferenceChangeHook } from "../../lib/syncPref"
-import { useEditorStore } from "../../store/editor"
+import { useTabs } from "../../store/tab"
 import { useSettingStore } from "../../store/settings"
 
-const editorStore = useEditorStore()
+const tabStore = useTabs()
 
-editorStore.currentEditor = "main"
+tabStore.currentEditor = "main"
 try {
-  editorStore.lspPort = await startLanguageServerProtocolServer()
+  tabStore.lspPort = await startLanguageServerProtocolServer()
 } catch (e: any) {
   notify.error(e.toString())
 }
@@ -22,3 +22,4 @@ useListenPreferenceChangeHook(settingsStore.$patch)
 <template>
   <EditorWithTab />
 </template>
+../../store/tab

@@ -1,6 +1,6 @@
 import { fs, path } from "@tauri-apps/api"
 import { type SettingsState } from "../store/settings"
-import { type Testcase } from "../store/editor"
+import { type Testcase } from "../store/tab"
 
 export async function saveSourceCode(path: string, source: string): Promise<void> {
   await fs.writeTextFile(path, source)

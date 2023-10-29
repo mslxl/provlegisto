@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import Select from "./common/Select.vue"
 import { useSettingStore } from "../../store/settings"
-import { syncPreferenceCrossWindows } from "../../lib/syncPref"
+import sync from "./sync"
 const store = useSettingStore()
-function sync(): void {
-  syncPreferenceCrossWindows(store.$state).catch(console.error)
-}
 
 const cursorKeymapOptions = [
   {

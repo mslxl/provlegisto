@@ -5,7 +5,7 @@ import Text from "./common/Text.vue"
 import { useSettingStore } from "../../store/settings"
 import themes from "../../codemirror/themeTable"
 import { keys, map } from "ramda"
-import { syncPreferenceCrossWindows } from "../../lib/syncPref"
+import sync from "./sync"
 const store = useSettingStore()
 
 const themeOptions = map(
@@ -15,9 +15,6 @@ const themeOptions = map(
   }),
   keys(themes),
 )
-function sync(): void {
-  syncPreferenceCrossWindows(store.$state).catch(console.error)
-}
 </script>
 <template>
   <Select title="Theme" global-event="theme" :options="themeOptions" v-model:value="store.theme" @change="sync" />

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from "vue"
-import { useEditorStore } from "../../store/editor"
 import TestcaseItem from "./TestcaseItem.vue"
 import { NButton, NButtonGroup, NCollapse, NProgress } from "naive-ui"
 import { CheckStatus, ExecuatorStatus, runChecker, runCode } from "../../lib/cp"
@@ -10,14 +9,15 @@ import { all, identity, map, range } from "ramda"
 import * as notify from "../../lib/notify"
 import CheckerSelect from "./CheckerSelect.vue"
 import { useSettingStore } from "../../store/settings"
+import { useTabs } from "../../store/tab"
 
 type Props = {
   codeId: string
 }
 
 const props = defineProps<Props>()
-const editorStore = useEditorStore()
-const state = editorStore.editors.get(props.codeId)!
+const tabStore = useTabs()
+const state = tabStore.editors.get(props.codeId)!
 const settingsStore = useSettingStore()
 
 interface Testdata {
@@ -31,7 +31,7 @@ const checker = ref("res:wcmp")
 const taskCompletedCount = ref(0)
 const taskSucceed = ref(true)
 const tasks = ref<Testdata[]>([])
-watch(editorStore, () => {
+watch(tabStore, () => {
   while (tasks.value.length < state.testcase.length) {
     tasks.value.push({ outputOverview: "", status: "untested" })
   }
@@ -116,7 +116,7 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
       />
       <CheckerSelect v-model:value="checker" />
       <NButtonGroup class="button-group">
-        <NButton type="primary" @click="editorStore.addTestcase(props.codeId)"> Add </NButton>
+        <NButton type="primary" @click="tabStore.addTestcase(props.codeId)"> Add </NButton>
         <NButton type="primary" :disabled="running" @click="runAll"> Run All </NButton>
       </NButtonGroup>
       <NCollapse arrow-placement="right">
@@ -178,3 +178,4 @@ async function runTest(testcaseIndex: number): Promise<boolean> {
   }
 }
 </style>
+../../store/tab

@@ -8,9 +8,9 @@ import bus from "../../bus"
 import { Mode, setMode } from "../../codemirror/mode"
 import { setTheme } from "../../codemirror/theme"
 import { setCursorKeymap } from "../../codemirror/keymap"
-import { useEditorStore } from "../../store/editor"
-import themes from "../../codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
+import themes from "../../codemirror/themeTable"
+import { useTabs } from "../../store/tab"
 import { filterCSSQuote } from "../../lib/style"
 
 type Props = {
@@ -19,7 +19,7 @@ type Props = {
 
 const props = defineProps<Props>()
 const block = ref<Element | null>(null)
-const editorStore = useEditorStore()
+const tabStore = useTabs()
 const settingsStore = useSettingStore()
 
 const languageCompartment = new Compartment()
@@ -48,7 +48,7 @@ function updateFont(): void {
   })
 }
 
-editorStore.createIfNotExists(props.codeId, Mode.cpp)
+tabStore.createIfNotExists(props.codeId, Mode.cpp)
 
 // 编辑器主题设置更新
 // 由于该事件可能来自其他窗口，因此不能从设置项中直接读取
@@ -66,7 +66,7 @@ bus.$on("pref:cursor-keymap", () => {
 // 文件因外部修改更新
 bus.$on(`sync:code`, (id: string) => {
   if (id !== props.codeId) return
-  const state = editorStore.editors.get(props.codeId)!
+  const state = tabStore.editors.get(props.codeId)!
   // 设置语言
   setMode(state.mode, codemirror, props.codeId, languageCompartment, languageServerCompartment).catch(console.error)
   // 替换编辑器中所有内容
@@ -84,11 +84,11 @@ bus.$on(`sync:code`, (id: string) => {
 // 语言更新
 bus.$on(`modeChange:${props.codeId}`, (e) => {
   console.log(e)
-  editorStore.$patch((state) => {
+  tabStore.$patch((state) => {
     state.editors.get(props.codeId)!.mode = e as Mode
   })
   setMode(
-    editorStore.currentEditorValue!.mode,
+    tabStore.currentEditorValue!.mode,
     codemirror,
     props.codeId,
     languageCompartment,
@@ -102,7 +102,7 @@ onMounted(() => {
       basicSetup,
       EditorView.updateListener.of((v: ViewUpdate) => {
         if (!v.docChanged) return
-        editorStore.$patch((state) => {
+        tabStore.$patch((state) => {
           const editorState = state.editors.get(props.codeId)!
           editorState.code = codemirror.state.doc.toString()
           editorState.isSaved = false
@@ -125,7 +125,7 @@ onMounted(() => {
         },
       }),
     ],
-    doc: editorStore.editors.get(props.codeId)?.code ?? "",
+    doc: tabStore.editors.get(props.codeId)?.code ?? "",
     parent: block.value!,
   })
 
@@ -133,9 +133,9 @@ onMounted(() => {
   updateFont()
   setCursorKeymap(settingsStore.cursorKeymap, codemirror, cursorKeymapCompartment)
 
-  if (editorStore.editors.get(props.codeId)!.mode != null) {
+  if (tabStore.editors.get(props.codeId)!.mode != null) {
     setMode(
-      editorStore.editors.get(props.codeId)!.mode,
+      tabStore.editors.get(props.codeId)!.mode,
       codemirror,
       props.codeId,
       languageCompartment,
@@ -167,3 +167,4 @@ onUnmounted(() => {
   height: 100%;
 }
 </style>
+../../store/tab

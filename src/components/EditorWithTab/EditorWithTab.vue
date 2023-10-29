@@ -8,19 +8,19 @@ import HSplit from "../SplitPane/HSplitPane.vue"
 import EmptyTabPane from "./Empty.vue"
 import TestcaseBox from "../Testcase/Testcase.vue"
 import bus from "../../bus"
-import { useEditorStore } from "../../store/editor"
+import { useSettingStore } from "../../store/settings"
 import { compileFile, runDetached } from "../../lib/cp"
 import { Mode } from "../../codemirror/mode"
-import { useSettingStore } from "../../store/settings"
+import { useTabs } from "../../store/tab"
 import * as file from "./file"
 import * as notify from "../../lib/notify"
 
-const editorStore = useEditorStore()
+const tabsStore = useTabs()
 const settingsStore = useSettingStore()
 
 const sideWith = ref(450)
 bus.$on("menu:compile", () => {
-  const cur = editorStore.currentEditorValue!
+  const cur = tabsStore.currentEditorValue!
   bus.emit("notify:info", { title: "Start Compile" })
   compileFile(cur.mode, cur.code, settingsStore.$state).catch((e) => {
     notify.error({
@@ -30,7 +30,7 @@ bus.$on("menu:compile", () => {
   })
 })
 bus.$on("menu:runDetached", () => {
-  const cur = editorStore.currentEditorValue!
+  const cur = tabsStore.currentEditorValue!
   notify.info({
     title: "Start Compile",
     content: "",
@@ -52,18 +52,18 @@ onUnmounted(() => {
 })
 
 function addNewEditor(): void {
-  const num = editorStore.editors.size
+  const num = tabsStore.editors.size
   const id = `Unamed-${num + 1}`
-  editorStore.create(id, Mode.cpp)
+  tabsStore.create(id, Mode.cpp)
   if (num === 0) {
-    editorStore.$patch((state) => {
+    tabsStore.$patch((state) => {
       state.currentEditor = id
     })
   }
 }
 
 async function closeEditor(targetName: string): Promise<void> {
-  const editor = editorStore.editors.get(targetName)!
+  const editor = tabsStore.editors.get(targetName)!
 
   let closeConfirm = editor.isSaved
   if (!editor.isSaved) {
@@ -71,13 +71,13 @@ async function closeEditor(targetName: string): Promise<void> {
   }
 
   if (closeConfirm) {
-    editorStore.remove(targetName)
+    tabsStore.remove(targetName)
   }
 }
 </script>
 
 <template>
-  <EmptyTabPane :empty="editorStore.editors.size == 0">
+  <EmptyTabPane :empty="tabsStore.editors.size == 0">
     <template #content>
       <NTabs
         type="card"
@@ -85,12 +85,12 @@ async function closeEditor(targetName: string): Promise<void> {
         tab-style="min-width: 80px"
         class="editor-tabs"
         addable
-        :value="editorStore.currentEditor ?? undefined"
-        @update:value="(v) => (editorStore.currentEditor = v)"
+        :value="tabsStore.currentEditor ?? undefined"
+        @update:value="(v) => (tabsStore.currentEditor = v)"
         @add="addNewEditor"
         @close="closeEditor"
       >
-        <NTabPane v-for="key of editorStore.ids" class="editor-tabpane" display-directive="show" :key="key" :name="key">
+        <NTabPane v-for="key of tabsStore.ids" class="editor-tabpane" display-directive="show" :key="key" :name="key">
           <HSplit v-model:side-width="sideWith" class="editor">
             <template #main>
               <Editor :code-id="key" />
@@ -125,3 +125,4 @@ async function closeEditor(targetName: string): Promise<void> {
   }
 }
 </style>
+../../store/tab

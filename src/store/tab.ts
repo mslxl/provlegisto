@@ -8,7 +8,7 @@ interface State {
   currentEditor: string | null
 }
 
-export const useEditorStore = defineStore("editor", {
+export const useTabs = defineStore("tabs", {
   state: (): State => {
     return {
       lspPort: 0,

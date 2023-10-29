@@ -6,13 +6,18 @@ import bus from "../../bus"
 import { dialog, fs } from "@tauri-apps/api"
 import { Mode, allowExtension, getExtensionByMode, getModeByExtension } from "../../codemirror/mode"
 import { map, slice } from "ramda"
-import { type Testcase, useEditorStore } from "../../store/editor"
+import { type Testcase, useTabs } from "../../store/tab"
 import { onMounted, onUnmounted } from "vue"
-import { readTestcases, saveSourceCode, saveTextfileFromExternalFile, saveTextfileTestcase } from "../../lib/srcStore"
+import {
+  readTestcases,
+  saveSourceCode,
+  saveTextfileFromExternalFile,
+  saveTextfileTestcase,
+} from "../../lib/presistedSource"
 import { useSettingStore } from "../../store/settings"
 
 async function menuFileOpen(): Promise<void> {
-  const editorStore = useEditorStore()
+  const editorStore = useTabs()
   const settingsStore = useSettingStore()
   const userFile = await dialog.open({
     multiple: false,
@@ -66,21 +71,21 @@ async function saveMutableTestcase(sourcePath: string, testcase: Testcase[]): Pr
 }
 
 async function menuFileSave(): Promise<void> {
-  const editorStore = useEditorStore()
-  if (editorStore.currentEditorValue == null) return
-  const state = editorStore.currentEditorValue
+  const tabStore = useTabs()
+  if (tabStore.currentEditorValue == null) return
+  const state = tabStore.currentEditorValue
   if (state.path == null) {
     await menuFileSaveAs()
     return
   }
-  editorStore.$patch((state) => {
+  tabStore.$patch((state) => {
     state.editors.get(state.currentEditor!)!.isSaved = true
   })
-  await saveSourceCode(state.path, editorStore.currentEditorValue.code)
-  await saveMutableTestcase(state.path, editorStore.currentEditorValue.testcase)
+  await saveSourceCode(state.path, tabStore.currentEditorValue.code)
+  await saveMutableTestcase(state.path, tabStore.currentEditorValue.testcase)
 }
 async function menuFileSaveAs(): Promise<void> {
-  const editorStore = useEditorStore()
+  const editorStore = useTabs()
   if (editorStore.currentEditorValue == null) return
   const userFile = await dialog.save({
     filters: [

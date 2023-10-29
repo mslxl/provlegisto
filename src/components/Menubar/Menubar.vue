@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref } from "vue"
-import { useSettingStore } from "../../store/settings"
 import bus from "../../bus"
 import { reject, equals } from "ramda"
 import NativeMenubar from "./Native.vue"
 import Select from "../Popup/Select.vue"
 import { Mode } from "../../codemirror/mode"
-import { useEditorStore } from "../../store/editor"
+import { useSettingStore } from "../../store/settings"
+import { useTabs } from "../../store/tab"
 import { WebviewWindow } from "@tauri-apps/api/window"
 const settingStore = useSettingStore()
 
 const showModeModal = ref(false)
-const editorStore = useEditorStore()
+const tabStore = useTabs()
 
 bus.$on("menu:changeLanguage", () => {
   showModeModal.value = true
@@ -25,7 +25,7 @@ bus.$on("menu:preference", () => {
 })
 
 function emitModeChange(mode: string): void {
-  const id = editorStore.currentEditor!
+  const id = tabStore.currentEditor!
   bus.emit(`modeChange:${id}`, (Mode as any)[mode])
 }
 </script>
@@ -37,7 +37,7 @@ function emitModeChange(mode: string): void {
     v-model:show="showModeModal"
     placeholder="Language"
     :options="reject(equals('default'), Object.keys(Mode))"
-    :defaultValue="editorStore.currentEditorValue?.mode"
+    :defaultValue="tabStore.currentEditorValue?.mode"
     @commit="
       (mode: string) => {
         showModeModal = false
@@ -47,3 +47,4 @@ function emitModeChange(mode: string): void {
   >
   </Select>
 </template>
+../../store/tab

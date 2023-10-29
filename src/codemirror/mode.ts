@@ -3,7 +3,7 @@ import { type Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
 import { map } from "ramda"
 import { languageServer } from "codemirror-languageserver"
-import { useEditorStore } from "../store/editor"
+import { useTabs } from "../store/tab"
 
 export enum Mode {
   c = "cpp",
@@ -15,7 +15,7 @@ export enum Mode {
 }
 
 function getLSPAdapterAddr(): string {
-  const port = useEditorStore().lspPort
+  const port = useTabs().lspPort
   return `ws://127.0.0.1:${port}`
 }
 

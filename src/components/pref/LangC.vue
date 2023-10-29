@@ -2,11 +2,8 @@
 import Text from "./common/Text.vue"
 import Program from "./common/Program.vue"
 import { useSettingStore } from "../../store/settings"
-import { syncPreferenceCrossWindows } from "../../lib/syncPref"
+import sync from "./sync"
 const store = useSettingStore()
-function sync(): void {
-  syncPreferenceCrossWindows(store.$state).catch(console.error)
-}
 </script>
 <template>
   <Program

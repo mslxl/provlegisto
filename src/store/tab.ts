@@ -1,5 +1,5 @@
 import { map, prop, sortBy } from "ramda"
-import { type Mode } from "../codemirror/mode"
+import { type Mode } from "../components/codemirror/mode"
 import { defineStore } from "pinia"
 
 interface State {

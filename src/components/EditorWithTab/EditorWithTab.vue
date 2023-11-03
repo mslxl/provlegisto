@@ -7,10 +7,10 @@ import Editor from "../Editor/Editor.vue"
 import HSplit from "../SplitPane/HSplitPane.vue"
 import EmptyTabPane from "./Empty.vue"
 import TestcaseBox from "../Testcase/Testcase.vue"
-import bus from "../../bus"
+import bus from "../../lib/bus"
 import { useSettingStore } from "../../store/settings"
 import { compileFile, runDetached } from "../../lib/compiler"
-import { Mode } from "../../codemirror/mode"
+import { Mode } from "../../components/codemirror/mode"
 import { useTabs } from "../../store/tab"
 import * as file from "./file"
 import * as notify from "../../lib/notify"
@@ -125,4 +125,4 @@ async function closeEditor(targetName: string): Promise<void> {
   }
 }
 </style>
-../../store/tab ../../lib/compiler
+../../store/tab ../../lib/compiler ../codemirror/mode ../../lib/bus

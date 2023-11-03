@@ -3,7 +3,7 @@ import Number from "./common/Number.vue"
 import Select from "./common/Select.vue"
 import Text from "./common/Text.vue"
 import { useSettingStore } from "../../store/settings"
-import themes from "../../codemirror/themeTable"
+import themes from "../../components/codemirror/themeTable"
 import { keys, map } from "ramda"
 import sync from "./sync"
 const store = useSettingStore()
@@ -40,3 +40,4 @@ const themeOptions = map(
     :disabled="true"
   />
 </template>
+../codemirror/themeTable

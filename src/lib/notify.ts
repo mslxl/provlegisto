@@ -1,4 +1,4 @@
-import bus from "../bus"
+import bus from "./bus"
 export interface NotifyBusMsg {
   title: string
   content: string

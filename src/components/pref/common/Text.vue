@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NListItem, NThing, NInput } from "naive-ui"
-import bus from "../../../bus/index"
+import bus from "../../../lib/bus/index"
 type Props = {
   title: string
   secondary?: string
@@ -53,3 +53,4 @@ async function updateValue(value: string): Promise<void> {
   width: 10em;
 }
 </style>
+../../../lib/bus/index

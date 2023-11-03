@@ -2,9 +2,9 @@
  * 监听 Bus 中菜单的点击事件
  * 触发相应事件时，响应用户操作
  */
-import bus from "../../bus"
+import bus from "../../lib/bus"
 import { dialog, fs } from "@tauri-apps/api"
-import { Mode, allowExtension, getExtensionByMode, getModeByExtension } from "../../codemirror/mode"
+import { Mode, allowExtension, getExtensionByMode, getModeByExtension } from "../codemirror/mode"
 import { map, slice } from "ramda"
 import { type Testcase, useTabs } from "../../store/tab"
 import { onMounted, onUnmounted } from "vue"

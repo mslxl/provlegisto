@@ -3,10 +3,10 @@ import { basicSetup } from "codemirror"
 import { onMounted, onUnmounted, ref, watch } from "vue"
 import { EditorView, type ViewUpdate } from "@codemirror/view"
 import { Compartment } from "@codemirror/state"
-import { setTheme } from "../../codemirror/theme"
-import themes from "../../codemirror/themeTable"
+import { setTheme } from "../../components/codemirror/theme"
+import themes from "../../components/codemirror/themeTable"
 import { useSettingStore } from "../../store/settings"
-import bus from "../../bus"
+import bus from "../../lib/bus"
 
 type Props = {
   content?: string
@@ -93,3 +93,4 @@ onUnmounted(() => {
   flex: 1;
 }
 </style>
+../codemirror/theme../codemirror/themeTable ../../lib/bus

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDocumentTitle } from "../lib/window"
+import { useDocumentTitle } from "../hooks/window"
 import { type MenuOption, NLayout, NLayoutContent, NLayoutSider, NList } from "naive-ui"
 import { NMenu } from "naive-ui"
 import { ref } from "vue"
@@ -71,3 +71,4 @@ const menuOption: MenuOption[] = [
   flex-basis: 100vh;
 }
 </style>
+../hooks/window

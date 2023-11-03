@@ -1,7 +1,7 @@
 import "normalize.css"
 import "@fontsource/noto-sans"
 import "@fontsource/fira-code"
-import "./styles.scss"
+import "./assets/styles.scss"
 import { createApp } from "vue"
 
 import App from "./App.vue"

@@ -4,14 +4,14 @@ import { EditorView, keymap, lineNumbers, type ViewUpdate } from "@codemirror/vi
 import { indentWithTab } from "@codemirror/commands"
 import { Compartment } from "@codemirror/state"
 import { onMounted, onUnmounted, ref } from "vue"
-import bus from "../../bus"
-import { Mode, setMode } from "../../codemirror/mode"
-import { setTheme } from "../../codemirror/theme"
-import { setCursorKeymap } from "../../codemirror/keymap"
+import bus from "../../lib/bus"
+import { Mode, setMode } from "../codemirror/mode"
+import { setTheme } from "../codemirror/theme"
+import { setCursorKeymap } from "../codemirror/keymap"
 import { useSettingStore } from "../../store/settings"
-import themes from "../../codemirror/themeTable"
+import themes from "../codemirror/themeTable"
 import { useTabs } from "../../store/tab"
-import { filterCSSQuote } from "../../lib/style"
+import { filterCSSQuote } from "../../utils/style"
 
 type Props = {
   codeId: string
@@ -167,4 +167,5 @@ onUnmounted(() => {
   height: 100%;
 }
 </style>
-../../store/tab
+../../store/tab ../../utils/style ../codemirror/mode../codemirror/theme../codemirror/keymap../codemirror/themeTable
+../../lib/bus ../../utils/style

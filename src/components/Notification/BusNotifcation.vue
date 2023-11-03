@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type NotificationType, useNotification } from "naive-ui"
-import bus from "../../bus"
+import bus from "../../lib/bus"
 import { onMounted, onUnmounted } from "vue"
 export interface NotifyBusMsg {
   title: string
@@ -35,3 +35,4 @@ onUnmounted(() => {
 <template>
   <span></span>
 </template>
+../../lib/bus

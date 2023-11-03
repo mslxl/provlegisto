@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import bus from "../../bus"
+import bus from "../../lib/bus"
 import { MenubarContent, MenubarItem, MenubarMenu, MenubarPortal, MenubarRoot, MenubarTrigger } from "radix-vue"
 import commands from "./command"
 </script>
@@ -100,4 +100,4 @@ import commands from "./command"
   padding-left: 20px;
 }
 </style>
-../../bus
+../../lib/bus ../../lib/bus

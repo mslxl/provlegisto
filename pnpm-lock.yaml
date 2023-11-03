@@ -65,6 +65,9 @@ dependencies:
   events:
     specifier: ^3.3.0
     version: 3.3.0
+  highlight.js:
+    specifier: ^11.9.0
+    version: 11.9.0
   mitt:
     specifier: ^3.0.1
     version: 3.0.1

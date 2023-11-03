@@ -1,4 +1,4 @@
-import bus from "../bus"
+import bus from "./bus"
 import { type SettingsState } from "../store/settings"
 import { setPresistItem } from "./presistedSettings"
 export async function syncPreferenceCrossWindows(state: SettingsState): Promise<void> {

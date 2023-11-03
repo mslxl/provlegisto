@@ -37,6 +37,7 @@
     "codemirror": "^6.0.1",
     "codemirror-languageserver": "^1.11.0",
     "events": "^3.3.0",
+    "highlight.js": "^11.9.0",
     "mitt": "^3.0.1",
     "naive-ui": "^2.35.0",
     "normalize.css": "^8.0.1",

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NListItem, NThing, NSelect } from "naive-ui"
-import bus from "../../../bus/index"
+import bus from "../../../lib/bus/index"
 import { type SelectMixedOption } from "naive-ui/es/select/src/interface"
 type Props = {
   title: string
@@ -58,3 +58,4 @@ async function updateValue(value: string): Promise<void> {
   width: 10em;
 }
 </style>
+../../../lib/bus/index

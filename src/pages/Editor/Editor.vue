@@ -2,7 +2,7 @@
 import Menubar from "../../components/Menubar/Menubar.vue"
 import Notification from "../../components/Notification/Notifcation.vue"
 import EditorInner from "./EditorInner.vue"
-import { useDocumentTitle } from "../../lib/window"
+import { useDocumentTitle } from "../../hooks/window"
 import { NSpin } from "naive-ui"
 
 useDocumentTitle("Provlegisto")
@@ -21,3 +21,4 @@ useDocumentTitle("Provlegisto")
     </Suspense>
   </Notification>
 </template>
+../../hooks/window

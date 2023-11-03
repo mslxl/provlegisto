@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue"
-import bus from "../../bus"
+import bus from "../../lib/bus"
 import { reject, equals } from "ramda"
 import NativeMenubar from "./Native.vue"
 import Select from "../Popup/Select.vue"
-import { Mode } from "../../codemirror/mode"
+import { Mode } from "../../components/codemirror/mode"
 import { useSettingStore } from "../../store/settings"
 import { useTabs } from "../../store/tab"
 import { WebviewWindow } from "@tauri-apps/api/window"
@@ -47,4 +47,4 @@ function emitModeChange(mode: string): void {
   >
   </Select>
 </template>
-../../store/tab
+../../store/tab ../codemirror/mode ../../lib/bus

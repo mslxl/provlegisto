@@ -3,7 +3,7 @@ import { type Compartment } from "@codemirror/state"
 import { StreamLanguage } from "@codemirror/language"
 import { map } from "ramda"
 import { languageServer } from "codemirror-languageserver"
-import { useTabs } from "../store/tab"
+import { useTabs } from "../../store/tab"
 
 export enum Mode {
   c = "cpp",

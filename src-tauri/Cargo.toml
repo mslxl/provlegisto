@@ -1,10 +1,10 @@
 [package]
 name = "provlegisto"
 version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "A simple IDE for ACMer"
+authors = ["mslxl"]
+license = "agpl"
+repository = "sdufeacm/provlegisto"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -16,6 +16,18 @@ tauri-build = { version = "1.5", features = [] }
 tauri = { version = "1.5", features = ["shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+uuid = "1.5.0"
+tokio-tungstenite = "0.20.1"
+tokio = { version = "1.34.0", features = ["full"] }
+log = { version = "0.4.20", features = ["serde", "std"] }
+anyhow = "1.0.75"
+async-trait = "0.1.74"
+futures-util = { version = "0.3.29", features = ["tokio-io"] }
+dunce = "1.0.4"
+tempfile = "3.8.1"
+rand = "0.8.5"
+sha256 = "1.4.0"
+regex = "1.10.2"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

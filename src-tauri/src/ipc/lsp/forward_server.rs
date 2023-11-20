@@ -43,34 +43,37 @@ impl<T: LspCommandBuilder> ForwardServer<T> {
 }
 
 impl<T: LspCommandBuilder> ForwardServer<T> {
-    async fn accept_stream(mut command: Command, path: String, stream: WebSocketStream<TcpStream>) {
-        console::hide_new_console(&mut command);
+    async fn accept_stream(
+        mut command: Command,
+        _path: String,
+        stream: WebSocketStream<TcpStream>,
+    ) {
+        {
+            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+            console::hide_new_console(&mut command);
+        }
         let mut command = tokio::process::Command::from(command);
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());
-        command.stderr(Stdio::null());
+        command.stderr(Stdio::inherit());
         let proc = command.spawn().unwrap();
+        let pid = proc.id().unwrap();
         let stdout = proc.stdout.unwrap();
         let mut stdin = proc.stdin.unwrap();
         let (ws_outcoming, mut ws_incoming) = stream.split();
-        tokio::spawn(async move {
-            while let Some(Ok(msg)) = ws_incoming.next().await {
-                let msg = msg.into_text().unwrap();
-                let data = msg.as_bytes();
-                stdin
-                    .write_all(format!("Content-Length: {}\r\n\r\n", data.len()).as_bytes())
-                    .await
-                    .unwrap();
-                stdin.write_all(data).await.unwrap();
-                stdin.flush().await.unwrap();
-            }
-        });
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
+            // transfer
+            // forward to client from server
             let mut reader = BufReader::new(stdout);
             let mut outcomimg = ws_outcoming;
             loop {
                 let mut header = String::new();
-                reader.read_line(&mut header).await.unwrap();
+                let sz = reader.read_line(&mut header).await.unwrap();
+                if sz == 0 {
+                    // client disconnect
+                    log::info!("server pid {} exited", pid);
+                    break;
+                }
                 let len: u64 = header[15..].trim().parse().unwrap();
                 let mut buf: Vec<u8> = Vec::with_capacity(len as usize);
 
@@ -81,8 +84,23 @@ impl<T: LspCommandBuilder> ForwardServer<T> {
                 chunk.read_to_end(&mut buf).await.unwrap();
 
                 let data = String::from_utf8(buf).unwrap();
+
                 outcomimg.send(Message::Text(data)).await.unwrap();
             }
+        });
+        tokio::spawn(async move {
+            while let Some(Ok(msg)) = ws_incoming.next().await {
+                let mut msg = msg.into_text().unwrap();
+                msg.push_str("\r\n");
+                let data = msg.as_bytes();
+                stdin
+                    .write_all(format!("Content-Length: {}\r\n\r\n", data.len()).as_bytes())
+                    .await
+                    .unwrap();
+                stdin.write_all(data).await.unwrap();
+                stdin.flush().await.unwrap();
+            }
+            handle.abort()
         });
     }
 }

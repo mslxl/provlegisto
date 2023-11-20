@@ -9,5 +9,5 @@ pub const CREATE_NEW_CONSOLE: u32 = 0x00000010;
 
 pub fn hide_new_console(command: &mut Command) {
     #[cfg(windows)]
-    command.creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS);
+    command.creation_flags(CREATE_NO_WINDOW);
 }

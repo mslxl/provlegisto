@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
 use crate::ipc::{
-    lsp::{clangd::ClangdCommandBuilder, forward_server::ForwardServer, LspServer},
+    lsp::{
+        clangd::ClangdCommandBuilder, direct_server::DirectServer, forward_server::ForwardServer,
+        pyrights::PylsCommandBuilder, LspServer,
+    },
     ws::ws_ipc_route,
     LanguageMode,
 };
@@ -59,13 +62,17 @@ pub async fn get_lsp_server(
     mode: LanguageMode,
 ) -> Result<u16, String> {
     let mut guard = lsp_state.t.lock().await;
-    dbg!(&mode);
     if !guard.contains_key(&mode) {
         match mode {
             LanguageMode::CXX => {
                 let mut server = ForwardServer::new(ClangdCommandBuilder);
                 let port = server.start().await.map_err(|e| e.to_string())?;
                 guard.insert(LanguageMode::CXX, (port, Box::new(server)));
+            }
+            LanguageMode::PY => {
+                let mut server = ForwardServer::new(PylsCommandBuilder);
+                let port = server.start().await.map_err(|e| e.to_string())?;
+                guard.insert(LanguageMode::PY, (port, Box::new(server)));
             }
         }
     }

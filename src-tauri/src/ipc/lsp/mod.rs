@@ -1,5 +1,7 @@
 pub mod clangd;
+pub mod direct_server;
 pub mod forward_server;
+pub mod pyrights;
 
 use anyhow::Result;
 use async_trait::async_trait;

@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use crate::ipc::{
     lsp::{
-        clangd::ClangdCommandBuilder, direct_server::DirectServer, forward_server::ForwardServer,
-        pyrights::PylsCommandBuilder, LspServer,
+        clangd::ClangdCommandBuilder, forward_server::ForwardServer, pyrights::PylsCommandBuilder,
+        LspServer,
     },
     ws::ws_ipc_route,
     LanguageMode,

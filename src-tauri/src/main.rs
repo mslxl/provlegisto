@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use ipc::cmd::bind::LSPState;
+use ipc::cmd::{bind::LSPState, competitive_companion::CompetitiveCompanionState};
 use tauri::Manager;
 use util::logger::SimpleLogger;
 
@@ -15,11 +15,14 @@ fn main() {
     tauri::Builder::default()
         .setup(|app| {
             app.manage(LSPState::default());
+            app.manage(CompetitiveCompanionState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             ipc::cmd::bind::bind_ws_ipc,
-            ipc::cmd::bind::get_lsp_server
+            ipc::cmd::bind::get_lsp_server,
+            ipc::cmd::competitive_companion::enable_competitive_companion,
+            ipc::cmd::competitive_companion::disable_competitive_companion
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

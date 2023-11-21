@@ -122,13 +122,13 @@ devDependencies:
     specifier: ^20.9.1
     version: 20.9.1
   '@types/react':
-    specifier: ^18.2.15
+    specifier: ^18.2.37
     version: 18.2.37
   '@types/react-dom':
-    specifier: ^18.2.7
+    specifier: ^18.2.15
     version: 18.2.15
   '@vitejs/plugin-react':
-    specifier: ^4.0.3
+    specifier: ^4.2.0
     version: 4.2.0(vite@4.5.0)
   autoprefixer:
     specifier: ^10.4.16
@@ -143,10 +143,10 @@ devDependencies:
     specifier: ^3.3.5
     version: 3.3.5
   typescript:
-    specifier: ^5.0.2
+    specifier: ^5.2.2
     version: 5.2.2
   vite:
-    specifier: ^4.4.4
+    specifier: ^4.5.0
     version: 4.5.0(@types/node@20.9.1)
 
 packages:

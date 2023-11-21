@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{process::Stdio, time::Duration};
 
 use crate::util::console;
 use futures_util::{SinkExt, StreamExt};
@@ -56,52 +56,62 @@ impl<T: LspCommandBuilder> ForwardServer<T> {
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());
         command.stderr(Stdio::inherit());
-        let proc = command.spawn().unwrap();
+        let mut proc = command.spawn().unwrap();
         let pid = proc.id().unwrap();
-        let stdout = proc.stdout.unwrap();
-        let mut stdin = proc.stdin.unwrap();
-        let (ws_outcoming, mut ws_incoming) = stream.split();
-        let handle = tokio::spawn(async move {
-            // transfer
-            // forward to client from server
-            let mut reader = BufReader::new(stdout);
-            let mut outcomimg = ws_outcoming;
-            loop {
-                let mut header = String::new();
-                let sz = reader.read_line(&mut header).await.unwrap();
-                if sz == 0 {
-                    // client disconnect
-                    log::info!("server pid {} exited", pid);
+        let stdout = proc.stdout.take().unwrap();
+        let mut stdin = proc.stdin.take().unwrap();
+        let (mut ws_outcoming, mut ws_incoming) = stream.split();
+        let mut client_msg_counter = 0;
+        let mut server_reader = BufReader::new(stdout);
+        loop {
+            let mut buf = Vec::new();
+            tokio::select! {
+                // forward server message to client
+                sz = server_reader.read_until(b'\n',&mut buf) => {
+                    let buf = String::from_utf8(buf).expect("Found invalid UTF-8");
+                    let sz = sz.unwrap();
+                    if sz == 0 {
+                        log::info!("server pid {} exited spontaneously", pid);
+                        break;
+                    }
+                    let len: u64 = buf[15..].trim().parse().unwrap();
+                    let mut buf: Vec<u8> = Vec::with_capacity(len as usize);
+
+                    let mut trash = String::new();
+                    server_reader.read_line(&mut trash).await.unwrap();
+
+                    let mut chunk = (&mut server_reader).take(len);
+                    chunk.read_to_end(&mut buf).await.unwrap();
+
+                    let data = String::from_utf8(buf).unwrap();
+
+                    ws_outcoming.send(Message::Text(data)).await.unwrap();
+                }
+                // forward client message to server
+                msg = ws_incoming.next() => {
+                    if msg.is_none(){
+                        log::info!("client associated with pid {} disconnected", pid);
+                        break;
+                    }
+                    client_msg_counter+=1;
+                    let msg = msg.unwrap().unwrap();
+                    let msg = msg.into_text().unwrap();
+                    let data = msg.as_bytes();
+                    stdin
+                        .write_all(format!("Content-Length: {}\r\n\r\n", data.len()).as_bytes())
+                        .await
+                        .unwrap();
+                    stdin.write_all(data).await.unwrap();
+                    stdin.flush().await.unwrap();
+                }
+                // check valid connection
+                _ = tokio::time::sleep(Duration::from_secs(5)), if client_msg_counter < 3 => {
+                    log::info!("number of client message less than 3 in 5 seconds, stop server(pid {})", pid);
                     break;
                 }
-                let len: u64 = header[15..].trim().parse().unwrap();
-                let mut buf: Vec<u8> = Vec::with_capacity(len as usize);
-
-                let mut trash = String::new();
-                reader.read_line(&mut trash).await.unwrap();
-
-                let mut chunk = (&mut reader).take(len);
-                chunk.read_to_end(&mut buf).await.unwrap();
-
-                let data = String::from_utf8(buf).unwrap();
-
-                outcomimg.send(Message::Text(data)).await.unwrap();
-            }
-        });
-        tokio::spawn(async move {
-            while let Some(Ok(msg)) = ws_incoming.next().await {
-                let mut msg = msg.into_text().unwrap();
-                msg.push_str("\r\n");
-                let data = msg.as_bytes();
-                stdin
-                    .write_all(format!("Content-Length: {}\r\n\r\n", data.len()).as_bytes())
-                    .await
-                    .unwrap();
-                stdin.write_all(data).await.unwrap();
-                stdin.flush().await.unwrap();
-            }
-            handle.abort()
-        });
+            };
+        }
+        let _ = proc.kill().await;
     }
 }
 

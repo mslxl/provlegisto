@@ -8,6 +8,12 @@ pub const DETACHED_PROCESS: u32 = 0x00000008;
 pub const CREATE_NEW_CONSOLE: u32 = 0x00000010;
 
 pub fn hide_new_console(command: &mut Command) {
-    #[cfg(windows)]
-    command.creation_flags(CREATE_NO_WINDOW);
+    {
+        #[cfg(all(debug_assertions, windows))]
+        command.creation_flags(CREATE_NEW_CONSOLE);
+    }
+    {
+        #[cfg(all(not(debug_assertions), windows))]
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
 }

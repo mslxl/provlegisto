@@ -1,4 +1,4 @@
-use std::{os::windows::process::CommandExt, process::Command};
+use std::process::Command;
 
 // The process is a console application that is being run without a console window. Therefore, the console handle for the application is not set.
 pub const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -8,12 +8,14 @@ pub const DETACHED_PROCESS: u32 = 0x00000008;
 pub const CREATE_NEW_CONSOLE: u32 = 0x00000010;
 
 pub fn hide_new_console(command: &mut Command) {
+    #[cfg(all(debug_assertions, windows))]
     {
-        #[cfg(all(debug_assertions, windows))]
+        use std::os::windows::process::CommandExt;
         command.creation_flags(CREATE_NEW_CONSOLE);
     }
+    #[cfg(all(not(debug_assertions), windows))]
     {
-        #[cfg(all(not(debug_assertions), windows))]
+        use std::os::windows::process::CommandExt;
         command.creation_flags(CREATE_NO_WINDOW);
     }
 }

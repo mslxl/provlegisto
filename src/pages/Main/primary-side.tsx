@@ -1,5 +1,5 @@
 import * as Sidebar from "@/components/ui/sidebar"
-import { VscMenu, VscDebugAlt, VscSettingsGear } from "react-icons/vsc"
+import { VscMenu, VscVmRunning, VscSettingsGear } from "react-icons/vsc"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +48,7 @@ export default function PrimarySide() {
         </DropdownMenuContent>
       </DropdownMenu>
       <Sidebar.Button>
-        <VscDebugAlt className="text-2xl my-4" />
+        <VscVmRunning className="text-2xl my-4" />
       </Sidebar.Button>
       <Sidebar.Space />
       <Sidebar.Button>

@@ -10,8 +10,8 @@ export async function loadCXXMode(): Promise<Extension> {
     highlight.cpp(),
     languageServer({
       serverUri,
-      rootUri: "inmemory:///",
-      documentUri: "inmemory:///random/file",
+      rootUri: "file:///inmemory",
+      documentUri: "file:///inmemory",
       languageId: "cpp",
       workspaceFolders: null,
     }),

@@ -1,5 +1,5 @@
 import { disableCompetitiveCompanion, enableCompetitiveCompanion } from "@/lib/ipc/competitive-companion"
-import { useEffect } from "react"
+import { DependencyList, useEffect } from "react"
 import { event } from "@tauri-apps/api"
 
 type Test = {
@@ -118,16 +118,19 @@ type Problem = {
   batch: Batch
 }
 
-export function useCompetitiveCompanion(listener: (data: Problem) => void) {
+export function useCompetitiveCompanion(listener: (data: Problem) => void, deps?: DependencyList | undefined) {
   useEffect(() => {
     enableCompetitiveCompanion()
+    return () => {
+      disableCompetitiveCompanion()
+    }
+  }, [])
+  useEffect(() => {
     let unlisten = event.listen("competitive-companion", (data) => {
       listener(JSON.parse(data.payload as string))
     })
-
     return () => {
       unlisten.then((fn) => fn())
-      disableCompetitiveCompanion()
     }
-  })
+  }, deps)
 }

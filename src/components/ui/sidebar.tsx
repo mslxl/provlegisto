@@ -11,11 +11,8 @@ export function Button({
   onClick?: () => void
 }) {
   return (
-    <button
-      className={clsx(className, "text-neutral-400 hover:text-neutral-100 mx-auto text-center")}
-      onClick={onClick}
-    >
-      {children}
+    <button className={clsx(className, "text-neutral-400 hover:text-neutral-100 text-center")} onClick={onClick}>
+      <span className="mx-auto block w-fit">{children}</span>
     </button>
   )
 }

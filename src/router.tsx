@@ -1,8 +1,9 @@
 import { lazy } from "react"
 import { RouterProvider, createMemoryRouter } from "react-router-dom"
 
-const PageMain = lazy(() => import("./pages/Main"))
-const PagePreference = lazy(() => import("./pages/Preference"))
+const PageMain = lazy(() => import("@/pages/Main"))
+const PagePreference = lazy(() => import("@/pages/Preference"))
+const PageAbout = lazy(() => import("@/pages/About"))
 
 const router = createMemoryRouter([
   {
@@ -12,6 +13,10 @@ const router = createMemoryRouter([
   {
     path: "/preference",
     element: <PagePreference />,
+  },
+  {
+    path: "/about",
+    element: <PageAbout />,
   },
 ])
 

@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai"
-import { filter } from "lodash"
+import { filter, map } from "lodash"
 
 type ItemHeader = {
   id: number
@@ -42,7 +42,7 @@ export function useAddHandle(): (title: string) => number {
     setSourcesCodeChangedMap(new Map([...sourcesCodeChangedMap, [counter, false]]))
 
     if (active == -1) {
-      setActive(0)
+      setActive(counter)
     }
     setCounter(counter + 1)
     return counter
@@ -58,6 +58,12 @@ export function useSetSourcesCodeHandle(): (id: number, content: string) => void
 
 export const useAtomSourceCodeMap = () => useAtom(sourcesCode)[0]
 
+export function useSetTabNameHandle(): (id: number, title: string) => void {
+  const [data, setData] = useAtom(items)
+  return (id, title) => {
+    setData(map(data, (e) => (e.id != id ? e : { id: e.id, text: title })))
+  }
+}
 export function useRemoveHandle(): (id: number) => void {
   const [head, setHead] = useAtom(items)
   const [, setActive] = useAtom(activeItemId)

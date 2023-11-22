@@ -2,7 +2,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use std::process::{Child, Command};
 
-use tokio::{net::TcpListener, sync::Mutex, task::JoinHandle};
+use tokio::{net::TcpListener, sync::Mutex};
 
 use super::LspServer;
 

@@ -1,5 +1,6 @@
 import * as Sidebar from "@/components/ui/sidebar"
-import { VscMenu, VscVmRunning, VscSettingsGear } from "react-icons/vsc"
+import { VscMenu, VscVmRunning, VscSettingsGear, VscOrganization, VscTypeHierarchySub } from "react-icons/vsc"
+import { primaryPanelShow } from "@/store/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +11,37 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { emit } from "@/hooks/useMitt"
+import { useAtom } from "jotai"
+import { ReactNode } from "react"
+import clsx from "clsx"
 
 export default function PrimarySide() {
+  const [panel, setPanel] = useAtom(primaryPanelShow)
+
+  function onPanelButtonClick(panelId: string) {
+    if (panelId == panel) setPanel(null)
+    else setPanel(panelId)
+  }
+
+  const panelBtn = (
+    [
+      ["run", <VscVmRunning className="text-2xl my-4" />],
+      ["team", <VscOrganization className="text-2xl my-4" />],
+      ["version", <VscTypeHierarchySub className="text-2xl my-4" />],
+    ] as [string, ReactNode][]
+  ).map((item, index) => (
+    <Sidebar.Button
+      key={index}
+      className={clsx({
+        "text-neutral-100 border-l-4 border-l-neutral-100": item[0] == panel,
+      })}
+      onClick={() => onPanelButtonClick(item[0])}
+    >
+      {item[1]}
+    </Sidebar.Button>
+  ))
+
   return (
     <Sidebar.Root className="h-full">
       <DropdownMenu>
@@ -22,7 +52,7 @@ export default function PrimarySide() {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>File</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuItem>New File</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => emit("fileMenu", "new")}>New File</DropdownMenuItem>
               <DropdownMenuItem>New Contest</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Open File</DropdownMenuItem>
@@ -47,9 +77,7 @@ export default function PrimarySide() {
           </DropdownMenuSub>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Sidebar.Button>
-        <VscVmRunning className="text-2xl my-4" />
-      </Sidebar.Button>
+      {panelBtn}
       <Sidebar.Space />
       <Sidebar.Button>
         <VscSettingsGear className="text-2xl my-4" />

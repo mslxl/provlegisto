@@ -19,3 +19,8 @@ pub fn hide_new_console(command: &mut Command) {
         command.creation_flags(CREATE_NO_WINDOW);
     }
 }
+
+pub fn create_new_console(command: &mut Command) {
+    use std::os::windows::process::CommandExt;
+    command.creation_flags(CREATE_NEW_CONSOLE);
+}

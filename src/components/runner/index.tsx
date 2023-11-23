@@ -23,7 +23,7 @@ export default function Runner({ id, className }: { id: number; className?: stri
   async function runAll() {
     setRunAllAnimate(true)
     const sourceCode = sourceCodeMap.get(id)!
-    console.log(await compileSource(LanguageMode.CXX, sourceCode))
+    await compileSource(LanguageMode.CXX, sourceCode)
     setRunAllAnimate(false)
   }
 
@@ -52,7 +52,9 @@ export default function Runner({ id, className }: { id: number; className?: stri
     return <div></div>
   }
 
-  const testcaseList = getSourcecodeTestcase(id).map((_, index) => <SingleRunner id={id} testcaseIdx={index} />)
+  const testcaseList = getSourcecodeTestcase(id).map((_, index) => (
+    <SingleRunner key={index} id={id} testcaseIdx={index} />
+  ))
 
   return (
     <div className={clsx(className, "h-full select-none flex flex-col min-h-0 min-w-0")}>

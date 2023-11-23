@@ -1,6 +1,9 @@
-use std::process::Command;
+use std::{path::PathBuf, process::Command};
 
 fn gcc(inp: &str, oup: &str) {
+    if PathBuf::from(oup).exists() {
+        return;
+    }
     assert!(Command::new("c++")
         .args([inp, "-o", oup])
         .spawn()

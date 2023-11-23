@@ -3,7 +3,7 @@
 
 use ipc::{
     cmd::{bind::LSPState, competitive_companion::CompetitiveCompanionState},
-    rt::compiler::CompilerState,
+    rt::{compiler::CompilerState, runner::RunnerState},
 };
 use tauri::Manager;
 use util::logger::SimpleLogger;
@@ -20,6 +20,7 @@ fn main() {
             app.manage(LSPState::default());
             app.manage(CompetitiveCompanionState::default());
             app.manage(CompilerState::default());
+            app.manage(RunnerState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -28,7 +29,8 @@ fn main() {
             ipc::cmd::competitive_companion::enable_competitive_companion,
             ipc::cmd::competitive_companion::disable_competitive_companion,
             ipc::rt::compiler::compile_source,
-            ipc::rt::runner::run_detach
+            ipc::rt::runner::run_detach,
+            ipc::rt::runner::run_redirect
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api"
 import { LanguageMode } from "."
+import { time } from "console"
 
 export type CompilerOptions = {
   path?: string
@@ -40,4 +41,37 @@ export const runDetach = (target: string, args?: string[]): Promise<void> =>
   invoke("run_detach", {
     target,
     args: args ?? [],
+  })
+
+type RunRedirectPASS = {
+  type: "PASS"
+  output_file: string
+  error_file: string
+}
+type RunRedirectRE = {
+  type: "RE"
+  output_file: string
+  error_file: string
+}
+type RunRedirectTLE = {
+  type: "TLE"
+}
+
+type RunRedirectResult = RunRedirectPASS | RunRedirectRE | RunRedirectTLE
+
+export const runRedirect = (
+  mode: LanguageMode,
+  taskId: string,
+  execTarget: string,
+  input: string,
+  timeout?: number,
+  additionArgs?: string[],
+): Promise<RunRedirectResult> =>
+  invoke("run_redirect", {
+    mode,
+    taskId,
+    execTarget,
+    input,
+    timeout: timeout ?? 3000,
+    additionArgs: additionArgs ?? [],
   })

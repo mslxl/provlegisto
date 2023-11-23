@@ -9,6 +9,11 @@ type ItemHeader = {
 export const items = atom<ItemHeader[]>([])
 export const sourcesCode = atom(new Map<number, string>())
 export const sourcesCodeChanged = atom(new Map<number, boolean>())
+type Testcase = {
+  input: string
+  output: string
+}
+export const sourcesCodeTestcase = atom(new Map<number, Testcase[]>())
 export const activeItemId = atom(-1)
 const idCounter = atom(0)
 
@@ -80,5 +85,35 @@ export function useRemoveHandle(): (id: number) => void {
     setHead(filter(head, (e: ItemHeader) => e.id != id))
     setSourcesCodeMap(new Map(filter([...sourcesCodeMap], (e: [number, string]) => e[0] != id)))
     setSourcesCodeChangedMap(new Map(filter([...sourcesCodeChangedMap], (e: [number, boolean]) => e[0] != id)))
+  }
+}
+
+export function useSetSourcecodeTestcase(): (
+  id: number,
+  idx: number,
+  newInputValue?: string,
+  newOutputValue?: string,
+) => void {
+  const [testcase, setTestcase] = useAtom(sourcesCodeTestcase)
+  return (id, idx, newInput, newOutput) => {
+    if (newInput == undefined && newOutput == undefined) return
+    let testcasesList = testcase.get(id)! ?? []
+    testcasesList[idx].input = newInput ?? testcasesList[idx].input
+    testcasesList[idx].output = newOutput ?? testcasesList[idx].output
+    setTestcase(new Map([...testcase, [id, [...testcasesList]]]))
+  }
+}
+
+export function useGetSourcecodeTestcase(): (id: number) => Testcase[] {
+  const [testcase] = useAtom(sourcesCodeTestcase)
+  return (id) => testcase.get(id)! ?? []
+}
+
+export function useAddSourcecodeTestcase(): (id: number) => void {
+  const [testcase, setTestcase] = useAtom(sourcesCodeTestcase)
+  return (id) => {
+    let testcasesList = testcase.get(id) ?? []
+    testcasesList.push({ input: "", output: "" })
+    setTestcase(new Map([...testcase, [id, [...testcasesList]]]))
   }
 }

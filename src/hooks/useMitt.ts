@@ -2,6 +2,7 @@ import mitt, { Handler } from "mitt"
 import { DependencyList, useEffect } from "react"
 type Events = {
   fileMenu: "new" | "newContest"
+  run: "all" | string
 }
 
 const emitter = mitt<Events>()

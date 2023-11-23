@@ -36,7 +36,7 @@ export default function PrimaryPanel({ children, className }: { children?: React
       className={clsx("bg-neutral-100 border-r-2 border-r-neutral-200 h-full flex shadow-md", className)}
       style={{ width: `${width}px` }}
     >
-      <div className="flex-1 relative">{children}</div>
+      <div className="flex-1 relative min-w-0">{children}</div>
       <span className="w-1 cursor-col-resize" ref={colResizeRef} />
     </div>
   )

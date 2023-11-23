@@ -10,7 +10,6 @@ fn gcc(inp: &str, oup: &str) {
         .success());
 }
 fn main() {
-    tauri_build::build();
     if cfg!(windows) {
         gcc(
             "src-util/consolepauser.windows.cpp",
@@ -29,4 +28,5 @@ fn main() {
     gcc("src-util/rcmp9.cpp", "src-util/build/ncmp9");
     gcc("src-util/wcmp.cpp", "src-util/build/wcmp");
     gcc("src-util/yesno.cpp", "src-util/build/yesno");
+    tauri_build::build();
 }

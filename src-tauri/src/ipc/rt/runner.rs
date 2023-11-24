@@ -1,4 +1,5 @@
 use anyhow::Result;
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::{ExitStatus, Stdio};
@@ -8,6 +9,7 @@ use tauri::Runtime;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::mpsc::{self, UnboundedReceiver};
+use tokio::sync::Mutex;
 
 use crate::{
     ipc::LanguageMode,
@@ -47,29 +49,65 @@ enum RunnerOutputCommand {
 pub struct RunnerOutputUpdater<R: Runtime> {
     task_id: String,
     win: tauri::Window<R>,
+    stdout: Mutex<String>,
+    stderr: Mutex<String>,
 }
+
 impl<R: Runtime> RunnerOutputUpdater<R> {
-    fn clear(&self) {
+    fn new(task_id: String, window: tauri::Window<R>) -> Self {
+        Self {
+            task_id,
+            win: window,
+            stdout: Mutex::new(String::new()),
+            stderr: Mutex::new(String::new()),
+        }
+    }
+    async fn clear(&self) {
         self.win
             .emit(&self.task_id, RunnerOutputCommand::Clear)
             .unwrap();
     }
-    fn append_stdout(&self, msg: String) {
-        self.win
-            .emit(
-                &self.task_id,
-                RunnerOutputCommand::AppendStdout { line: msg },
-            )
-            .unwrap();
+    async fn append_stdout(&self, msg: String) {
+        let mut guard = self.stdout.lock().await;
+        guard.push_str(&msg);
     }
 
-    fn append_stderr(&self, msg: String) {
+    async fn append_stderr(&self, msg: String) {
+        let mut guard = self.stderr.lock().await;
+        guard.push_str(&msg);
         self.win
             .emit(
                 &self.task_id,
                 RunnerOutputCommand::AppendStderr { line: msg },
             )
             .unwrap();
+    }
+
+    async fn flush(&self) {
+        let mut guard = self.stdout.lock().await;
+        if !guard.is_empty() {
+            self.win
+                .emit(
+                    &self.task_id,
+                    RunnerOutputCommand::AppendStdout {
+                        line: guard.clone(),
+                    },
+                )
+                .unwrap();
+            guard.clear();
+        }
+        let mut guard = self.stderr.lock().await;
+        if !guard.is_empty() {
+            self.win
+                .emit(
+                    &self.task_id,
+                    RunnerOutputCommand::AppendStderr {
+                        line: guard.clone(),
+                    },
+                )
+                .unwrap();
+            guard.clear();
+        }
     }
 }
 
@@ -120,13 +158,12 @@ pub async fn run_redirect<R: Runtime>(
         LanguageMode::CXX => std::process::Command::new(exec_target),
         _ => unimplemented!(),
     };
-    let update = RunnerOutputUpdater {
-        task_id: task_id.clone(),
-        win: window,
-    };
+    let update = RunnerOutputUpdater::new(task_id.clone(), window);
 
-    let job = run_command_with_updater(update, cmd, input);
+    let job = run_command_with_updater(&update, cmd, input);
     let timeout = tokio::time::timeout(Duration::from_millis(timeout), job).await;
+    update.flush().await;
+
     let result = if let Ok(status) = timeout {
         let (exit_status, stdout, stderr) = status.map_err(|e| e.to_string())?;
         let stdout_log = workspace.join(format!("task{}-stdout.log", &task_id));
@@ -189,7 +226,7 @@ impl Drop for ChildKiller {
 }
 
 async fn run_command_with_updater<R: Runtime>(
-    update: RunnerOutputUpdater<R>,
+    update: &RunnerOutputUpdater<R>,
     mut cmd: std::process::Command,
     input: String,
 ) -> Result<(ExitStatus, String, String)> {
@@ -211,34 +248,38 @@ async fn run_command_with_updater<R: Runtime>(
     let mut stderr_buf = String::new();
     let mut stdout_eof = false;
     let mut stderr_eof = false;
-    update.clear();
+    update.clear().await;
 
     let exit_status = loop {
         let mut stdout_bytesbuf = Vec::new();
         let mut stderr_bytesbuf = Vec::new();
         tokio::select! {
-            Ok(sz) = stdout.read_until(b'\n', &mut stdout_bytesbuf), if !stdout_eof => {
-                if sz == 0{
-                    stdout_eof = true;
-                    continue;
+                Ok(sz) = stdout.read_until(b'\n', &mut stdout_bytesbuf), if !stdout_eof => {
+                    if sz == 0{
+                        stdout_eof = true;
+                        continue;
+                    }
+                    let buf = String::from_utf8(stdout_bytesbuf)?;
+                    stdout_buf.push_str(&buf);
+                    update.append_stdout(buf).await;
                 }
-                let buf = String::from_utf8(stdout_bytesbuf)?;
-                stdout_buf.push_str(&buf);
-                update.append_stdout(buf);
-            }
-            Ok(sz) = stderr.read_until(b'\n', &mut stderr_bytesbuf), if !stderr_eof => {
-                if sz == 0 {
-                    stderr_eof = true;
-                    continue;
+                Ok(sz) = stderr.read_until(b'\n', &mut stderr_bytesbuf), if !stderr_eof => {
+                    if sz == 0 {
+                        stderr_eof = true;
+                        continue;
+                    }
+                    let buf = String::from_utf8(stderr_bytesbuf)?;
+                    stderr_buf.push_str(&buf);
+                    update.append_stderr(buf).await;
                 }
-                let buf = String::from_utf8(stderr_bytesbuf)?;
-                stderr_buf.push_str(&buf);
-                update.append_stderr(buf);
+                _ = tokio::time::sleep(Duration::from_millis(500)), if !stdout_eof || !stderr_eof => {
+                    update.flush().await;
+                }
+                else => {
+                    update.flush().await;
+                    break proc.as_mut().wait().await?;
+                }
             }
-            else => {
-                break proc.as_mut().wait().await?;
-            }
-        }
     };
 
     Ok((exit_status, stdout_buf, stderr_buf))

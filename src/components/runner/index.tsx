@@ -7,10 +7,7 @@ import { LanguageMode, compileSource, runDetach } from "@/lib/ipc"
 import { ContextMenu, ContextMenuItem, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
-import Editor from "../editor"
-import { ChevronDown } from "lucide-react"
-import { Badge } from "../ui/badge"
+import { Accordion} from "../ui/accordion"
 import { emit, useMitt } from "@/hooks/useMitt"
 import SingleRunner from "./single"
 
@@ -58,8 +55,8 @@ export default function Runner({ id, className }: { id: number; className?: stri
 
   return (
     <div className={clsx(className, "h-full select-none flex flex-col min-h-0 min-w-0")}>
-      <div className="flex-1 min-h-0">
-        <div className="m-1 text-end min-w-0">
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="m-1 text-end min-w-0 shadow-sm">
           <ContextMenu>
             <ContextMenuTrigger>
               <Button
@@ -85,16 +82,16 @@ export default function Runner({ id, className }: { id: number; className?: stri
             <VscGear />
           </Button>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 min-h-0 overflow-y-auto flex-1">
           <Accordion type="multiple">{testcaseList}</Accordion>
         </div>
       </div>
-      <div className="flex gap-2 p-4 shadow-md shadow-black">
-        <Button size="sm" className="flex-1 py-0" onClick={() => addSourcecodeTestcase(id)}>
-          New Case
+      <div className="flex gap-2 p-4 shadow-sm shadow-black">
+        <Button size="sm" className="flex-1 py-0  bg-green-600 hover:bg-green-500" onClick={() => addSourcecodeTestcase(id)}>
+          New Testcase
         </Button>
-        <Button size="sm" className="flex-1 py-0" onClick={() => emit("run", "all")}>
-          Run All
+        <Button size="sm" className="flex-1 py-0 bg-blue-500 hover:bg-blue-400">
+          Submit
         </Button>
       </div>
     </div>

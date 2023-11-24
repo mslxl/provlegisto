@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api"
 import { LanguageMode } from "."
-import { time } from "console"
 
 export type CompilerOptions = {
   path?: string

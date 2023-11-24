@@ -13,7 +13,7 @@ export default function PrimaryPanel({ children, className }: { children?: React
     let startWidth = 0
     function onDrag(e: MouseEvent) {
       let newWidth = startWidth + (e.clientX - startX)
-      if (newWidth > 80 && newWidth < windowWidth * 0.8) setWidth(newWidth)
+      if (newWidth > 260 && newWidth < windowWidth * 0.8) setWidth(newWidth)
     }
     function stopDrag() {
       document.documentElement.removeEventListener("mousemove", onDrag)

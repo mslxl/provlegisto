@@ -88,6 +88,8 @@ export function useRemoveHandle(): (id: number) => void {
   }
 }
 
+// Sourcecode Testcase Below
+
 export function useSetSourcecodeTestcase(): (
   id: number,
   idx: number,
@@ -103,10 +105,19 @@ export function useSetSourcecodeTestcase(): (
     setTestcase(new Map([...testcase, [id, [...testcasesList]]]))
   }
 }
-
 export function useGetSourcecodeTestcase(): (id: number) => Testcase[] {
   const [testcase] = useAtom(sourcesCodeTestcase)
   return (id) => testcase.get(id)! ?? []
+}
+
+export function useDelSourcecodeTestcase(): (id: number, index: number)=>void {
+  const [testcase, setTestcase] = useAtom(sourcesCodeTestcase)
+  return (id, index)=> {
+    let testcasesList = testcase.get(id)
+    if(testcasesList == undefined) return
+    testcasesList.splice(index, 1)
+    setTestcase(new Map([...testcase, [id, [...testcasesList]]]))
+  }
 }
 
 export function useAddSourcecodeTestcase(): (id: number) => void {

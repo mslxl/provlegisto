@@ -3,66 +3,66 @@ import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordi
 import { Badge } from "../ui/badge"
 import { ChevronDown } from "lucide-react"
 import Editor from "../editor"
-import {
-  useAtomSourceCodeMap,
-  useDelSourcecodeTestcase,
-  useGetSourcecodeTestcase,
-  useSetSourcecodeTestcase,
-} from "@/store/tabs"
+import { useAtomSourcecodeMap, useDelTestcase, useGetChecker, useGetTestcase, useSetTestcase } from "@/store/tabs"
 import { emit, useMitt } from "@/hooks/useMitt"
-import { LanguageMode, compileSource, runRedirect } from "@/lib/ipc"
+import { LanguageMode, compileRunCheck } from "@/lib/ipc"
 import { Button } from "../ui/button"
 import { VscDebugRestart, VscTrash } from "react-icons/vsc"
 import { useTauriEvent } from "@/hooks/useTauriEvent"
 import { motion } from "framer-motion"
 import clsx from "clsx"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import AdditionMessage from "./addition-msg"
 type SingleRunnerProps = {
   id: number
   testcaseIdx: number
 }
 
-type JudgeStatus = "AC" | "TLE" | "WA" | "RE" | "PD" | "CE" | "UK"
+type JudgeStatus = "AC" | "TLE" | "WA" | "RE" | "PD" | "CE" | "UK" | "INT"
 
 type JudgeStatusStyle = {
-  [Property in JudgeStatus] : string
+  [Property in JudgeStatus]: string
 }
 
 const JudgeStatusBorderStyle: JudgeStatusStyle = {
-  'AC': 'border-l-emerald-400',
-  'TLE': 'border-l-blue-600',
-  'WA': 'border-l-red-700',
-  'RE': 'border-l-violet-600',
-  'PD': 'border-l-transparent',
-  'CE': 'border-l-amber-500',
-  'UK': 'border-l-transparent'
+  AC: "border-l-green-700",
+  TLE: "border-l-blue-600",
+  WA: "border-l-red-700",
+  RE: "border-l-violet-600",
+  PD: "border-l-transparent",
+  CE: "border-l-amber-500",
+  UK: "border-l-transparent",
+  INT: "border-l-violet-600",
 }
 
-const JudgeStatusTextStype : JudgeStatusStyle= {
-  'AC': 'bg-emerald-400',
-  'TLE': 'bg-blue-600',
-  'WA': 'bg-red-700',
-  'RE': 'bg-violet-600',
-  'PD': 'bg-slate-600',
-  'CE': 'bg-amber-500',
-  'UK': 'bg-slate-600'
+const JudgeStatusTextStype: JudgeStatusStyle = {
+  AC: "bg-green-700",
+  TLE: "bg-blue-600",
+  WA: "bg-red-700",
+  RE: "bg-violet-600",
+  PD: "bg-slate-600",
+  CE: "bg-amber-500",
+  UK: "bg-slate-600",
+  INT: "bg-violet-600",
 }
-
 
 const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
-  const getSourcecodeTestcase = useGetSourcecodeTestcase()
-  const setSourcecodeTestcase = useSetSourcecodeTestcase()
-  const delSourcecodeTestcase = useDelSourcecodeTestcase()
+  const getSourcecodeTestcase = useGetTestcase()
+  const setSourcecodeTestcase = useSetTestcase()
+  const delSourcecodeTestcase = useDelTestcase()
   const [judgeStatus, setJudgeStatus] = useState<JudgeStatus>("UK")
 
   let testcase = getSourcecodeTestcase(props.id)[props.testcaseIdx]
-  const sourceCode = useAtomSourceCodeMap().get(props.id)!
-  const externalTaskId = `task${props.id}_${props.testcaseIdx}`
+  const sourceCode = useAtomSourcecodeMap().get(props.id)!
+  const externalTaskId = `${props.id}_${props.testcaseIdx}`
   const acutalStdoutBuf = useRef("")
   const acutalStdoutLinesCnt = useRef(0)
   const [actualStdout, setActualStdout] = useState("")
   const acutalStderrBuf = useRef("")
   const [_actualStderr, setActualStderr] = useState("")
   const [running, setRunning] = useState(false)
+  const checker = useGetChecker()(props.id)
+  const [checkerReport, setCheckerReport] = useState("")
 
   useMitt(
     "run",
@@ -70,29 +70,37 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
       if (props.testcaseIdx != parseInt(taskId) && taskId != "all") return
       setRunning(true)
       setJudgeStatus("PD")
-      compileSource(LanguageMode.CXX, sourceCode)
-        .then((compileResult) => {
-          if (compileResult.type == "Error") {
-            setJudgeStatus("CE")
-            setRunning(false)
-            return
+      acutalStdoutBuf.current = ""
+      acutalStderrBuf.current = ""
+      acutalStdoutLinesCnt.current = 0
+      setActualStderr("")
+      setActualStdout("")
+
+      compileRunCheck(LanguageMode.CXX, sourceCode, externalTaskId, testcase.input, testcase.output, {
+        type: "Internal",
+        name: checker,
+      })
+        .then((result) => {
+          console.log(result)
+          if (result.type == "WA") {
+            setCheckerReport(result.report)
+          } else if(result.type == 'CE') {
+            let line = ""
+            for(let i of result.data){
+              line += `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`
+            }
+            setCheckerReport(line)
           }
-          const target = compileResult.data
-          runRedirect(LanguageMode.CXX, externalTaskId, target, testcase.input)
-            .then((judgeResult) => {
-              console.log(judgeResult)
-              setJudgeStatus(judgeResult.type as any)
-              setRunning(false)
-            })
-            .catch(() => {
-              setRunning(false)
-            })
+          
+          setRunning(false)
+          setJudgeStatus(result.type as any)
         })
-        .catch(() => {
+        .catch((e) => {
+          console.error(e)
           setRunning(false)
         })
     },
-    [props.testcaseIdx, props.id, testcase, sourceCode],
+    [props.testcaseIdx, props.id, testcase, sourceCode, checker],
   )
   useTauriEvent(
     externalTaskId,
@@ -100,6 +108,7 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
       const payload = event.payload as any
       if (payload.type == "Clear") {
         acutalStdoutBuf.current = ""
+        acutalStderrBuf.current = ""
         acutalStdoutLinesCnt.current = 0
       } else if (payload.type == "AppendStdout") {
         acutalStdoutLinesCnt.current += 1
@@ -117,9 +126,11 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
     [],
   )
 
-
   return (
-    <AccordionItem value={props.testcaseIdx.toString()} className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}>
+    <AccordionItem
+      value={props.testcaseIdx.toString()}
+      className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}
+    >
       <AccordionTrigger className="px-1 py-1" asChild>
         <div className="flex">
           <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200" />
@@ -176,6 +187,14 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
         />
         <span className="text-sm px-2">Ouput:</span>
         <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} />
+        <Popover>
+          <PopoverTrigger asChild>
+            <span className="text-end text-xs w-full px-2 hover:text-gray-600">See Report&gt;&gt;</span>
+          </PopoverTrigger>
+          <PopoverContent side="right">
+            <AdditionMessage checkReport={checkerReport} stderrLog={actualStdout} />
+          </PopoverContent>
+        </Popover>
       </AccordionContent>
     </AccordionItem>
   )

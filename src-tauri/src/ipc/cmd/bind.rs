@@ -5,44 +5,10 @@ use crate::ipc::{
         clangd::ClangdCommandBuilder, forward_server::ForwardServer, pyrights::PylsCommandBuilder,
         LspServer,
     },
-    ws::ws_ipc_route,
     LanguageMode,
 };
-use tokio::{net::TcpListener, sync::Mutex};
-use tokio_tungstenite::{
-    accept_hdr_async,
-    tungstenite::handshake::server::{ErrorResponse, Request, Response},
-};
-
-#[tauri::command]
-pub async fn bind_ws_ipc() -> Result<u16, String> {
-    let tcp_listener = TcpListener::bind("127.0.0.1:0")
-        .await
-        .map_err(|e| e.to_string())?;
-    let port = tcp_listener.local_addr().unwrap().port();
-    log::info!(
-        "ipc websocks listen on {}",
-        tcp_listener.local_addr().unwrap().to_string()
-    );
-
-    tokio::spawn(async move {
-        while let Ok((stream, _)) = tcp_listener.accept().await {
-            let mut path = None;
-            let callback = |req: &Request, res: Response| -> Result<Response, ErrorResponse> {
-                path = Some(req.uri().path().to_string());
-                Ok(res)
-            };
-            let ws = accept_hdr_async(stream, callback).await.unwrap();
-            let path = path.unwrap();
-            if "/interrupt" == path {
-                break;
-            }
-            tokio::spawn(ws_ipc_route(path, ws));
-        }
-    });
-
-    Ok(port)
-}
+use tauri::Runtime;
+use tokio::sync::Mutex;
 
 pub struct LSPState {
     t: Mutex<HashMap<LanguageMode, (u16, Box<dyn LspServer>)>>,
@@ -78,4 +44,10 @@ pub async fn get_lsp_server(
     }
 
     Ok(guard.get(&mode).unwrap().0)
+}
+
+#[tauri::command]
+pub async fn open_devtools<R: Runtime>(window: tauri::Window<R>) -> Result<(), String> {
+    window.open_devtools();
+    Ok(())
 }

@@ -9,6 +9,7 @@ type EditorProps = {
   className?: string
   text?: string
   onChange?: (text: string) => void
+  editable?: boolean
 }
 function TextareaEditor(props: EditorProps) {
   return (

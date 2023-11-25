@@ -1,14 +1,11 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::{ExitStatus, Stdio};
-use std::task::Context;
 use std::time::Duration;
 use tauri::Runtime;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
-use tokio::sync::mpsc::{self, UnboundedReceiver};
 use tokio::sync::Mutex;
 
 use crate::{
@@ -241,8 +238,8 @@ async fn run_command_with_updater<R: Runtime>(
     stdin.write_all(input.as_bytes()).await?;
     stdin.flush().await?;
     std::mem::drop(stdin); // close stdin
-    let mut stdout = BufReader::new(proc.0.stdout.take().unwrap());
-    let mut stderr = BufReader::new(proc.0.stderr.take().unwrap());
+    let mut stdout = BufReader::new(proc.0.stdout.take().unwrap()).lines();
+    let mut stderr = BufReader::new(proc.0.stderr.take().unwrap()).lines();
 
     let mut stdout_buf = String::new();
     let mut stderr_buf = String::new();
@@ -251,35 +248,40 @@ async fn run_command_with_updater<R: Runtime>(
     update.clear().await;
 
     let exit_status = loop {
-        let mut stdout_bytesbuf = Vec::new();
-        let mut stderr_bytesbuf = Vec::new();
         tokio::select! {
-                Ok(sz) = stdout.read_until(b'\n', &mut stdout_bytesbuf), if !stdout_eof => {
-                    if sz == 0{
-                        stdout_eof = true;
-                        continue;
+            Ok(data) = stdout.next_line(), if !stdout_eof => {
+                if let Some(line) = data {
+                    if !stdout_buf.is_empty() {
+                        stdout_buf.push('\n');
+                        update.append_stdout(String::from("\n")).await;
                     }
-                    let buf = String::from_utf8(stdout_bytesbuf)?;
-                    stdout_buf.push_str(&buf);
-                    update.append_stdout(buf).await;
-                }
-                Ok(sz) = stderr.read_until(b'\n', &mut stderr_bytesbuf), if !stderr_eof => {
-                    if sz == 0 {
-                        stderr_eof = true;
-                        continue;
-                    }
-                    let buf = String::from_utf8(stderr_bytesbuf)?;
-                    stderr_buf.push_str(&buf);
-                    update.append_stderr(buf).await;
-                }
-                _ = tokio::time::sleep(Duration::from_millis(500)), if !stdout_eof || !stderr_eof => {
-                    update.flush().await;
-                }
-                else => {
-                    update.flush().await;
-                    break proc.as_mut().wait().await?;
+                    stdout_buf.push_str(&line);
+                    update.append_stdout(line).await;
+                }else{
+                    stdout_eof = true
                 }
             }
+            Ok(data) = stderr.next_line(), if !stderr_eof => {
+                if let Some(line) = data{
+                    if !stderr_buf.is_empty() {
+                        stderr_buf.push('\n');
+                        update.append_stderr(String::from("\n")).await;
+                    }
+                    stderr_buf.push_str(&line);
+                    update.append_stderr(line).await;
+                }else{
+                    stderr_eof = true;
+                }
+            }
+            _ = tokio::time::sleep(Duration::from_millis(500)), if !stdout_eof || !stderr_eof => {
+                update.flush().await;
+            }
+            else => {
+                update.flush().await;
+                log::info!("wait process end,exit? {:?}", proc.as_mut().try_wait());
+                break proc.as_mut().wait().await?;
+            }
+        }
     };
 
     Ok((exit_status, stdout_buf, stderr_buf))

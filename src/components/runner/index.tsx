@@ -1,25 +1,26 @@
 import clsx from "clsx"
 import { Button } from "../ui/button"
 import { VscDebugRestart, VscGear } from "react-icons/vsc"
-import { sourcesCode, useAddSourcecodeTestcase, useGetSourcecodeTestcase } from "@/store/tabs"
-import { useAtom } from "jotai"
+import { useGetSourcesCode, useAddTestcase, useGetTestcase } from "@/store/tabs"
 import { LanguageMode, compileSource, runDetach } from "@/lib/ipc"
 import { ContextMenu, ContextMenuItem, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Accordion} from "../ui/accordion"
+import { Accordion } from "../ui/accordion"
 import { emit, useMitt } from "@/hooks/useMitt"
 import SingleRunner from "./single"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import Configuration from "./conf"
 
 export default function Runner({ id, className }: { id: number; className?: string }) {
-  const [sourceCodeMap] = useAtom(sourcesCode)
+  const getSourceCode = useGetSourcesCode()
   const [runAllAnimate, setRunAllAnimate] = useState(false)
-  const addSourcecodeTestcase = useAddSourcecodeTestcase()
-  const getSourcecodeTestcase = useGetSourcecodeTestcase()
+  const addSourcecodeTestcase = useAddTestcase()
+  const getSourcecodeTestcase = useGetTestcase()
 
   async function runAll() {
     setRunAllAnimate(true)
-    const sourceCode = sourceCodeMap.get(id)!
+    const sourceCode = getSourceCode(id)
     await compileSource(LanguageMode.CXX, sourceCode)
     setRunAllAnimate(false)
   }
@@ -34,7 +35,7 @@ export default function Runner({ id, className }: { id: number; className?: stri
 
   async function onRunDetachClick() {
     setRunAllAnimate(true)
-    const sourceCode = sourceCodeMap.get(id)!
+    const sourceCode = getSourceCode(id)
     let target = await compileSource(LanguageMode.CXX, sourceCode)
     setRunAllAnimate(false)
 
@@ -78,16 +79,27 @@ export default function Runner({ id, className }: { id: number; className?: stri
               <ContextMenuItem onClick={onRunDetachClick}>Run Detached</ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
-          <Button size="icon" variant="outline" className="m-1">
-            <VscGear />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="icon" variant="outline" className="m-1">
+                <VscGear />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="right">
+              <Configuration id={id}/>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="min-w-0 min-h-0 overflow-y-auto flex-1">
           <Accordion type="multiple">{testcaseList}</Accordion>
         </div>
       </div>
       <div className="flex gap-2 p-4 shadow-sm shadow-black">
-        <Button size="sm" className="flex-1 py-0  bg-green-600 hover:bg-green-500" onClick={() => addSourcecodeTestcase(id)}>
+        <Button
+          size="sm"
+          className="flex-1 py-0  bg-green-600 hover:bg-green-500"
+          onClick={() => addSourcecodeTestcase(id)}
+        >
           New Testcase
         </Button>
         <Button size="sm" className="flex-1 py-0 bg-blue-500 hover:bg-blue-400">

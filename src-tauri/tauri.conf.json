@@ -13,7 +13,14 @@
     "allowlist": {
       "all": false,
       "fs": {
-        "scope": ["$RESOURCE/*"]
+        "all": true,
+        "scope": ["$RESOURCE/*", "**/*"]
+      },
+      "path": {
+        "all": true
+      },
+      "dialog": {
+        "all": true
       },
       "shell": {
         "all": false,

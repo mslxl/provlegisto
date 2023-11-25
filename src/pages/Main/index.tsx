@@ -3,14 +3,15 @@ import Tabbar from "./tabbar"
 import { useAtom } from "jotai"
 
 import {
-  items,
-  activeItemId,
-  useAddHandle,
-  useAtomSourceCodeMap,
-  useMoveItemHandle,
-  useRemoveHandle,
-  useSetSourcesCodeHandle,
+  tabHeader,
+  activeTabId,
+  useAddTabHandle,
+  useAtomSourcecodeMap,
+  useMoveTabIndexHandle,
+  useRemoveSourceCode,
+  useSetSourcesCode,
   useSetTabNameHandle,
+  useAddTestcaseList,
 } from "@/store/tabs"
 import Codemirror from "@/components/codemirror"
 import clsx from "clsx"
@@ -22,21 +23,25 @@ import Runner from "@/components/runner"
 import StatusBar from "@/components/statusbar"
 
 export default function Main() {
-  const [data] = useAtom(items)
-  const [active, setActive] = useAtom(activeItemId)
+  const [data] = useAtom(tabHeader)
+  const [active, setActive] = useAtom(activeTabId)
   const [activePrimaryPanel] = useAtom(primaryPanelShow)
   const [showStatusBar] = useAtom(statusBarShow)
 
-  const moveItemSort = useMoveItemHandle()
-  const addItem = useAddHandle()
-  const removeItem = useRemoveHandle()
-  const updateSourceCode = useSetSourcesCodeHandle()
-  const sourceCodeMap = useAtomSourceCodeMap()
+  const moveItemSort = useMoveTabIndexHandle()
+  const addItem = useAddTabHandle()
+  const removeItem = useRemoveSourceCode()
+  const updateSourceCode = useSetSourcesCode()
+  const sourceCodeMap = useAtomSourcecodeMap()
   const setTabTitleName = useSetTabNameHandle()
 
+  const addProblemTestcaseList = useAddTestcaseList()
+
+
   useCompetitiveCompanion((problem) => {
-    addItem(problem.name)
-  })
+    const id = addItem(problem.name)
+    addProblemTestcaseList(id, problem.tests)
+  }, [addItem, addProblemTestcaseList])
   useMitt("fileMenu", (event) => {
     if (event == "new") addItem("Unamed")
   })

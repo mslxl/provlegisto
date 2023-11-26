@@ -57,7 +57,7 @@ export default function PrimarySide() {
               <DropdownMenuItem onClick={() => emit("fileMenu", "new")}>New File</DropdownMenuItem>
               <DropdownMenuItem>New Contest</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Open File</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => emit("fileMenu", "open")}>Open File</DropdownMenuItem>
               <DropdownMenuItem>Open Contest</DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Open Recent</DropdownMenuSubTrigger>
@@ -69,6 +69,8 @@ export default function PrimarySide() {
                   <DropdownMenuItem>Clear Recently Open</DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => emit("fileMenu", "save")}>Save</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>

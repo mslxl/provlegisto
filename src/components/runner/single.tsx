@@ -3,7 +3,7 @@ import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordi
 import { Badge } from "../ui/badge"
 import { ChevronDown } from "lucide-react"
 import Editor from "../editor"
-import { useAtomSourcecodeMap, useDelTestcase, useGetChecker, useGetTestcase, useSetTestcase } from "@/store/tabs"
+import {  useDelTestcase, useGetChecker, useGetSourcesCode, useGetTestcase, useSetTestcase } from "@/store/tabs"
 import { emit, useMitt } from "@/hooks/useMitt"
 import { LanguageMode, compileRunCheck } from "@/lib/ipc"
 import { Button } from "../ui/button"
@@ -53,13 +53,13 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
   const [judgeStatus, setJudgeStatus] = useState<JudgeStatus>("UK")
 
   let testcase = getSourcecodeTestcase(props.id)[props.testcaseIdx]
-  const sourceCode = useAtomSourcecodeMap().get(props.id)!
+  const sourceCode = useGetSourcesCode()(props.id)
   const externalTaskId = `${props.id}_${props.testcaseIdx}`
   const acutalStdoutBuf = useRef("")
   const acutalStdoutLinesCnt = useRef(0)
   const [actualStdout, setActualStdout] = useState("")
   const acutalStderrBuf = useRef("")
-  const [_actualStderr, setActualStderr] = useState("")
+  const [actualStderr, setActualStderr] = useState("")
   const [running, setRunning] = useState(false)
   const checker = useGetChecker()(props.id)
   const [checkerReport, setCheckerReport] = useState("")
@@ -192,7 +192,7 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
             <span className="text-end text-xs w-full px-2 hover:text-gray-600">See Report&gt;&gt;</span>
           </PopoverTrigger>
           <PopoverContent side="right">
-            <AdditionMessage checkReport={checkerReport} stderrLog={actualStdout} />
+            <AdditionMessage checkReport={checkerReport} stderrLog={actualStderr} />
           </PopoverContent>
         </Popover>
       </AccordionContent>

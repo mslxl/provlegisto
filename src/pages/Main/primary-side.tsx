@@ -14,8 +14,9 @@ import {
 import { emit } from "@/hooks/useMitt"
 import { useAtom } from "jotai"
 import { ReactNode } from "react"
-import clsx from "clsx"
 import { openDevTools } from "@/lib/ipc"
+import { Link } from "react-router-dom"
+import clsx from "clsx"
 
 export default function PrimarySide() {
   const [panel, setPanel] = useAtom(primaryPanelShow)
@@ -74,8 +75,10 @@ export default function PrimarySide() {
             <DropdownMenuSubTrigger>Help</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => openDevTools()}>Open Devtools</DropdownMenuItem>
-              <DropdownMenuSeparator/>
-              <DropdownMenuItem>About</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/about">About</Link>
+              </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         </DropdownMenuContent>

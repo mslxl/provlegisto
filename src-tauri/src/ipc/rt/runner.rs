@@ -151,10 +151,13 @@ pub async fn run_redirect<R: Runtime>(
         target.parent().unwrap().to_owned()
     };
 
-    let cmd = match mode {
+    let working_dir = PathBuf::from(&exec_target).parent().unwrap().to_path_buf();
+    let mut cmd = match mode {
         LanguageMode::CXX => std::process::Command::new(exec_target),
         _ => unimplemented!(),
     };
+
+    cmd.current_dir(working_dir);
     let update = RunnerOutputUpdater::new(task_id.clone(), window);
 
     let job = run_command_with_updater(&update, cmd, input);

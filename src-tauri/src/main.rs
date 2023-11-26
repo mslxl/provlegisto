@@ -6,16 +6,20 @@ use ipc::{
     rt::{compiler::CompilerState, runner::RunnerState, checker::CheckerState},
 };
 use tauri::Manager;
-use util::logger::SimpleLogger;
+use tauri_plugin_log::{LogTarget};
+
 
 pub mod ipc;
 pub mod util;
 
-static LOGGER: SimpleLogger = SimpleLogger;
 fn main() {
-    let _ = log::set_logger(&LOGGER).map(|()| log::set_max_level(log::LevelFilter::Info));
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::default().targets([
+            LogTarget::LogDir,
+            LogTarget::Stdout,
+            LogTarget::Webview,
+        ]).build())
         .setup(|app| {
             app.manage(LSPState::default());
             app.manage(CompetitiveCompanionState::default());

@@ -57,6 +57,7 @@
     "styled-components": "^6.1.1",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
+    "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
     "vscode-languageserver-protocol": "^3.17.5",
     "zod": "^3.22.4"
   },

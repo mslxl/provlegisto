@@ -5,7 +5,7 @@ fn gcc(inp: &str, oup: &str) {
         return;
     }
     assert!(Command::new("c++")
-        .args([inp, "-o", oup])
+        .args([inp, "-std=c++17", "-o", oup])
         .spawn()
         .unwrap()
         .wait()

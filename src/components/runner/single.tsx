@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useState } from "react"
+import { forwardRef, useEffect, useRef, useState } from "react"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Badge } from "../ui/badge"
 import { ChevronDown } from "lucide-react"
@@ -46,7 +46,7 @@ const JudgeStatusTextStype: JudgeStatusStyle = {
   INT: "bg-violet-600",
 }
 
-const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
+export default function SingleRunner(props : SingleRunnerProps) {
   const getSourcecodeTestcase = useGetTestcase()
   const setSourcecodeTestcase = useSetTestcase()
   const delSourcecodeTestcase = useDelTestcase()
@@ -63,6 +63,10 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
   const [running, setRunning] = useState(false)
   const checker = useGetChecker()(props.id)
   const [checkerReport, setCheckerReport] = useState("")
+
+  useEffect(()=>{
+    setJudgeStatus('UK')
+  }, [props.id])
 
   useMitt(
     "run",
@@ -123,7 +127,7 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
         setActualStderr(acutalStdoutBuf.current)
       }
     },
-    [],
+    [externalTaskId],
   )
 
   return (
@@ -198,6 +202,4 @@ const SingleRunner = forwardRef<unknown, SingleRunnerProps>((props, _ref) => {
       </AccordionContent>
     </AccordionItem>
   )
-})
-SingleRunner.displayName = "SingleRunner"
-export default SingleRunner
+}

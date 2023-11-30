@@ -71,6 +71,10 @@ export default function PrimarySide() {
               </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => emit("fileMenu", "save")}>Save</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem asChild>
+                <Link to="/pref">Preferences</Link>
+              </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>

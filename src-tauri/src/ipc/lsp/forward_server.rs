@@ -48,10 +48,7 @@ impl<T: LspCommandBuilder> ForwardServer<T> {
         _path: String,
         stream: WebSocketStream<TcpStream>,
     ) {
-        {
-            #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-            console::hide_new_console(&mut command);
-        }
+        console::hide_new_console(&mut command);
         let mut command = tokio::process::Command::from(command);
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());

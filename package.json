@@ -30,6 +30,8 @@
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.0.2",
+    "@replit/codemirror-emacs": "^6.0.1",
+    "@replit/codemirror-vim": "^6.1.0",
     "@tauri-apps/api": "^1.5.1",
     "axios": "^1.6.2",
     "axios-tauri-api-adapter": "^0.2.0",
@@ -58,6 +60,7 @@
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log#v1",
+    "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
     "vscode-languageserver-protocol": "^3.17.5",
     "zod": "^3.22.4"
   },

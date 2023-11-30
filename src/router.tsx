@@ -1,19 +1,38 @@
 import { Suspense, lazy } from "react"
-import { RouterProvider, createMemoryRouter } from "react-router-dom"
+import { RouterProvider, createBrowserRouter } from "react-router-dom"
 
 import Loading from "@/components/loading"
 const PageMain = lazy(() => import("@/pages/Main"))
-const PagePreference = lazy(() => import("@/pages/Preference"))
-const PageAbout = lazy(() => import("@/pages/About"))
+const PagePreference = {
+  Layout: lazy(() => import("@/pages/Preference")),
+  Appearance: lazy(() => import("@/pages/Preference/appearance")),
+  Editor: lazy(() => import("@/pages/Preference/editor")),
+  Keymap: lazy(() => import("@/pages/Preference/keymap")),
+}
 
-const router = createMemoryRouter([
+const PageAbout = lazy(() => import("@/pages/About"))
+const router = createBrowserRouter([
   {
     path: "/",
     element: <PageMain />,
   },
   {
-    path: "/preference",
-    element: <PagePreference />,
+    path: "/pref",
+    element: <PagePreference.Layout />,
+    children: [
+      {
+        path: "/pref/appearance",
+        element: <PagePreference.Appearance />,
+      },
+      {
+        path: "/pref/editor",
+        element: <PagePreference.Editor />,
+      },
+      {
+        path: "/pref/keymap",
+        element: <PagePreference.Keymap />,
+      },
+    ],
   },
   {
     path: "/about",

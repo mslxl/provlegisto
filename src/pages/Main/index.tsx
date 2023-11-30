@@ -25,8 +25,13 @@ import { primaryPanelShow, statusBarShow } from "@/store/ui"
 import Runner from "@/components/runner"
 import StatusBar from "@/components/statusbar"
 import { dialog } from "@tauri-apps/api"
+import { useZoom } from "@/hooks/useZoom"
+import { cxxLsp } from "@/components/codemirror/language"
+import { KeymapProvider, emacsKeymap, noKeymap, vimKeymap } from "@/components/codemirror/keymap"
+import { keymapState } from "@/store/setting/keymap"
 
 export default function Main() {
+  useZoom()
   const data = useAtomValue(tabHeader)
   const [active, setActive] = useAtom(activeTabId)
   const [activePrimaryPanel] = useAtom(primaryPanelShow)
@@ -87,6 +92,12 @@ export default function Main() {
     }
   })
 
+  const keymapName = useAtomValue(keymapState)
+  let keymapExt: KeymapProvider | null = null
+  if(keymapName == 'vim') keymapExt = vimKeymap
+  else if(keymapName == 'emacs') keymapExt = emacsKeymap
+  else if(keymapName == 'normal') keymapExt = noKeymap
+
   return (
     <div className="w-full h-full flex flex-col items-stretch">
       <div className="flex-1 flex flex-row min-h-0">
@@ -115,6 +126,8 @@ export default function Main() {
               className={clsx("box-border flex-1 min-h-0", {
                 hidden: active != head.id,
               })}
+              lsp={cxxLsp}
+              keymap={keymapExt!}
               initialSourceCode={getSourceCode(head.id) ?? ""}
               onCurrentSourceCodeChange={(content) => updateSourceCode(head.id, content)}
             />

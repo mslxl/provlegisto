@@ -11,6 +11,7 @@ import { emit, useMitt } from "@/hooks/useMitt"
 import SingleRunner from "./single"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import Configuration from "./conf"
+import * as log from 'tauri-plugin-log-api'
 
 export default function Runner({ id, className }: { id: number; className?: string }) {
   const getSourceCode = useGetSourcesCode()
@@ -42,7 +43,7 @@ export default function Runner({ id, className }: { id: number; className?: stri
     if (target.type === "Success") {
       runDetach(target.data)
     } else {
-      console.log(target)
+      log.warn(JSON.stringify(target))
     }
   }
 

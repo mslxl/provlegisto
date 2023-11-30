@@ -1,9 +1,9 @@
-import { forwardRef, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Badge } from "../ui/badge"
 import { ChevronDown } from "lucide-react"
 import Editor from "../editor"
-import {  useDelTestcase, useGetChecker, useGetSourcesCode, useGetTestcase, useSetTestcase } from "@/store/tabs"
+import { useDelTestcase, useGetChecker, useGetSourcesCode, useGetTestcase, useSetTestcase } from "@/store/tabs"
 import { emit, useMitt } from "@/hooks/useMitt"
 import { LanguageMode, compileRunCheck } from "@/lib/ipc"
 import { Button } from "../ui/button"
@@ -13,6 +13,7 @@ import { motion } from "framer-motion"
 import clsx from "clsx"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import AdditionMessage from "./addition-msg"
+import * as log from 'tauri-plugin-log-api'
 type SingleRunnerProps = {
   id: number
   testcaseIdx: number
@@ -46,7 +47,7 @@ const JudgeStatusTextStype: JudgeStatusStyle = {
   INT: "bg-violet-600",
 }
 
-export default function SingleRunner(props : SingleRunnerProps) {
+export default function SingleRunner(props: SingleRunnerProps) {
   const getSourcecodeTestcase = useGetTestcase()
   const setSourcecodeTestcase = useSetTestcase()
   const delSourcecodeTestcase = useDelTestcase()
@@ -64,8 +65,8 @@ export default function SingleRunner(props : SingleRunnerProps) {
   const checker = useGetChecker()(props.id)
   const [checkerReport, setCheckerReport] = useState("")
 
-  useEffect(()=>{
-    setJudgeStatus('UK')
+  useEffect(() => {
+    setJudgeStatus("UK")
   }, [props.id])
 
   useMitt(
@@ -85,17 +86,18 @@ export default function SingleRunner(props : SingleRunnerProps) {
         name: checker,
       })
         .then((result) => {
-          console.log(result)
+          log.info(JSON.stringify(result))
+
           if (result.type == "WA") {
             setCheckerReport(result.report)
-          } else if(result.type == 'CE') {
+          } else if (result.type == "CE") {
             let line = ""
-            for(let i of result.data){
+            for (let i of result.data) {
               line += `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`
             }
             setCheckerReport(line)
           }
-          
+
           setRunning(false)
           setJudgeStatus(result.type as any)
         })

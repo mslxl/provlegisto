@@ -9,3 +9,7 @@ export enum LanguageMode {
 }
 
 export const openDevTools = (): Promise<void> => invoke("open_devtools")
+
+export const getSettingsPath = (): Promise<string> => invoke("get_settings_path")
+
+export const isDebug = (): Promise<boolean> => invoke("is_debug")

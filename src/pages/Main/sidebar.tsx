@@ -1,6 +1,6 @@
 import * as Sidebar from "@/components/ui/sidebar"
 import { VscMenu, VscVmRunning, VscSettingsGear, VscOrganization, VscTypeHierarchySub } from "react-icons/vsc"
-import { primaryPanelShow } from "@/store/ui"
+import { primaryPanelShowAtom } from "@/store/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ import { Link } from "react-router-dom"
 import clsx from "clsx"
 
 export default function PrimarySide() {
-  const [panel, setPanel] = useAtom(primaryPanelShow)
+  const [panel, setPanel] = useAtom(primaryPanelShowAtom)
 
   function onPanelButtonClick(panelId: string) {
     if (panelId == panel) setPanel(null)
@@ -71,6 +71,7 @@ export default function PrimarySide() {
               </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => emit("fileMenu", "save")}>Save</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => emit("fileMenu", "saveAs")}>Save As...</DropdownMenuItem>
               <DropdownMenuSeparator/>
               <DropdownMenuItem asChild>
                 <Link to="/pref">Preferences</Link>

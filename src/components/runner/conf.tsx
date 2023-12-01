@@ -1,27 +1,26 @@
 import { availableInternalChecker } from "@/lib/ipc"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { useGetChecker, useSetChecker } from "@/store/tabs"
+import { PrimitiveAtom } from "jotai"
+import { Test } from "@/store/testcase"
+import { useMemo } from "react"
+import { focusAtom } from "jotai-optics"
+import PrefSelect from "../pref/Select"
+import { PrefNumber } from "../pref"
 
 type ConfigurationProps = {
-  id: number
+  testAtom: PrimitiveAtom<Test>
 }
 export default function Configuration(props: ConfigurationProps) {
-  const getChecker = useGetChecker()
-  const setChecker = useSetChecker()
-  const currentCheckerValue = getChecker(props.id)
+  const checkerAtom = useMemo(() => focusAtom(props.testAtom, (optic) => optic.prop("checker")), [props.testAtom])
+  const timeLimitsAtom = useMemo(() => focusAtom(props.testAtom, (optic) => optic.prop("timeLimits")), [props.testAtom])
 
   return (
     <div>
-      <Select defaultValue={currentCheckerValue} onValueChange={(v: string) => setChecker(props.id, v)}>
-        <SelectTrigger>
-          <SelectValue placeholder="Checker" />
-        </SelectTrigger>
-        <SelectContent>
-          {availableInternalChecker.map((ck) => (
-            <SelectItem value={ck}>{ck}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <PrefSelect
+        leading="Checker"
+        items={availableInternalChecker.map((v) => ({ key: v, value: v }))}
+        atom={checkerAtom}
+      />
+      <PrefNumber leading="Time Limits" min={0} step={500} atom={timeLimitsAtom} />
     </div>
   )
 }

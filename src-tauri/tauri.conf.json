@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "Provlegisto",
+    "productName": "provlegisto",
     "version": "0.0.0"
   },
   "tauri": {

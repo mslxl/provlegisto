@@ -1,105 +1,29 @@
-import PrimarySide from "./primary-side"
+import PrimarySide from "./sidebar"
 import Tabbar from "./tabbar"
 import { useAtom, useAtomValue } from "jotai"
 
-import {
-  tabHeader,
-  activeTabId,
-  sourcePath,
-  useAddTabHandle,
-  useMoveTabIndexHandle,
-  useRemoveSourceCode,
-  useSetSourcesCode,
-  useSetTabNameHandle,
-  useAddTestcaseList,
-  useAddSourceFromFiles,
-  useGetSourcesCode,
-  useSaveSourceToFile,
-} from "@/store/tabs"
-import Codemirror from "@/components/codemirror"
 import clsx from "clsx"
-import { useCompetitiveCompanion } from "@/hooks/useCompetitiveCompanion"
-import { useMitt } from "@/hooks/useMitt"
-import PrimaryPanel from "./primary-panel"
-import { primaryPanelShow, statusBarShow } from "@/store/ui"
-import Runner from "@/components/runner"
+import PrimaryPanel from "./sidebar-panel"
+import { primaryPanelShowAtom, statusBarShowAtom } from "@/store/ui"
 import StatusBar from "@/components/statusbar"
-import { dialog } from "@tauri-apps/api"
 import { useZoom } from "@/hooks/useZoom"
-import { cxxLsp } from "@/components/codemirror/language"
-import { KeymapProvider, emacsKeymap, noKeymap, vimKeymap } from "@/components/codemirror/keymap"
-import { keymapState } from "@/store/setting/keymap"
+import { sourceIndexAtomAtoms } from "@/store/source"
+import EditorTabPanel from "./editor-tabpane"
+import Runner from "@/components/runner"
+import MenuEventReceiver from "./menu-event"
 
 export default function Main() {
   useZoom()
-  const data = useAtomValue(tabHeader)
-  const [active, setActive] = useAtom(activeTabId)
-  const [activePrimaryPanel] = useAtom(primaryPanelShow)
-  const [showStatusBar] = useAtom(statusBarShow)
-  const [sourcePathMap, setSourcePathMap] = useAtom(sourcePath)
 
-  const moveItemSort = useMoveTabIndexHandle()
-  const addItem = useAddTabHandle()
-  const removeItem = useRemoveSourceCode()
-  const updateSourceCode = useSetSourcesCode()
-  const getSourceCode = useGetSourcesCode()
-  const setTabTitleName = useSetTabNameHandle()
+  const [activePrimaryPanel] = useAtom(primaryPanelShowAtom)
+  const [showStatusBar] = useAtom(statusBarShowAtom)
 
-  const addProblemTestcaseList = useAddTestcaseList()
+  const sourceIndexAtom = useAtomValue(sourceIndexAtomAtoms)
 
-  useCompetitiveCompanion(
-    (problem) => {
-      const id = addItem(problem.name)
-      addProblemTestcaseList(id, problem.tests)
-    },
-    [addItem, addProblemTestcaseList],
-  )
-  const addFiles = useAddSourceFromFiles()
-  const saveFile = useSaveSourceToFile()
-
-  useMitt("fileMenu", async (event) => {
-    if (event == "new") addItem("Unamed")
-    else if (event == "open") {
-      const files = await dialog.open({
-        filters: [
-          {
-            name: "c++/c source file",
-            extensions: ["cpp", "c"],
-          },
-        ],
-      })
-      // parse header
-      if (files == null) return
-      const sources = typeof files == "string" ? [files] : files
-      await addFiles(sources)
-    } else if (event == "save") {
-      let targetFile = sourcePathMap.get(active)
-      if (targetFile === undefined) {
-        const path = await dialog.save({
-          defaultPath: `${data.find((v) => v.id == active)!.text}.cpp`,
-          filters: [
-            {
-              name: "c++/c source file",
-              extensions: ["cpp", "c"],
-            },
-          ],
-        })
-        if (path == null) return
-        setSourcePathMap(new Map([...sourcePathMap, [active, path]]))
-        targetFile = path
-      }
-      await saveFile(targetFile, active)
-    }
-  })
-
-  const keymapName = useAtomValue(keymapState)
-  let keymapExt: KeymapProvider | null = null
-  if(keymapName == 'vim') keymapExt = vimKeymap
-  else if(keymapName == 'emacs') keymapExt = emacsKeymap
-  else if(keymapName == 'normal') keymapExt = noKeymap
 
   return (
     <div className="w-full h-full flex flex-col items-stretch">
+      <MenuEventReceiver/>
       <div className="flex-1 flex flex-row min-h-0">
         <PrimarySide />
         <PrimaryPanel
@@ -107,30 +31,12 @@ export default function Main() {
             hidden: activePrimaryPanel === null,
           })}
         >
-          <Runner id={active} className={clsx({ hidden: activePrimaryPanel != "run" })} />
+        <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} />
         </PrimaryPanel>
         <div className="flex-1 flex flex-col w-0 min-h-0">
-          <Tabbar
-            className="h-8"
-            items={data}
-            activeId={active}
-            onSelect={setActive}
-            swap={moveItemSort}
-            onAdd={() => addItem("Unamed")}
-            onClose={removeItem}
-            onSetName={setTabTitleName}
-          />
-          {data.map((head) => (
-            <Codemirror
-              key={head.id}
-              className={clsx("box-border flex-1 min-h-0", {
-                hidden: active != head.id,
-              })}
-              lsp={cxxLsp}
-              keymap={keymapExt!}
-              initialSourceCode={getSourceCode(head.id) ?? ""}
-              onCurrentSourceCodeChange={(content) => updateSourceCode(head.id, content)}
-            />
+          <Tabbar className="h-8" />
+          {sourceIndexAtom.map((atom, index) => (
+            <EditorTabPanel key={index} className={clsx("box-border flex-1 min-h-0")} headerAtom={atom} />
           ))}
         </div>
       </div>

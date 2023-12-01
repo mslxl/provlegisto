@@ -1,7 +1,7 @@
 import mitt, { Handler } from "mitt"
 import { DependencyList, useEffect } from "react"
 type Events = {
-  fileMenu: "new" | "newContest" | "open" | "openContest" | "save"
+  fileMenu: "new" | "newContest" | "open" | "openContest" | "save" | "saveAs"
   run: "all" | string
 }
 

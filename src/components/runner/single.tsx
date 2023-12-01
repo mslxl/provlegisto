@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Badge } from "../ui/badge"
 import { ChevronDown } from "lucide-react"
 import Editor from "../editor"
-import { useDelTestcase, useGetChecker, useGetSourcesCode, useGetTestcase, useSetTestcase } from "@/store/tabs"
 import { emit, useMitt } from "@/hooks/useMitt"
-import { LanguageMode, compileRunCheck } from "@/lib/ipc"
+import { compileRunCheck } from "@/lib/ipc"
 import { Button } from "../ui/button"
 import { VscDebugRestart, VscTrash } from "react-icons/vsc"
 import { useTauriEvent } from "@/hooks/useTauriEvent"
@@ -13,10 +12,20 @@ import { motion } from "framer-motion"
 import clsx from "clsx"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import AdditionMessage from "./addition-msg"
-import * as log from 'tauri-plugin-log-api'
+import * as log from "tauri-plugin-log-api"
+import { Atom, PrimitiveAtom, useAtom } from "jotai"
+import { TestCase } from "@/store/testcase"
+import { SourceCode } from "@/store/source"
+import useReadAtom from "@/hooks/useReadAtom"
+import { focusAtom } from "jotai-optics"
 type SingleRunnerProps = {
-  id: number
-  testcaseIdx: number
+  testcaseAtom: PrimitiveAtom<TestCase>
+  sourceAtom: Atom<SourceCode>
+  timeLimitsAtom: Atom<number>
+  memoryLimitsAtom: Atom<number>
+  checkerAtom: Atom<string>
+  taskId: string
+  onDelete: () => void
 }
 
 type JudgeStatus = "AC" | "TLE" | "WA" | "RE" | "PD" | "CE" | "UK" | "INT"
@@ -48,43 +57,49 @@ const JudgeStatusTextStype: JudgeStatusStyle = {
 }
 
 export default function SingleRunner(props: SingleRunnerProps) {
-  const getSourcecodeTestcase = useGetTestcase()
-  const setSourcecodeTestcase = useSetTestcase()
-  const delSourcecodeTestcase = useDelTestcase()
   const [judgeStatus, setJudgeStatus] = useState<JudgeStatus>("UK")
 
-  let testcase = getSourcecodeTestcase(props.id)[props.testcaseIdx]
-  const sourceCode = useGetSourcesCode()(props.id)
-  const externalTaskId = `${props.id}_${props.testcaseIdx}`
-  const acutalStdoutBuf = useRef("")
-  const acutalStdoutLinesCnt = useRef(0)
+  const readSourceCode = useReadAtom(props.sourceAtom)
+  const readTimeLimits = useReadAtom(props.timeLimitsAtom)
+  // const readMemoryLimits = useReadAtom(props.memoryLimitsAtom)
+  const readChecker = useReadAtom(props.checkerAtom)
+  const inputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("input")), [props.testcaseAtom])
+  const outputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("output")), [props.testcaseAtom])
+
+  const [input, setInput] = useAtom(inputAtom)
+  const [output, setOutput] = useAtom(outputAtom)
+
   const [actualStdout, setActualStdout] = useState("")
-  const acutalStderrBuf = useRef("")
   const [actualStderr, setActualStderr] = useState("")
+  const acutalStdoutLinesCnt = useRef(0)
   const [running, setRunning] = useState(false)
-  const checker = useGetChecker()(props.id)
   const [checkerReport, setCheckerReport] = useState("")
 
   useEffect(() => {
     setJudgeStatus("UK")
-  }, [props.id])
+    setCheckerReport("")
+  }, [props.sourceAtom])
 
   useMitt(
     "run",
     (taskId) => {
-      if (props.testcaseIdx != parseInt(taskId) && taskId != "all") return
+      if (props.taskId != taskId && taskId != "all") return
       setRunning(true)
       setJudgeStatus("PD")
-      acutalStdoutBuf.current = ""
-      acutalStderrBuf.current = ""
       acutalStdoutLinesCnt.current = 0
+      setCheckerReport("")
       setActualStderr("")
       setActualStdout("")
 
-      compileRunCheck(LanguageMode.CXX, sourceCode, externalTaskId, testcase.input, testcase.output, {
+      const sourceCode = readSourceCode()
+
+      const checker = readChecker()
+      log.info(`compile in ${sourceCode.language} mode with checker ${checker}`)
+      
+      compileRunCheck(sourceCode.language, sourceCode.source, props.taskId, input, output, {
         type: "Internal",
         name: checker,
-      })
+      }, readTimeLimits())
         .then((result) => {
           log.info(JSON.stringify(result))
 
@@ -96,6 +111,8 @@ export default function SingleRunner(props: SingleRunnerProps) {
               line += `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`
             }
             setCheckerReport(line)
+          }else {
+            setCheckerReport(" ")
           }
 
           setRunning(false)
@@ -106,49 +123,42 @@ export default function SingleRunner(props: SingleRunnerProps) {
           setRunning(false)
         })
     },
-    [props.testcaseIdx, props.id, testcase, sourceCode, checker],
+    [props.taskId, props.sourceAtom, input, output],
   )
   useTauriEvent(
-    externalTaskId,
+    props.taskId,
     (event) => {
       const payload = event.payload as any
       if (payload.type == "Clear") {
-        acutalStdoutBuf.current = ""
-        acutalStderrBuf.current = ""
         acutalStdoutLinesCnt.current = 0
       } else if (payload.type == "AppendStdout") {
         acutalStdoutLinesCnt.current += 1
         if (acutalStdoutLinesCnt.current > 200) {
-          setActualStdout(acutalStdoutBuf.current + "...")
+          setActualStdout((prev) => prev + "...")
         } else {
-          acutalStdoutBuf.current = acutalStdoutBuf.current + payload.line
-          setActualStdout(acutalStdoutBuf.current)
+          setActualStdout((prev) => prev + payload.line)
         }
       } else if (payload.type == "AppendStderr") {
-        acutalStderrBuf.current = acutalStderrBuf.current + payload.line
-        setActualStderr(acutalStdoutBuf.current)
+        setActualStderr((prev) => prev + payload.line)
       }
     },
-    [externalTaskId],
+    [props.taskId],
   )
 
   return (
-    <AccordionItem
-      value={props.testcaseIdx.toString()}
-      className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}
-    >
+    <AccordionItem value={props.taskId} className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}>
       <AccordionTrigger className="px-1 py-1" asChild>
         <div className="flex">
           <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200" />
           <h3 className="text-sm whitespace-nowrap">
-            Testcase #{props.testcaseIdx}
+            Testcase #{props.taskId}
             <Badge className={clsx("mx-2 text-white", JudgeStatusTextStype[judgeStatus])}>{judgeStatus}</Badge>
           </h3>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               onClick={(e) => {
-                emit("run", props.testcaseIdx.toString())
+                emit("run", props.taskId)
                 e.preventDefault()
               }}
               variant="outline"
@@ -167,7 +177,7 @@ export default function SingleRunner(props: SingleRunnerProps) {
               variant="destructive"
               className="h-7 w-7 p-0"
               onClick={(e) => {
-                delSourcecodeTestcase(props.id, props.testcaseIdx)
+                props.onDelete()
                 e.preventDefault()
               }}
             >
@@ -178,19 +188,9 @@ export default function SingleRunner(props: SingleRunnerProps) {
       </AccordionTrigger>
       <AccordionContent>
         <span className="text-sm px-2">Input:</span>
-        <Editor
-          kernel="codemirror"
-          className="min-w-0 m-2"
-          text={testcase.input}
-          onChange={(v) => setSourcecodeTestcase(props.id, props.testcaseIdx, v, undefined)}
-        />
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} />
         <span className="text-sm px-2">Expected Output:</span>
-        <Editor
-          kernel="codemirror"
-          className="min-w-0 m-2"
-          text={testcase.output}
-          onChange={(v) => setSourcecodeTestcase(props.id, props.testcaseIdx, undefined, v)}
-        />
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} />
         <span className="text-sm px-2">Ouput:</span>
         <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} />
         <Popover>

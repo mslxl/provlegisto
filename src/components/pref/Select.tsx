@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import PrefItem, { PrefItemProps } from "./Item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { WritableAtom, useAtom } from "jotai"
+import { PrimitiveAtom, useAtom } from "jotai"
 import { map } from "lodash"
 
 type PrefSelectItem = {
@@ -11,7 +11,7 @@ type PrefSelectItem = {
 
 type PrefSelectProps = {
   items: PrefSelectItem[]
-  atom: WritableAtom<string, any[], string>
+  atom: PrimitiveAtom<string>
 } & {
   [Property in keyof PrefItemProps as Exclude<Property, "children" | "msg">]: PrefItemProps[Property]
 }
@@ -22,7 +22,6 @@ export default function PrefSelect(props: PrefSelectProps) {
   const dict = useMemo(() => 
     new Map(map(props.items, (v) => [v.key, v.value]))
   , [props.items])
-  console.log(value)
 
   return (
     <PrefItem {...props}>

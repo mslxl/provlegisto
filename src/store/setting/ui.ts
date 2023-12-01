@@ -1,3 +1,3 @@
 import { atomWithSettings } from "."
 
-export const zoomState = atomWithSettings("zoom", 1.0)
+export const zoomStateAtom = atomWithSettings("zoom", 1.0)

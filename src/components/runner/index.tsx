@@ -1,28 +1,53 @@
 import clsx from "clsx"
 import { Button } from "../ui/button"
 import { VscDebugRestart, VscGear } from "react-icons/vsc"
-import { useGetSourcesCode, useAddTestcase, useGetTestcase } from "@/store/tabs"
-import { LanguageMode, compileSource, runDetach } from "@/lib/ipc"
+import { compileSource, runDetach } from "@/lib/ipc"
 import { ContextMenu, ContextMenuItem, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Accordion } from "../ui/accordion"
 import { emit, useMitt } from "@/hooks/useMitt"
 import SingleRunner from "./single"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import Configuration from "./conf"
-import * as log from 'tauri-plugin-log-api'
+import * as log from "tauri-plugin-log-api"
+import { Atom, useAtom, useAtomValue } from "jotai"
+import { activeIdAtom, sourceStoreAtom } from "@/store/source"
+import { focusAtom } from "jotai-optics"
+import { splitAtom } from "jotai/utils"
+import { emptyTestcase } from "@/store/testcase"
+import useReadAtom from "@/hooks/useReadAtom"
 
-export default function Runner({ id, className }: { id: number; className?: string }) {
-  const getSourceCode = useGetSourcesCode()
+export default function Runnner({ className }: { className?: string }) {
+  const activeId = useAtomValue(activeIdAtom)
+  if (activeId == -1) {
+    return <div className={className}></div>
+  }
+  return <RunnerContent className={className} activeIdAtom={activeIdAtom} />
+}
+
+function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }) {
+  const activeId = useAtomValue(props.activeIdAtom)
+  const sourceCodeAtom = useMemo(
+    () => focusAtom(sourceStoreAtom, (optic) => optic.prop(activeId).prop("code")),
+    [activeId],
+  )
+  const readSourceCode = useReadAtom(sourceCodeAtom)
+
+  const testAtom = useMemo(() => focusAtom(sourceStoreAtom, (optic) => optic.prop(activeId).prop("test")), [activeId])
+  const testcasesAtom = useMemo(() => splitAtom(focusAtom(testAtom, (optic) => optic.prop("testcases"))), [testAtom])
+  const timeLimitsAtom = useMemo(() => focusAtom(testAtom, (optic) => optic.prop("timeLimits")), [testAtom])
+  const memoryAtom = useMemo(() => focusAtom(testAtom, (optic) => optic.prop("memoryLimits")), [testAtom])
+  const checkerAtom = useMemo(() => focusAtom(testAtom, (optic) => optic.prop("checker")), [testAtom])
+
+  const [testcases, dispatchTestcases] = useAtom(testcasesAtom)
+
   const [runAllAnimate, setRunAllAnimate] = useState(false)
-  const addSourcecodeTestcase = useAddTestcase()
-  const getSourcecodeTestcase = useGetTestcase()
 
   async function runAll() {
     setRunAllAnimate(true)
-    const sourceCode = getSourceCode(id)
-    await compileSource(LanguageMode.CXX, sourceCode)
+    const sourceCode = readSourceCode()
+    await compileSource(sourceCode.language, sourceCode.source)
     setRunAllAnimate(false)
   }
 
@@ -36,8 +61,8 @@ export default function Runner({ id, className }: { id: number; className?: stri
 
   async function onRunDetachClick() {
     setRunAllAnimate(true)
-    const sourceCode = getSourceCode(id)
-    let target = await compileSource(LanguageMode.CXX, sourceCode)
+    const sourceCode = readSourceCode()
+    let target = await compileSource(sourceCode.language, sourceCode.source)
     setRunAllAnimate(false)
 
     if (target.type === "Success") {
@@ -47,16 +72,25 @@ export default function Runner({ id, className }: { id: number; className?: stri
     }
   }
 
-  if (id == -1) {
-    return <div></div>
+  if (activeId == -1) {
+    return <div>TODO</div>
   }
 
-  const testcaseList = getSourcecodeTestcase(id).map((_, index) => (
-    <SingleRunner key={index} id={id} testcaseIdx={index} />
+  const testcaseList = testcases.map((atom, index) => (
+    <SingleRunner
+      key={index}
+      sourceAtom={sourceCodeAtom}
+      testcaseAtom={atom}
+      onDelete={() => dispatchTestcases({ type: "remove", atom })}
+      taskId={index.toString()}
+      checkerAtom={checkerAtom}
+      timeLimitsAtom={timeLimitsAtom}
+      memoryLimitsAtom={memoryAtom}
+    />
   ))
 
   return (
-    <div className={clsx(className, "h-full select-none flex flex-col min-h-0 min-w-0")}>
+    <div className={clsx(props.className, "h-full select-none flex flex-col min-h-0 min-w-0")}>
       <div className="flex-1 min-h-0 flex flex-col">
         <div className="m-1 text-end min-w-0 shadow-sm">
           <ContextMenu>
@@ -87,7 +121,7 @@ export default function Runner({ id, className }: { id: number; className?: stri
               </Button>
             </PopoverTrigger>
             <PopoverContent side="right">
-              <Configuration id={id}/>
+              <Configuration testAtom={testAtom} />
             </PopoverContent>
           </Popover>
         </div>
@@ -99,7 +133,7 @@ export default function Runner({ id, className }: { id: number; className?: stri
         <Button
           size="sm"
           className="flex-1 py-0  bg-green-600 hover:bg-green-500"
-          onClick={() => addSourcecodeTestcase(id)}
+          onClick={() => dispatchTestcases({ type: "insert", value: emptyTestcase() })}
         >
           New Testcase
         </Button>

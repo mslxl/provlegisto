@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { ReactNode, useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { VscAdd, VscClose } from "react-icons/vsc"
 import { useDrag, useDrop } from "react-dnd"
 import { useHoverDirty, useMouseWheel } from "react-use"
@@ -11,12 +11,9 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { useRenameDialog } from "./rename-dialog"
-
-type TabItem = {
-  id: number
-  text: string
-}
+import { useRenameDialog } from "../../hooks/useRenameDialog"
+import { SourceHeader, activeIdAtom, emptySource, sourceIndexAtomAtoms, useAddSource } from "@/store/source"
+import { PrimitiveAtom, useAtom } from "jotai"
 
 const HorizontalUnorderedList = styled.ul`
   position: relative;
@@ -35,25 +32,7 @@ const HorizontalUnorderedList = styled.ul`
   }
 `
 
-export default function Tabbar({
-  className,
-  items,
-  activeId,
-  onSelect,
-  onAdd,
-  onClose,
-  onSetName,
-  swap,
-}: {
-  className: string
-  items: TabItem[]
-  activeId: number
-  onSelect?: (id: number) => void
-  onAdd?: () => void
-  onClose?: (id: number) => void
-  swap?: (from: number, to: number) => void
-  onSetName?: (id: number, title: string) => void
-}) {
+export default function Tabbar({ className }: { className: string }) {
   // handle mousewheel scroll on tab header
   const ulRef = useRef<HTMLUListElement>(null)
   const mouseWheel = useMouseWheel()
@@ -66,47 +45,25 @@ export default function Tabbar({
     ulRef.current?.scrollBy(delta / 2, 0)
   }, [ulHover, mouseWheel])
 
-  // handle rename dialog
-  const [originTabId, setOriginTabId] = useState(0)
-  const [RenameDialogPortal, showRenameDialog] = useRenameDialog((title: string) => {
-    onSetName && onSetName(originTabId, title)
-  })
+  const [sourceIndexAtoms, patchSourceIndexAtoms] = useAtom(sourceIndexAtomAtoms)
+  const addSource = useAddSource()
 
   return (
     <>
-      {RenameDialogPortal}
       <HorizontalUnorderedList className={clsx("text-sm bg-neutral-200 flex items-stretch", className)} ref={ulRef}>
-        {items.map((v, index) => (
-          <li
-            key={index}
-            className={clsx(
-              {
-                "bg-neutral-50": activeId === v.id,
-              },
-              "px-2",
-            )}
-          >
+        {sourceIndexAtoms.map((atom, index) => (
+          <li key={index}>
             <Bar
               key={index}
-              index={index}
               className="h-full"
-              closeBtnClassName={clsx({
-                invisible: activeId !== v.id,
-              })}
-              onClick={() => onSelect && onSelect(v.id)}
-              onClose={() => onClose && onClose(v.id)}
-              swap={swap}
-              onSetNameClick={() => {
-                setOriginTabId(v.id)
-                showRenameDialog(v.text)
-              }}
-            >
-              {v.text}
-            </Bar>
+              atom={atom}
+              removeAtom={() => patchSourceIndexAtoms({ type: "remove", atom })}
+              moveAtom={(from, to) => patchSourceIndexAtoms({ type: "move", atom: from, before: to })}
+            />
           </li>
         ))}
         <li>
-          <button className="w-4 h-full mx-2 my-auto" onClick={onAdd}>
+          <button className="w-4 h-full mx-2 my-auto" onClick={() => addSource("Unamed", emptySource())}>
             <VscAdd />
           </button>
         </li>
@@ -116,34 +73,28 @@ export default function Tabbar({
 }
 
 function Bar({
-  index,
-  children,
   className,
-  closeBtnClassName,
-  onClick,
-  onClose,
-  swap,
-  onSetNameClick,
+  atom,
+  moveAtom,
+  removeAtom,
 }: {
-  index: number
-  children: string | ReactNode
   className?: string
-  closeBtnClassName?: string
-  onClick?: () => void
-  onClose?: () => void
-  swap?: (from: number, to: number) => void
-  onSetNameClick?: () => void
+  atom: PrimitiveAtom<SourceHeader>
+  moveAtom: (fromAtom: PrimitiveAtom<SourceHeader>, toId: PrimitiveAtom<SourceHeader>) => void
+  removeAtom: () => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [content, setContent] = useAtom(atom)
+  const [activeId, setActiveId] = useAtom(activeIdAtom)
 
   const [, dragRef] = useDrag({
     type: "tabbox",
-    item: { index },
+    item: { atom },
   })
   const [{ hover }, dropRef] = useDrop({
     accept: "tabbox",
     drop: (item: any) => {
-      if (swap) swap(item.index, index)
+      moveAtom(item.atom, atom)
     },
     collect(monitor) {
       return {
@@ -152,26 +103,40 @@ function Bar({
     },
   })
 
+  const [dialog, showDialog] = useRenameDialog((value) => {
+    setContent((e) => ({
+      ...e,
+      title: value,
+    }))
+  })
+
   dragRef(dropRef(ref))
   return (
     <ContextMenu>
+      {dialog}
       <ContextMenuTrigger
-        className={clsx("flex min-w-min max-w-lg whitespace-nowrap text-ellipsis relative", className, {
+        className={clsx("flex min-w-min max-w-lg whitespace-nowrap text-ellipsis relative px-2", className, {
           "bg-sky-100": hover,
+          "bg-neutral-50": content.id == activeId,
         })}
         ref={ref}
       >
-        <button className="my-auto flex-1 pl-4" onClick={onClick}>
-          {children}
+        <button className="my-auto flex-1 pl-4" onClick={() => setActiveId(content.id)}>
+          {content.title}
         </button>
-        <button className={clsx("w-4 h-full ml-2", closeBtnClassName)} onClick={onClose}>
+        <button
+          className={clsx("w-4 h-full ml-2", {
+            invisible: content.id != activeId,
+          })}
+          onClick={removeAtom}
+        >
           <VscClose />
         </button>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={onSetNameClick}>Rename</ContextMenuItem>
+        <ContextMenuItem onClick={() => showDialog(content.title)}>Rename</ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={onClose}>Close</ContextMenuItem>
+        <ContextMenuItem onClick={removeAtom}>Close</ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem>Copy Path</ContextMenuItem>
       </ContextMenuContent>

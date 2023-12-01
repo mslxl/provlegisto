@@ -1,4 +1,4 @@
 import { atom } from "jotai"
 
-export const primaryPanelShow = atom<string | null>(null)
-export const statusBarShow = atom(false)
+export const primaryPanelShowAtom = atom<string | null>(null)
+export const statusBarShowAtom = atom(false)

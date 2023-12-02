@@ -1,7 +1,7 @@
 import { useMitt } from "@/hooks/useMitt"
 import useReadAtom from "@/hooks/useReadAtom"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
-import { activeIdAtom, counterAtom, sourceIndexAtomAtoms, sourceIndexAtoms, sourceStoreAtom } from "@/store/source"
+import { activeIdAtom, counterAtom, emptySource, sourceIndexAtomAtoms, sourceIndexAtoms, sourceStoreAtom, useAddSource } from "@/store/source"
 import { useAtom, useSetAtom } from "jotai"
 import { useImmerAtom } from "jotai-immer"
 
@@ -12,9 +12,12 @@ export default function MenuEventReceiver() {
 
   const readActiveId = useReadAtom(activeIdAtom)
   const readSourceIndex = useReadAtom(sourceIndexAtoms)
+  const addSource = useAddSource()
 
   useMitt("fileMenu", async (event) => {
-    if (event == "open") {
+    if (event == "new") {
+      addSource("Unamed", emptySource())
+    } else if (event == "open") {
       const problems = await openProblem()
       for (let i = 0; i < problems.length; i++) {
         setSourceCodeStore((store) => {
@@ -29,13 +32,13 @@ export default function MenuEventReceiver() {
         })
       }
       incCounter(problems.length)
-    } else if (event == "save" || event == 'saveAs') {
+    } else if (event == "save" || event == "saveAs") {
       const id = readActiveId()
       console.log(id)
-      if(id < 0) return
+      if (id < 0) return
       const title = readSourceIndex().find((h) => h.id == id)!.title
       const source = sourceCodeStore[id]
-      await saveProblem(source, title, event == 'saveAs')
+      await saveProblem(source, title, event == "saveAs")
     }
   })
 

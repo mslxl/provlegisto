@@ -30,11 +30,11 @@ export function PrefNumber(props: PrefNumberProps) {
     })
     if (props.max)
       p = p.max(props.max, {
-        message: `It must >= ${props.max}`,
+        message: `It must <= ${props.max}`,
       })
     if (props.min)
       p = p.min(props.min, {
-        message: `It must <= ${props.min}`,
+        message: `It must >= ${props.min}`,
       })
     try {
       const v = p.parse(e)
@@ -46,12 +46,7 @@ export function PrefNumber(props: PrefNumberProps) {
     }
   }
   function applyOffset(offset: number) {
-    if (
-      props.max !== undefined &&
-      storage + offset <= props.max &&
-      props.min != undefined &&
-      storage + offset >= props.min
-    ) {
+    if (storage + offset <= (props.max ?? Infinity) && storage + offset >= (props.min ?? -Infinity)) {
       const target = Math.round((storage + offset) * 100) / 100
       setStorage(target)
     }

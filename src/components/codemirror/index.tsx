@@ -1,14 +1,18 @@
 import clsx from "clsx"
-import { memo, useEffect, useRef } from "react"
+import { RefObject, memo, useEffect, useRef } from "react"
 import { EditorView, keymap } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import { LspProvider } from "./language"
-import { Compartment } from "@codemirror/state"
+import { Compartment, Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
 import { Atom, PrimitiveAtom, useAtomValue } from "jotai"
 import { Source } from "@/store/source"
 import { useImmerAtom } from "jotai-immer"
+import { map } from "lodash"
+import "@fontsource/jetbrains-mono"
+import { filterCSSQuote } from "@/lib/utils"
+import { editorFontFamily, editorFontSizeAtom } from "@/store/setting"
 
 type CodemirrorProps = {
   className?: string
@@ -17,31 +21,48 @@ type CodemirrorProps = {
   keymapAtom: Atom<ReturnType<KeymapProvider>>
 }
 
+function useExtensionCompartment<T>(
+  cm: RefObject<EditorView | null>,
+  atom: Atom<T>,
+  builder: (status: T) => Extension,
+) {
+  const compartment = useRef(new Compartment())
+  const value = useAtomValue(atom)
+  useEffect(() => {
+    if (cm.current == null) return
+    console.log("dispatch")
+    cm.current.dispatch({
+      effects: compartment.current.reconfigure(builder(value)),
+    })
+  }, [atom, cm])
+  return () => compartment.current.of(builder(value))
+}
+
 const Codemirror = memo((props: CodemirrorProps) => {
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const lspCompartment = useRef<Compartment>(new Compartment())
-  const keymapCompartment = useRef<Compartment>(new Compartment())
   const cm = useRef<EditorView | null>(null)
+
   const [source, patchSource] = useImmerAtom(props.sourceAtom)
 
-  const extensions = {
-    lsp: useAtomValue(props.lspAtom),
-    keymap: useAtomValue(props.keymapAtom),
-  }
-  useEffect(() => {
-    if (cm.current != null){
-      cm.current.dispatch({
-        effects: lspCompartment.current.reconfigure(extensions.lsp()),
-      })
-    }
-  }, [extensions.lsp, cm])
-  useEffect(() => {
-    if (cm.current != null)
-      cm.current.dispatch({
-        effects: keymapCompartment.current.reconfigure(extensions.keymap()),
-      })
-  }, [extensions.keymap, cm])
+  const configurableExtensions = [
+    useExtensionCompartment(cm, props.lspAtom, (v: any) => v()),
+    useExtensionCompartment(cm, props.keymapAtom, (v: any) => v()),
+    useExtensionCompartment(cm, editorFontSizeAtom, (fontsize) =>
+      EditorView.theme({
+        "&": {
+          "font-size": `${fontsize}px`,
+        },
+      }),
+    ),
+    useExtensionCompartment(cm, editorFontFamily, (fontfamily: any) =>
+      EditorView.theme({
+        "& .cm-content": {
+          "font-family": filterCSSQuote(fontfamily),
+        },
+      }),
+    ),
+  ]
 
   useEffect(() => {
     if (parentRef.current == null) return
@@ -55,8 +76,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
       extensions: [
         basicSetup,
         keymap.of([indentWithTab]),
-        lspCompartment.current.of(extensions.lsp()),
-        keymapCompartment.current.of(extensions.keymap()),
+        ...map(configurableExtensions, (e: () => Extension) => e()),
         EditorView.theme({
           "&": {
             "flex-grow": 1,

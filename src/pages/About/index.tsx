@@ -24,7 +24,7 @@ export default function About() {
         <VscClose />
       </button>
       <div className="flex flex-row items-center justify-center p-4">
-        <img className="w-48 h-48 object-cover" src={LogoImage} />
+        <img className="w-32 h-32 object-cover m-16" src={LogoImage} />
         <div>
           <div>
             <span className="font-bold text-2xl">Provlegisto </span>

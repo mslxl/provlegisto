@@ -2258,6 +2258,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-tungstenite",
+ "toml 0.8.8",
  "uuid",
  "which",
 ]

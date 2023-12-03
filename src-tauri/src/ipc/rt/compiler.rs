@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 
 use crate::{ipc::LanguageMode, util::keylock::KeyLock};
 
-use super::gnu_gcc::GNUGccCompiler;
+use super::{gnu_gcc::GNUGccCompiler, interpreter::Interpreter};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CompileLint {
@@ -84,7 +84,7 @@ pub async fn compile_source(
 
     let compiler_handle: Box<dyn Compiler> = match mode {
         LanguageMode::CXX => Box::new(GNUGccCompiler),
-        LanguageMode::PY => unimplemented!(),
+        LanguageMode::PY => Box::new(Interpreter::with_ext(String::from("py"))),
     };
 
     let result = compiler_handle

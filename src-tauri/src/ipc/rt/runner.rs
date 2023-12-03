@@ -8,6 +8,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::Mutex;
 
+use crate::ipc::rt::interpreter::build_command_from_config;
 use crate::{
     ipc::LanguageMode,
     util::{
@@ -154,7 +155,9 @@ pub async fn run_redirect<R: Runtime>(
     let working_dir = PathBuf::from(&exec_target).parent().unwrap().to_path_buf();
     let mut cmd = match mode {
         LanguageMode::CXX => std::process::Command::new(exec_target),
-        _ => unimplemented!(),
+        LanguageMode::PY => build_command_from_config(PathBuf::from(exec_target))
+            .await
+            .map_err(|e| e.to_string())?,
     };
 
     cmd.current_dir(working_dir);

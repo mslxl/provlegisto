@@ -17,6 +17,7 @@ import { focusAtom } from "jotai-optics"
 import { splitAtom } from "jotai/utils"
 import { emptyTestcase } from "@/store/testcase"
 import useReadAtom from "@/hooks/useReadAtom"
+import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
 
 export default function Runnner({ className }: { className?: string }) {
   const activeId = useAtomValue(activeIdAtom)
@@ -44,10 +45,15 @@ function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }
 
   const [runAllAnimate, setRunAllAnimate] = useState(false)
 
+  const getLanguageCompilerPath = useGetLanguageCompiler()
+
   async function runAll() {
     setRunAllAnimate(true)
     const sourceCode = readSourceCode()
-    await compileSource(sourceCode.language, sourceCode.source)
+    await compileSource(sourceCode.language, sourceCode.source, {
+      path: await getLanguageCompilerPath(sourceCode.language) ?? undefined,
+      args: []
+    })
     setRunAllAnimate(false)
   }
 

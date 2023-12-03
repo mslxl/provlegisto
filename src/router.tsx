@@ -8,12 +8,18 @@ const PagePreference = {
   Appearance: lazy(() => import("@/pages/Preference/appearance")),
   Editor: lazy(() => import("@/pages/Preference/editor")),
   Keymap: lazy(() => import("@/pages/Preference/keymap")),
+  Language: lazy(() => import("@/pages/Preference/language")),
 }
+const PageSetup = lazy(() => import("@/pages/Setup"))
 
 const PageAbout = lazy(() => import("@/pages/About"))
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <PageSetup />,
+  },
+  {
+    path: "/editor",
     element: <PageMain />,
   },
   {
@@ -21,7 +27,7 @@ const router = createBrowserRouter([
     element: <PagePreference.Layout />,
     children: [
       {
-        path: "/pref/appearance",
+        path: "/pref",
         element: <PagePreference.Appearance />,
       },
       {
@@ -32,11 +38,19 @@ const router = createBrowserRouter([
         path: "/pref/keymap",
         element: <PagePreference.Keymap />,
       },
+      {
+        path: "/pref/lang",
+        element: <PagePreference.Language />,
+      },
     ],
   },
   {
     path: "/about",
     element: <PageAbout />,
+  },
+  {
+    path: "/setup",
+    element: <PageSetup />,
   },
 ])
 

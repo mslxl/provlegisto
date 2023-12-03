@@ -1,8 +1,17 @@
 import { useMitt } from "@/hooks/useMitt"
 import useReadAtom from "@/hooks/useReadAtom"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
-import { activeIdAtom, counterAtom, emptySource, sourceIndexAtomAtoms, sourceIndexAtoms, sourceStoreAtom, useAddSource } from "@/store/source"
-import { useAtom, useSetAtom } from "jotai"
+import { defaultLanguageAtom } from "@/store/setting"
+import {
+  activeIdAtom,
+  counterAtom,
+  emptySource,
+  sourceIndexAtomAtoms,
+  sourceIndexAtoms,
+  sourceStoreAtom,
+  useAddSource,
+} from "@/store/source"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useImmerAtom } from "jotai-immer"
 
 export default function MenuEventReceiver() {
@@ -13,10 +22,11 @@ export default function MenuEventReceiver() {
   const readActiveId = useReadAtom(activeIdAtom)
   const readSourceIndex = useReadAtom(sourceIndexAtoms)
   const addSource = useAddSource()
+  const defaultLanguage = useAtomValue(defaultLanguageAtom)
 
   useMitt("fileMenu", async (event) => {
     if (event == "new") {
-      addSource("Unamed", emptySource())
+      addSource("Unamed", emptySource(defaultLanguage!))
     } else if (event == "open") {
       const problems = await openProblem()
       for (let i = 0; i < problems.length; i++) {

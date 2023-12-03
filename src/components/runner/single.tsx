@@ -18,6 +18,7 @@ import { TestCase } from "@/store/testcase"
 import { SourceCode } from "@/store/source"
 import useReadAtom from "@/hooks/useReadAtom"
 import { focusAtom } from "jotai-optics"
+import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
 type SingleRunnerProps = {
   testcaseAtom: PrimitiveAtom<TestCase>
   sourceAtom: Atom<SourceCode>
@@ -74,6 +75,7 @@ export default function SingleRunner(props: SingleRunnerProps) {
   const acutalStdoutLinesCnt = useRef(0)
   const [running, setRunning] = useState(false)
   const [checkerReport, setCheckerReport] = useState("")
+  const getLanguageCompiler = useGetLanguageCompiler()
 
   useEffect(() => {
     setJudgeStatus("UK")
@@ -82,7 +84,7 @@ export default function SingleRunner(props: SingleRunnerProps) {
 
   useMitt(
     "run",
-    (taskId) => {
+    async (taskId) => {
       if (props.taskId != taskId && taskId != "all") return
       setRunning(true)
       setJudgeStatus("PD")
@@ -95,11 +97,22 @@ export default function SingleRunner(props: SingleRunnerProps) {
 
       const checker = readChecker()
       log.info(`compile in ${sourceCode.language} mode with checker ${checker}`)
-      
-      compileRunCheck(sourceCode.language, sourceCode.source, props.taskId, input, output, {
-        type: "Internal",
-        name: checker,
-      }, readTimeLimits())
+
+      compileRunCheck(
+        sourceCode.language,
+        sourceCode.source,
+        props.taskId,
+        input,
+        output,
+        {
+          type: "Internal",
+          name: checker,
+        },
+        readTimeLimits(),
+        {
+          path: (await getLanguageCompiler(sourceCode.language)) ?? undefined,
+        },
+      )
         .then((result) => {
           log.info(JSON.stringify(result))
 
@@ -111,7 +124,7 @@ export default function SingleRunner(props: SingleRunnerProps) {
               line += `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`
             }
             setCheckerReport(line)
-          }else {
+          } else {
             setCheckerReport(" ")
           }
 

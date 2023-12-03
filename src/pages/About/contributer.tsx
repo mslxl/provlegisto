@@ -28,7 +28,7 @@ const contributers: Contributer[] = [
     name: "Galong",
     avatar: "https://avatars.githubusercontent.com/u/94678496?v=4",
     fallback: "G",
-    ty: "Advice",
+    ty: "Advice & Debug",
     profile: "https://github.com/gjh303987897",
   },
 ]

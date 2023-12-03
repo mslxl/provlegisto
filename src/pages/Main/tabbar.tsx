@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { VscAdd, VscClose } from "react-icons/vsc"
 import { useDrag, useDrop } from "react-dnd"
 import { useHoverDirty, useMouseWheel } from "react-use"
@@ -12,8 +12,26 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import { useRenameDialog } from "../../hooks/useRenameDialog"
-import { SourceHeader, activeIdAtom, emptySource, sourceIndexAtomAtoms, useAddSource } from "@/store/source"
-import { PrimitiveAtom, useAtom } from "jotai"
+import {
+  SourceHeader,
+  activeIdAtom,
+  emptySource,
+  sourceIndexAtomAtoms,
+  sourceStoreAtom,
+  useAddSource,
+} from "@/store/source"
+import { PrimitiveAtom, useAtom, useAtomValue } from "jotai"
+import { focusAtom } from "jotai-optics"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
+import { defaultLanguageAtom } from "@/store/setting"
 
 const HorizontalUnorderedList = styled.ul`
   position: relative;
@@ -38,6 +56,7 @@ export default function Tabbar({ className }: { className: string }) {
   const mouseWheel = useMouseWheel()
   const lastWheel = useRef(0)
   const ulHover = useHoverDirty(ulRef)
+  const defaultLanguage = useAtomValue(defaultLanguageAtom)
   useEffect(() => {
     let delta = mouseWheel - lastWheel.current
     lastWheel.current = mouseWheel
@@ -63,7 +82,7 @@ export default function Tabbar({ className }: { className: string }) {
           </li>
         ))}
         <li>
-          <button className="w-4 h-full mx-2 my-auto" onClick={() => addSource("Unamed", emptySource())}>
+          <button className="w-4 h-full mx-2 my-auto" onClick={() => addSource("Unamed", emptySource(defaultLanguage!))}>
             <VscAdd />
           </button>
         </li>
@@ -86,7 +105,10 @@ function Bar({
   const ref = useRef<HTMLDivElement>(null)
   const [content, setContent] = useAtom(atom)
   const [activeId, setActiveId] = useAtom(activeIdAtom)
-
+  const currentLanguageAtom = useMemo(
+    () => focusAtom(sourceStoreAtom, (optic) => optic.prop(content.id).prop("code").prop("language")),
+    [atom, content],
+  )
   const [, dragRef] = useDrag({
     type: "tabbox",
     item: { atom },
@@ -103,17 +125,30 @@ function Bar({
     },
   })
 
-  const [dialog, showDialog] = useRenameDialog((value) => {
+  const [renameDialog, showRenameDialog] = useRenameDialog((value) => {
     setContent((e) => ({
       ...e,
       title: value,
     }))
   })
+  const [changeLanguageDialog, showChangeLanguageDialog] = useChangeLanguageDialog(currentLanguageAtom as any)
 
   dragRef(dropRef(ref))
   return (
     <ContextMenu>
-      {dialog}
+      {renameDialog}
+      {changeLanguageDialog}
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Language</AlertDialogTitle>
+            <AlertDialogDescription></AlertDialogDescription>
+          </AlertDialogHeader>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <ContextMenuTrigger
         className={clsx("flex min-w-min max-w-lg whitespace-nowrap text-ellipsis relative px-2", className, {
           "bg-sky-100": hover,
@@ -134,11 +169,13 @@ function Bar({
         </button>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={() => showDialog(content.title)}>Rename</ContextMenuItem>
+        <ContextMenuItem onClick={() => showRenameDialog(content.title)}>Rename</ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={removeAtom}>Close</ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem>Copy Path</ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => showChangeLanguageDialog()}>Change Language</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )

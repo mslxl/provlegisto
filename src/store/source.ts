@@ -17,10 +17,10 @@ export type Source = {
   test: Test
 }
 
-export function emptySource(): Source {
+export function emptySource(language: LanguageMode): Source {
   return {
     code: {
-      language: LanguageMode.CXX,
+      language,
       source: "",
     },
     test: {
@@ -44,16 +44,19 @@ type SourceStore = {
 const activeIdInternalAtom = atom(-1)
 activeIdInternalAtom.debugLabel = "source.active.internal"
 
-export const activeIdAtom = atom((get)=>{
-  let headers = get(sourceIndexAtoms)
-  if(headers.length == 0) return -1
-  let id = get(activeIdInternalAtom)
-  if(id == -1 && headers.length != 0) return headers[0].id
-  if(id != -1 && headers.findIndex((p)=> p.id == id) == -1) return -1
-  return id
-}, (_get, set, value:number)=>{
-  set(activeIdInternalAtom, value)
-})
+export const activeIdAtom = atom(
+  (get) => {
+    let headers = get(sourceIndexAtoms)
+    if (headers.length == 0) return -1
+    let id = get(activeIdInternalAtom)
+    if (id == -1 && headers.length != 0) return headers[0].id
+    if (id != -1 && headers.findIndex((p) => p.id == id) == -1) return -1
+    return id
+  },
+  (_get, set, value: number) => {
+    set(activeIdInternalAtom, value)
+  },
+)
 activeIdAtom.debugLabel = "source.active"
 
 export const counterAtom = atomWithReducer(0, (prev, value: number | undefined) => {

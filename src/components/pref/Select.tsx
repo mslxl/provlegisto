@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { PrimitiveAtom, useAtom } from "jotai"
 import { map } from "lodash"
 
-type PrefSelectItem = {
+export type PrefSelectItem = {
   key: string
   value: string
 }

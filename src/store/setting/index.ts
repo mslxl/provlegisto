@@ -1,4 +1,7 @@
 export * from "./ui"
+export * from "./keymap"
+export * from "./setup"
+import * as log from "tauri-plugin-log-api"
 import { Store } from "tauri-plugin-store-api"
 import { atomWithStorage } from "jotai/utils"
 import { getSettingsPath } from "@/lib/ipc"
@@ -28,10 +31,10 @@ export function atomWithSettings<T>(key: string, initialValue: T) {
         if (key == k && value != initialValue) callback(value as T)
       })
       return () => {
-        unlisten.then((fn) => fn())
+        unlisten.then((fn) => fn()).catch((reson) => log.error(reson))
       }
     },
   })
   atom.debugLabel = `settings.${key}`
-  return atom
+  return atom 
 }

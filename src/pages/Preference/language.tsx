@@ -1,7 +1,7 @@
 import PrefSelect from "@/components/pref/Select"
-import SetupCXX from "@/components/pref/setup/setup-cxx"
-import SetupPy from "@/components/pref/setup/setup-py"
-import { availableLanguageListAtom, defaultLanguageAtom } from "@/store/setting"
+import SetupCXX from "@/components/setup/setup-cxx"
+import SetupPy from "@/components/setup/setup-py"
+import { availableLanguageListAtom, defaultLanguageAtom } from "@/store/setting/setup"
 import { useAtomValue } from "jotai"
 
 export default function Page() {

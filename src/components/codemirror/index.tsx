@@ -12,7 +12,7 @@ import { useImmerAtom } from "jotai-immer"
 import { map } from "lodash"
 import "@fontsource/jetbrains-mono"
 import { filterCSSQuote } from "@/lib/utils"
-import { editorFontFamily, editorFontSizeAtom } from "@/store/setting"
+import { editorFontFamily, editorFontSizeAtom } from "@/store/setting/ui"
 
 type CodemirrorProps = {
   className?: string

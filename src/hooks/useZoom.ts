@@ -1,4 +1,4 @@
-import { zoomStateAtom } from "@/store/setting"
+import { zoomStateAtom } from "@/store/setting/ui"
 import { useAtom } from "jotai"
 import { useEffect } from "react"
 

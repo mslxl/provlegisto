@@ -1,4 +1,6 @@
-use std::{time::Duration, process::Stdio};
+pub mod installer;
+
+use std::{process::Stdio, time::Duration};
 
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;

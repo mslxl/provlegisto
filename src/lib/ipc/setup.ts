@@ -12,3 +12,5 @@ export const captureOutput: (program: string, args: string[]) => Promise<OutputC
     program,
     args,
   })
+
+export const execuatePwshScript = (name: string) => invoke<string>("execuate_pwsh_script", { name })

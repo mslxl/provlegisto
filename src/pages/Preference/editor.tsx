@@ -1,7 +1,7 @@
 import { PrefNumber } from "@/components/pref"
 import { PrefText } from "@/components/pref/Text"
 import { filterCSSQuote } from "@/lib/utils"
-import { editorFontFamily, editorFontSizeAtom } from "@/store/setting"
+import { editorFontFamily, editorFontSizeAtom } from "@/store/setting/ui"
 import { useAtomValue } from "jotai"
 import styled from "styled-components"
 

@@ -1,7 +1,7 @@
 import PrefSelect from "@/components/pref/Select"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { availableLanguageListAtom } from "@/store/setting"
+import { availableLanguageListAtom } from "@/store/setting/setup"
 import { PrimitiveAtom, useAtomValue } from "jotai"
 import { ReactNode, useState } from "react"
 

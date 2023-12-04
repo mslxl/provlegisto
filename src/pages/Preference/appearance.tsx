@@ -1,5 +1,5 @@
 import { PrefNumber } from "@/components/pref"
-import { zoomStateAtom } from "@/store/setting"
+import { zoomStateAtom } from "@/store/setting/ui"
 
 export default function Page() {
   return (

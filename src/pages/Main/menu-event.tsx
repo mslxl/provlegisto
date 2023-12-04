@@ -1,7 +1,7 @@
 import { useMitt } from "@/hooks/useMitt"
 import useReadAtom from "@/hooks/useReadAtom"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
-import { defaultLanguageAtom } from "@/store/setting"
+import { defaultLanguageAtom } from "@/store/setting/setup"
 import {
   activeIdAtom,
   counterAtom,

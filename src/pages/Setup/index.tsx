@@ -66,7 +66,7 @@ export default function Setup() {
       return
     }
     if ((await cxxCfg.readEnable()) && (await cxxCfg.readGCCV()) == null) {
-      setAlertMessage("GCC G++ Path must be setted for compiling c++ program")
+      setAlertMessage("C++ Compiler Path must be setted for compiling c++ program")
       setAlertOpen(true)
       return
     }

@@ -34,7 +34,7 @@ function useExtensionCompartment<T>(
     cm.current.dispatch({
       effects: compartment.current.reconfigure(builder(value)),
     })
-  }, [atom, cm])
+  }, [atom, cm, value])
   return () => compartment.current.of(builder(value))
 }
 

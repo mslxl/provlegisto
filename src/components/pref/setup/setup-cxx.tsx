@@ -16,11 +16,10 @@ export default function SetupCXX() {
       {!enableCxx ? null : (
         <>
           <PrefProgram
-            leading="GNU G++ Path"
+            leading="C++ Compiler Path"
             valueAtom={gccPathAtom as any}
             versionAtom={gccVersionAtom as any}
             versionFallback="File not found"
-            dialogFilter={[{name: 'GNU GCC/G++', extensions: ["gcc.exe", "g++.exe", "gcc", "g++"]}]}
           >
             {/* <Button>Install</Button> */}
           </PrefProgram>

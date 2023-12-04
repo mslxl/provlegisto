@@ -1,4 +1,4 @@
-import { gccPathAtom, pythonPathAtom } from "@/store/setting"
+import { gccPathAtom, pythonPathAtom } from "@/store/setting/setup"
 import useReadAtom from "./useReadAtom"
 import { LanguageMode } from "@/lib/ipc"
 

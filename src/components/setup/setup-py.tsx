@@ -6,7 +6,7 @@ import {
   pyrightsVersionAtom,
   pythonPathAtom,
   pythonVersionAtom,
-} from "@/store/setting"
+} from "@/store/setting/setup"
 import { useAtom } from "jotai"
 
 export default function SetupPy() {

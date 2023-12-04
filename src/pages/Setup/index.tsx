@@ -10,14 +10,14 @@ import {
   pyrightsVersionAtom,
   pythonVersionAtom,
   setupDeviceAtom,
-} from "@/store/setting"
+} from "@/store/setting/setup"
 import { useAtom, useAtomValue } from "jotai"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import * as log from "tauri-plugin-log-api"
 import Logo from "./logo"
-import SetupCXX from "../../components/pref/setup/setup-cxx"
-import SetupPy from "../../components/pref/setup/setup-py"
+import SetupCXX from "../../components/setup/setup-cxx"
+import SetupPy from "../../components/setup/setup-py"
 import { Button } from "@/components/ui/button"
 import useReadAtom from "@/hooks/useReadAtom"
 import {

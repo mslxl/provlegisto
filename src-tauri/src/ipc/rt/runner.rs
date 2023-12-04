@@ -24,9 +24,9 @@ pub async fn run_detach<R: Runtime>(
     args: Vec<String>,
 ) -> Result<(), String> {
     let pauser = if cfg!(windows) {
-        app.path_resolver().resolve_resource("consolepauser.exe")
+        app.path_resolver().resolve_resource("sidecar/consolepauser.exe")
     } else {
-        app.path_resolver().resolve_resource("consolepauser")
+        app.path_resolver().resolve_resource("sidecar/consolepauser")
     }
     .unwrap();
     let mut cmd = std::process::Command::new(pauser);
@@ -205,7 +205,7 @@ pub async fn run_redirect<R: Runtime>(
     Ok(result)
 }
 
-struct ChildKiller(Child);
+pub struct ChildKiller(Child);
 impl AsMut<Child> for ChildKiller {
     fn as_mut(&mut self) -> &mut Child {
         &mut self.0

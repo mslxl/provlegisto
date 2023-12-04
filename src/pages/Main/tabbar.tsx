@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
-import { defaultLanguageAtom } from "@/store/setting"
+import { defaultLanguageAtom } from "@/store/setting/setup"
 
 const HorizontalUnorderedList = styled.ul`
   position: relative;

@@ -68,9 +68,10 @@ pub async fn check_answer<R: Runtime>(
     let checker_path = match checker {
         CheckerType::Internal { name } => if cfg!(windows) {
             app.path_resolver()
-                .resolve_resource(format!("{}.exe", name))
+                .resolve_resource(format!("sidecar/{}.exe", name))
         } else {
-            app.path_resolver().resolve_resource(name)
+            app.path_resolver()
+                .resolve_resource(format!("sidecar/{}", name))
         }
         .ok_or(String::from("no such the checker"))?,
         _ => unimplemented!(),

@@ -11,6 +11,7 @@ const PagePreference = {
   Language: lazy(() => import("@/pages/Preference/language")),
 }
 const PageSetup = lazy(() => import("@/pages/Setup"))
+const PageInstall = lazy(() => import("@/pages/Install"))
 
 const PageAbout = lazy(() => import("@/pages/About"))
 const router = createBrowserRouter([
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
   {
     path: "/setup",
     element: <PageSetup />,
+  },
+  {
+    path: "/install/:name",
+    element: <PageInstall />,
   },
 ])
 

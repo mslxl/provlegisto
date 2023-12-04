@@ -6,30 +6,22 @@ use std::{env, path::PathBuf};
 use ipc::{
     cmd::{bind::LSPState, competitive_companion::CompetitiveCompanionState},
     rt::{checker::CheckerState, compiler::CompilerState, runner::RunnerState},
+    setup::installer::PwshScriptState,
 };
 use log::LevelFilter;
-use once_cell::sync::{Lazy, OnceCell};
+use once_cell::sync::OnceCell;
 use tauri::{plugin::TauriPlugin, Manager, Runtime};
 use tauri_plugin_log::{fern::colors::ColoredLevelConfig, LogTarget};
 
 pub mod ipc;
 pub mod util;
 
-static CURRENT_DIR: Lazy<OnceCell<PathBuf>> = Lazy::new(|| {
-    let cell = OnceCell::new();
-    cell.set(env::current_exe().unwrap().parent().unwrap().to_path_buf())
-        .unwrap();
-    cell
-});
+pub static CONFIG_DIR: OnceCell<PathBuf> = OnceCell::new();
+pub static RESOURCE_DIR: OnceCell<PathBuf> = OnceCell::new();
 
 fn log_pugin<R: Runtime>() -> TauriPlugin<R> {
-    let log_dir = CURRENT_DIR.get().unwrap().join("logs");
     let builder = tauri_plugin_log::Builder::default()
-        .targets([
-            LogTarget::Stdout,
-            LogTarget::Webview,
-            LogTarget::Folder(log_dir),
-        ])
+        .targets([LogTarget::Stdout, LogTarget::Webview, LogTarget::LogDir])
         .with_colors(ColoredLevelConfig::default())
         .max_file_size(10240);
     let builder = if cfg!(debug_assertions) {
@@ -47,13 +39,7 @@ async fn is_debug() -> Result<bool, String> {
 
 #[tauri::command]
 async fn get_settings_path() -> Result<String, String> {
-    Ok(CURRENT_DIR
-        .get()
-        .unwrap()
-        .join("settings.dat")
-        .to_str()
-        .unwrap()
-        .to_owned())
+    Ok(String::from("settings.dat"))
 }
 
 fn main() {
@@ -61,12 +47,21 @@ fn main() {
         .plugin(log_pugin())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
-            // provlegisto statue
+            // provlegisto state
+            CONFIG_DIR
+                .set(dunce::canonicalize(app.path_resolver().app_config_dir().unwrap()).unwrap())
+                .unwrap();
+            RESOURCE_DIR
+                .set(
+                    dunce::canonicalize(app.path_resolver().app_local_data_dir().unwrap()).unwrap(),
+                )
+                .unwrap();
             app.manage(LSPState::default());
             app.manage(CompetitiveCompanionState::default());
             app.manage(CompilerState::default());
             app.manage(RunnerState::default());
             app.manage(CheckerState::default());
+            app.manage(PwshScriptState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -77,8 +72,10 @@ fn main() {
             ipc::cmd::competitive_companion::enable_competitive_companion,
             ipc::cmd::competitive_companion::disable_competitive_companion,
             ipc::cmd::host::get_hostname,
+            ipc::cmd::host::get_system_name,
             ipc::setup::capture_output,
             ipc::setup::which,
+            ipc::setup::installer::execuate_pwsh_script,
             ipc::rt::compiler::compile_source,
             ipc::rt::runner::run_detach,
             ipc::rt::runner::run_redirect,

@@ -1,8 +1,14 @@
-use std::{path::PathBuf, process::Stdio};
+use std::{collections::HashMap, path::PathBuf, process::Stdio};
 
-use crate::{ipc::rt::compiler::CompileLint, util::console};
+use crate::{
+    ipc::rt::compiler::CompileLint,
+    util::{append_env_var, console},
+};
 
-use super::compiler::{CompileResult, Compiler, CompilerOptions};
+use super::{
+    compiler::{CompileResult, Compiler, CompilerOptions},
+    runner::CompileDataStore,
+};
 use anyhow::{Ok, Result};
 use async_trait::async_trait;
 use fancy_regex::{Regex, RegexBuilder};
@@ -27,12 +33,27 @@ impl Compiler for GNUGccCompiler {
     ) -> Result<CompileResult> {
         let source_file = working_path.join("source.cpp");
         fs::write(&source_file, source).await?;
+
+        // init compiler, including set PATH var on windows
         let compiler = compiler_options.path.unwrap_or(String::from("g++"));
-        let mut cmd = std::process::Command::new(compiler);
+        let compiler = PathBuf::from(&compiler);
+        let path_var = if cfg!(windows) {
+            let compiler_dir = compiler.parent().unwrap();
+            let path_var = append_env_var("PATH", compiler_dir.to_str().unwrap().to_owned());
+            Some(path_var)
+        } else {
+            None
+        };
+        let mut cmd = std::process::Command::new(&compiler);
+        if let Some(path_var) = &path_var {
+            cmd.env("PATH", path_var);
+        }
+        // hiden console on windows
         console::hide_new_console(&mut cmd);
         let mut cmd = Command::from(cmd);
-        let mut args = compiler_options.args.unwrap_or_else(|| Vec::new());
-        let source_file_path = dunce::canonicalize(source_file)?
+        // construct compiler arguments
+        let mut args: Vec<String> = compiler_options.args.unwrap_or_else(|| Vec::new());
+        let source_file_path = dunce::canonicalize(&source_file)?
             .to_str()
             .unwrap()
             .to_owned();
@@ -43,13 +64,14 @@ impl Compiler for GNUGccCompiler {
             .to_owned();
         target_file_path.push_str("/target");
 
-        args.push(source_file_path);
+        args.push(source_file_path.clone());
         args.push(String::from("-o"));
         args.push(target_file_path.clone());
 
+        // prepare gain output
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
-        cmd.args(args);
+        cmd.args(&args);
         let proc = cmd.spawn()?;
         let output = proc.wait_with_output().await?;
 
@@ -57,6 +79,14 @@ impl Compiler for GNUGccCompiler {
             if cfg!(windows) {
                 target_file_path.push_str(".exe");
             }
+            let store = CompileDataStore {
+                compile: compiler.to_str().unwrap().to_owned(),
+                compile_args: args,
+                source: source_file_path,
+                required_env_running: path_var
+                    .map(|v| HashMap::from_iter(vec![(String::from("PATH"), v)].into_iter())),
+            };
+            store.save(&target_file_path).await?;
             Ok(CompileResult::Success {
                 data: target_file_path,
             })

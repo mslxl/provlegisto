@@ -1,10 +1,10 @@
-
 import { invoke } from "@tauri-apps/api"
 import { LanguageMode } from "@/lib/ipc"
 
-export const runDetach = (target: string, args?: string[]): Promise<void> =>
+export const runDetach = (target: string, mode: LanguageMode, args?: string[]): Promise<void> =>
   invoke("run_detach", {
     target,
+    mode,
     args: args ?? [],
   })
 

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Stdio};
 use std::time::Duration;
 use tauri::Runtime;
@@ -8,7 +9,6 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::Mutex;
 
-use crate::ipc::rt::interpreter::build_command_from_config;
 use crate::{
     ipc::LanguageMode,
     util::{
@@ -17,21 +17,97 @@ use crate::{
     },
 };
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompileDataStore {
+    pub compile: String,
+    pub source: String,
+    pub compile_args: Vec<String>,
+    pub required_env_running: Option<HashMap<String, String>>,
+}
+impl CompileDataStore {
+    fn get_addition_path<P: AsRef<Path>>(src: P) -> PathBuf {
+        let mut ext = src
+            .as_ref()
+            .extension()
+            .map(|s| s.to_str().unwrap())
+            .unwrap_or("")
+            .to_owned();
+        ext.push_str(".toml");
+        src.as_ref().with_extension(ext)
+    }
+
+    pub async fn load<P: AsRef<Path>>(src: P) -> Result<Self> {
+        let path = CompileDataStore::get_addition_path(src);
+        let content = tokio::fs::read_to_string(path).await?;
+        Ok(toml::from_str(&content)?)
+    }
+
+    pub async fn save<P: AsRef<Path>>(&self, src: P) -> Result<()> {
+        let path = CompileDataStore::get_addition_path(src);
+        let conetnt = toml::to_string(&self)?;
+        tokio::fs::write(&path, conetnt).await?;
+        Ok(())
+    }
+
+    pub fn with_env(&self, cmd: &mut std::process::Command) {
+        if let Some(env) = &self.required_env_running {
+            for (k, v) in env {
+                cmd.env(k, v);
+            }
+        }
+    }
+
+    pub fn with_interpreter_command(&self, cmd: &mut std::process::Command) -> Result<()> {
+        cmd.arg(&self.compile);
+        cmd.arg(&self.source);
+        cmd.args(&self.compile_args);
+
+        Ok(())
+    }
+    pub fn as_interpreter_command(&self) -> std::process::Command {
+        let mut cmd = std::process::Command::new(&self.compile);
+        cmd.arg(&self.source);
+        cmd.args(&self.compile_args);
+
+        cmd
+    }
+}
+
 #[tauri::command]
 pub async fn run_detach<R: Runtime>(
     app: tauri::AppHandle<R>,
+    mode: LanguageMode,
     target: String,
     args: Vec<String>,
 ) -> Result<(), String> {
     let pauser = if cfg!(windows) {
-        app.path_resolver().resolve_resource("sidecar/consolepauser.exe")
+        app.path_resolver()
+            .resolve_resource("sidecar/consolepauser.exe")
     } else {
-        app.path_resolver().resolve_resource("sidecar/consolepauser")
+        app.path_resolver()
+            .resolve_resource("sidecar/consolepauser")
     }
     .unwrap();
+
     let mut cmd = std::process::Command::new(pauser);
-    cmd.arg("1").arg(target).args(args);
+    cmd.arg("1");
     create_new_console(&mut cmd);
+    let compile_data = CompileDataStore::load(&target)
+        .await
+        .map_err(|e| e.to_string())?;
+    match mode {
+        LanguageMode::CXX => {
+            cmd.arg(target);
+        }
+        LanguageMode::PY => {
+            compile_data
+                .with_interpreter_command(&mut cmd)
+                .map_err(|e| e.to_string())?;
+        }
+    }
+    compile_data.with_env(&mut cmd);
+
+    cmd.args(&args);
     cmd.spawn().map_err(|e| e.to_string())?;
 
     Ok(())
@@ -153,12 +229,14 @@ pub async fn run_redirect<R: Runtime>(
     };
 
     let working_dir = PathBuf::from(&exec_target).parent().unwrap().to_path_buf();
+    let compile_data = CompileDataStore::load(PathBuf::from(&exec_target))
+        .await
+        .map_err(|e| e.to_string())?;
     let mut cmd = match mode {
         LanguageMode::CXX => std::process::Command::new(exec_target),
-        LanguageMode::PY => build_command_from_config(PathBuf::from(exec_target))
-            .await
-            .map_err(|e| e.to_string())?,
+        LanguageMode::PY => compile_data.as_interpreter_command(),
     };
+    compile_data.with_env(&mut cmd);
 
     cmd.current_dir(working_dir);
     let update = RunnerOutputUpdater::new(task_id.clone(), window);

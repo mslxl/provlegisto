@@ -21,7 +21,7 @@ use tokio_tungstenite::{
     WebSocketStream,
 };
 
-pub trait LspCommandBuilder: Clone + Copy + Send + Sync {
+pub trait LspCommandBuilder: Clone + Send + Sync {
     fn build(&self) -> Command;
 }
 

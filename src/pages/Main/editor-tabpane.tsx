@@ -1,8 +1,11 @@
 import Codemirror from "@/components/codemirror"
 import { cxxLsp, noLsp, pyLsp } from "@/components/codemirror/language"
+import useReadAtom from "@/hooks/useReadAtom"
 import { LanguageMode } from "@/lib/ipc"
 import { keymapExtensionAtom } from "@/store/setting/keymap"
+import { clangdPathAtom, pyrightsPathAtom } from "@/store/setting/setup"
 import { SourceHeader, activeIdAtom, sourceStoreAtom } from "@/store/source"
+import { Extension } from "@codemirror/state"
 import clsx from "clsx"
 import { PrimitiveAtom, atom, useAtomValue } from "jotai"
 import { focusAtom } from "jotai-optics"
@@ -22,11 +25,14 @@ export default function EditorTabPanel(props: EditorProps) {
   )
   const sourceCodeLanguage = useAtomValue(sourceCodeLanguageAtom)
 
+  const readClangdPath = useReadAtom(clangdPathAtom)
+  const readPyrightsPath = useReadAtom(pyrightsPathAtom)
+
   const lspExtensionAtom = useMemo(() => {
-    return atom(() => {
-      if (sourceCodeLanguage == LanguageMode.CXX) return cxxLsp()
-      else if (sourceCodeLanguage == LanguageMode.PY) return pyLsp()
-      return noLsp()
+    return atom(async():Promise<()=>Extension> => {
+      if (sourceCodeLanguage == LanguageMode.CXX) return cxxLsp(await readClangdPath())
+      else if (sourceCodeLanguage == LanguageMode.PY) return pyLsp(await readPyrightsPath())
+      return noLsp("")
     })
   }, [sourceCodeLanguage])
   return (

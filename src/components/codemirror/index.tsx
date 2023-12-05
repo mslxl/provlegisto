@@ -30,7 +30,6 @@ function useExtensionCompartment<T>(
   const value = useAtomValue(atom)
   useEffect(() => {
     if (cm.current == null) return
-    console.log("dispatch")
     cm.current.dispatch({
       effects: compartment.current.reconfigure(builder(value)),
     })

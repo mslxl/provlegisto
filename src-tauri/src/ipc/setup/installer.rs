@@ -1,7 +1,4 @@
-use std::{
-    io::Stderr,
-    process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
 use tauri::Runtime;
 use tokio::{
@@ -37,8 +34,8 @@ pub async fn execuate_pwsh_script<R: Runtime>(
     let mut cmd = Command::new(which::which("powershell").unwrap());
 
     let target = RESOURCE_DIR.get().unwrap();
-    cmd.arg(&script_file.to_str().unwrap());
-    cmd.arg(target.to_str().unwrap());
+    cmd.arg(&script_file.to_str().unwrap().replace(" ", "` "));
+    cmd.arg(target.to_str().unwrap().replace(" ", "` "));
     console::hide_new_console(&mut cmd);
 
     let mut cmd = tokio::process::Command::from(cmd);

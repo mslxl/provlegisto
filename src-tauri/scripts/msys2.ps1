@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 $target = $args[0]
 $downloadUrl = "https://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/msys2-x86_64-latest.sfx.exe"
 $mirror = 'sed -i "s#https\?://mirror.msys2.org/#https://mirrors.tuna.tsinghua.edu.cn/msys2/#g" /etc/pacman.d/mirrorlist*'

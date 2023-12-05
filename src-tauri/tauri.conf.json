@@ -35,6 +35,12 @@
       "resources": {
         "src-util/build/*": "./sidecar/",
         "scripts/*": "./sidecar/"
+      },
+      "windows": {
+        "webviewInstallMode": {
+          "silent": true,
+          "type": "embedBootstrapper"
+        }
       }
     },
     "security": {

@@ -51,8 +51,8 @@ function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }
     setRunAllAnimate(true)
     const sourceCode = readSourceCode()
     await compileSource(sourceCode.language, sourceCode.source, {
-      path: await getLanguageCompilerPath(sourceCode.language) ?? undefined,
-      args: []
+      path: (await getLanguageCompilerPath(sourceCode.language)) ?? undefined,
+      args: [],
     })
     setRunAllAnimate(false)
   }
@@ -68,11 +68,13 @@ function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }
   async function onRunDetachClick() {
     setRunAllAnimate(true)
     const sourceCode = readSourceCode()
-    let target = await compileSource(sourceCode.language, sourceCode.source)
+    let target = await compileSource(sourceCode.language, sourceCode.source, {
+      path: (await getLanguageCompilerPath(sourceCode.language)) ?? undefined,
+    })
     setRunAllAnimate(false)
 
     if (target.type === "Success") {
-      runDetach(target.data)
+      runDetach(target.data, sourceCode.language)
     } else {
       log.warn(JSON.stringify(target))
     }

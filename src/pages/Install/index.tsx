@@ -24,6 +24,7 @@ export default function Install() {
   const setGcc = useSetAtom(gccPathAtom)
   const setClangd = useSetAtom(clangdPathAtom)
   const [fatal, setFatal] = useState(false)
+  const logRef = useRef<HTMLPreElement | null>(null)
 
   const [dialogMessage, setDialogMessage] = useState("")
   const [dialogVisible, setDialogVisible] = useState(false)
@@ -56,6 +57,10 @@ export default function Install() {
     "install_message",
     (msg) => {
       setOutput((pre) => `${pre}\n${msg.payload}`)
+      if(logRef.current == null) return
+      if(logRef.current.scrollTop + logRef.current.offsetHeight >= logRef.current.scrollHeight - 20){
+        logRef.current.scrollTo(0, logRef.current.scrollHeight);
+      }
     },
     [setOutput],
   )
@@ -65,11 +70,11 @@ export default function Install() {
       <AlertDialog open={dialogVisible} onOpenChange={setDialogVisible}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Error</AlertDialogTitle>
+            <AlertDialogTitle>{fatal ? "Error" : "Message"}</AlertDialogTitle>
             <AlertDialogDescription>{dialogMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>See Logs</AlertDialogCancel>
+            {!fatal ? null : <AlertDialogCancel>See Logs</AlertDialogCancel>}
             <AlertDialogAction onClick={() => navigate(-1)}>Back</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -81,11 +86,12 @@ export default function Install() {
           </button>
         )}
         <h2 className="font-bold text-2xl">Installing {installName}</h2>
-        <span className="text-xs">Girl in Prayer...</span>
+        <p className="text-xs">DO NOT close the application, the installer is running background</p>
+        <p className="text-xs">Girl in Prayer...</p>
       </div>
       <Progress />
       <div className="shadow-sm shadow-slate-950 flex-1 p-2 overflow-auto min-h-0 min-w-0">
-        <pre>{output}</pre>
+        <pre ref={logRef}>{output}</pre>
       </div>
     </div>
   )

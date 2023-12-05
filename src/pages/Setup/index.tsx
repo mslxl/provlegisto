@@ -12,7 +12,7 @@ import {
   setupDeviceAtom,
 } from "@/store/setting/setup"
 import { useAtom, useAtomValue } from "jotai"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import * as log from "tauri-plugin-log-api"
 import Logo from "./logo"
@@ -49,14 +49,12 @@ export default function Setup() {
     readPyrightsV: useReadAtom(pyrightsVersionAtom),
   }
 
-  useEffect(() => {
-    log.info(`hostname: ${hostname}`)
-    log.info(`setupHostname: ${setupHostname}`)
+  log.info(`hostname: ${hostname}`)
+  log.info(`setupHostname: ${setupHostname}`)
 
-    if (setupHostname == hostname) {
-      navgiate("/editor")
-    }
-  }, [setupHostname])
+  if (setupHostname == hostname) {
+    navgiate("/editor")
+  }
 
   async function done() {
     const defaultLang = await readDefaultLang()

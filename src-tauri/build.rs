@@ -4,13 +4,12 @@ fn gcc(inp: &str, oup: &str) {
     if PathBuf::from(oup).exists() {
         return;
     }
-    assert!(Command::new("c++")
-        .args([inp, "-std=c++17", "-static", "-o", oup])
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap()
-        .success());
+    let mut cmd = Command::new("c++");
+    cmd.args([inp, "-std=c++17", "-o", oup]);
+    if cfg!(windows) {
+        cmd.arg("-static");
+    }
+    assert!(cmd.spawn().unwrap().wait().unwrap().success());
 }
 fn main() {
     if cfg!(windows) {

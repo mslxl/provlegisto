@@ -201,11 +201,11 @@ export default function SingleRunner(props: SingleRunnerProps) {
       </AccordionTrigger>
       <AccordionContent>
         <span className="text-sm px-2">Input:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} />
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} editable/>
         <span className="text-sm px-2">Expected Output:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} />
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} editable/>
         <span className="text-sm px-2">Ouput:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} />
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} editable={false} />
         <Popover>
           <PopoverTrigger asChild>
             <span className="text-end text-xs w-full px-2 hover:text-gray-600">See Report&gt;&gt;</span>

@@ -7,7 +7,7 @@ import PrimaryPanel from "./sidebar-panel"
 import { primaryPanelShowAtom, statusBarShowAtom } from "@/store/ui"
 import StatusBar from "@/components/statusbar"
 import { useZoom } from "@/hooks/useZoom"
-import { sourceIndexAtomAtoms } from "@/store/source"
+import { sourceIndexAtomAtoms, sourceIndexAtoms } from "@/store/source"
 import EditorTabPanel from "./editor-tabpane"
 import Runner from "@/components/runner"
 import MenuEventReceiver from "./menu-event"
@@ -15,6 +15,7 @@ import { hostnameAtom, setupDeviceAtom } from "@/store/setting/setup"
 import { useNavigate } from "react-router-dom"
 import * as log from "tauri-plugin-log-api"
 import { useEffect } from "react"
+import { zip } from "lodash"
 
 export default function Main() {
   useZoom()
@@ -24,7 +25,9 @@ export default function Main() {
   const [activePrimaryPanel] = useAtom(primaryPanelShowAtom)
   const [showStatusBar] = useAtom(statusBarShowAtom)
 
+  const sourceIndexContent = useAtomValue(sourceIndexAtoms)
   const sourceIndexAtom = useAtomValue(sourceIndexAtomAtoms)
+  const sourceIndex= zip(sourceIndexContent, sourceIndexAtom)
 
   useEffect(() => {
     log.info(`hostname: ${hostname}`)
@@ -46,8 +49,8 @@ export default function Main() {
         </PrimaryPanel>
         <div className="flex-1 flex flex-col w-0 min-h-0">
           <Tabbar className="h-8" />
-          {sourceIndexAtom.map((atom, index) => (
-            <EditorTabPanel key={index} className={clsx("box-border flex-1 min-h-0")} headerAtom={atom} />
+          {sourceIndex.map(([content, atom]) => (
+            <EditorTabPanel key={content!.id} className={clsx("box-border flex-1 min-h-0")} headerAtom={atom!} />
           ))}
         </div>
       </div>

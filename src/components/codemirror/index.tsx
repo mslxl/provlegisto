@@ -1,40 +1,23 @@
 import clsx from "clsx"
-import { RefObject, memo, useEffect, useRef } from "react"
+import { memo, useEffect, useRef } from "react"
 import { EditorView, keymap } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import { LspProvider } from "./language"
-import { Compartment, Extension } from "@codemirror/state"
+import { Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
-import { Atom, PrimitiveAtom, useAtomValue } from "jotai"
+import { Atom, PrimitiveAtom } from "jotai"
 import { Source } from "@/store/source"
 import { useImmerAtom } from "jotai-immer"
-import { map } from "lodash"
+import { concat, map } from "lodash"
 import "@fontsource/jetbrains-mono"
-import { filterCSSQuote } from "@/lib/utils"
-import { editorFontFamily, editorFontSizeAtom } from "@/store/setting/ui"
+import useExtensionCompartment, { generateCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
 
 type CodemirrorProps = {
   className?: string
   sourceAtom: PrimitiveAtom<Source>
   lspAtom: Atom<ReturnType<LspProvider>>
   keymapAtom: Atom<ReturnType<KeymapProvider>>
-}
-
-function useExtensionCompartment<T>(
-  cm: RefObject<EditorView | null>,
-  atom: Atom<T>,
-  builder: (status: T) => Extension,
-) {
-  const compartment = useRef(new Compartment())
-  const value = useAtomValue(atom)
-  useEffect(() => {
-    if (cm.current == null) return
-    cm.current.dispatch({
-      effects: compartment.current.reconfigure(builder(value)),
-    })
-  }, [atom, cm, value])
-  return () => compartment.current.of(builder(value))
 }
 
 const Codemirror = memo((props: CodemirrorProps) => {
@@ -44,24 +27,13 @@ const Codemirror = memo((props: CodemirrorProps) => {
 
   const [source, patchSource] = useImmerAtom(props.sourceAtom)
 
-  const configurableExtensions = [
-    useExtensionCompartment(cm, props.lspAtom, (v: any) => v()),
-    useExtensionCompartment(cm, props.keymapAtom, (v: any) => v()),
-    useExtensionCompartment(cm, editorFontSizeAtom, (fontsize) =>
-      EditorView.theme({
-        "&": {
-          "font-size": `${fontsize}px`,
-        },
-      }),
-    ),
-    useExtensionCompartment(cm, editorFontFamily, (fontfamily: any) =>
-      EditorView.theme({
-        "& .cm-content": {
-          "font-family": filterCSSQuote(fontfamily),
-        },
-      }),
-    ),
-  ]
+  const configurableExtensions = concat(
+    [
+      useExtensionCompartment(cm, props.lspAtom, (v: any) => v()),
+      useExtensionCompartment(cm, props.keymapAtom, (v: any) => v()),
+    ],
+    generateCommonConfigurationExtension(cm),
+  )
 
   useEffect(() => {
     if (parentRef.current == null) return
@@ -83,6 +55,9 @@ const Codemirror = memo((props: CodemirrorProps) => {
           },
           "&.cm-focused": {
             outline: "none",
+          },
+          "& .cm-lineNumbers": {
+            "user-select": "none",
           },
         }),
         EditorView.updateListener.of((e) => {

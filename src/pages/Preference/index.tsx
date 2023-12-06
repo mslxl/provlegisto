@@ -9,7 +9,7 @@ export default function Preference() {
   useZoom()
   const navigate = useNavigate()
   return (
-    <div className="m-8 w-full shadow-md select-none relative">
+    <div className="p-8 w-full shadow-md select-none relative">
       <button className="absolute right-4 top-4" onClick={() => navigate("/")}>
         <VscClose />
       </button>

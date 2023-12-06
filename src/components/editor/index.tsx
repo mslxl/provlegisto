@@ -1,7 +1,10 @@
-import { Compartment } from "@codemirror/state"
+import useExtensionCompartment, { generateCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
+import { editorThemeExtensionAtom } from "@/store/setting/ui"
+import { Compartment, Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import clsx from "clsx"
 import { minimalSetup } from "codemirror"
+import { map } from "lodash"
 import { useEffect, useRef } from "react"
 
 type EditorProps = {
@@ -28,13 +31,17 @@ function CMEditor(props: EditorProps) {
   const cm = useRef<EditorView | null>(null)
   const updateCompart = useRef(new Compartment())
 
+  const configurableExtensions = generateCommonConfigurationExtension(cm)
+
   useEffect(() => {
     if (parentRef.current == null) return
 
     cm.current = new EditorView({
       extensions: [
         minimalSetup,
+        ...map(configurableExtensions, (e: () => Extension) => e()),
         updateCompart.current.of(EditorView.updateListener.of(() => {})),
+        EditorView.editable.of(props.editable ?? true),
         [
           EditorView.theme({
             "&": {
@@ -53,6 +60,8 @@ function CMEditor(props: EditorProps) {
       cm.current?.destroy()
     }
   }, [])
+
+  useExtensionCompartment(cm, editorThemeExtensionAtom, (v: any) => v())
 
   useEffect(() => {
     cm.current?.dispatch({

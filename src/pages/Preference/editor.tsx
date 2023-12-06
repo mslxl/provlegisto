@@ -1,32 +1,34 @@
+import { themeListItemAtom } from "@/components/codemirror/theme"
+import Editor from "@/components/editor"
 import { PrefNumber } from "@/components/pref"
+import PrefSelect from "@/components/pref/Select"
 import { PrefText } from "@/components/pref/Text"
-import { filterCSSQuote } from "@/lib/utils"
-import { editorFontFamily, editorFontSizeAtom } from "@/store/setting/ui"
+import { editorFontFamilyAtom, editorFontSizeAtom, editorThemeAtom } from "@/store/setting/ui"
 import { useAtomValue } from "jotai"
-import styled from "styled-components"
-
-const FontDisplay = styled.p<{ fontFamily: string; fontSize: number }>`
-  text-align: center;
-  font-size: ${(props) => props.fontSize}px;
-  font-family: ${(props) => filterCSSQuote(props.fontFamily)};
-`
 
 export default function Page() {
-  const fontFamily = useAtomValue(editorFontFamily)
-  const fontSize = useAtomValue(editorFontSizeAtom)
+  const themeItems = useAtomValue(themeListItemAtom)
   return (
     <ul>
+      <li>
+        <div className="shadow-md bg-zinc-200 min-w-0">
+          <Editor
+            className="min-w-0"
+            text={
+              'The quick fox jump over the lazy dog\nif 2 != 1 && 3 >= 2 {\n\tprintln!("=== greet from {}", "provlegisto");\n } '
+            }
+            kernel="codemirror"
+          />
+        </div>
+      </li>
+      <li>
+        <PrefSelect leading="Theme" items={themeItems} atom={editorThemeAtom as any} />
+      </li>
       <li>
         <PrefNumber leading="Editor Font Size" atom={editorFontSizeAtom as any} step={1} min={1} />
       </li>
       <li>
-        <PrefText leading="Editor Font" atom={editorFontFamily as any} />
-        <div className="shadow-md p-2 bg-zinc-200">
-          <FontDisplay fontSize={fontSize} fontFamily={fontFamily}>The quick fox jump over the lazy dog</FontDisplay>
-          <FontDisplay fontSize={fontSize} fontFamily={fontFamily}>
-            {'if 2 != 1 && 3 >= 2 { println!("=== greet from {}", "provlegisto") } '}{" "}
-          </FontDisplay>
-        </div>
+        <PrefText leading="Editor Font" atom={editorFontFamilyAtom as any} />
       </li>
     </ul>
   )

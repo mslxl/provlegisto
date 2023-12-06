@@ -18,11 +18,12 @@ import { splitAtom } from "jotai/utils"
 import { emptyTestcase } from "@/store/testcase"
 import useReadAtom from "@/hooks/useReadAtom"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
+import EmptyRunner from "./empty"
 
 export default function Runnner({ className }: { className?: string }) {
   const activeId = useAtomValue(activeIdAtom)
   if (activeId == -1) {
-    return <div className={className}></div>
+    return <EmptyRunner className={className}/>
   }
   return <RunnerContent className={className} activeIdAtom={activeIdAtom} />
 }
@@ -78,10 +79,6 @@ function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }
     } else {
       log.warn(JSON.stringify(target))
     }
-  }
-
-  if (activeId == -1) {
-    return <div>TODO</div>
   }
 
   const testcaseList = testcases.map((atom, index) => (

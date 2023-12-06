@@ -12,6 +12,7 @@ import { useTauriEvent } from "@/hooks/useTauriEvent"
 import { installMsys2 } from "@/lib/fs/installer"
 import { clangdPathAtom, gccPathAtom } from "@/store/setting/setup"
 import { AlertDialogTitle } from "@radix-ui/react-alert-dialog"
+import { motion } from "framer-motion"
 import { useSetAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { VscClose } from "react-icons/vsc"
@@ -57,16 +58,20 @@ export default function Install() {
     "install_message",
     (msg) => {
       setOutput((pre) => `${pre}\n${msg.payload}`)
-      if(logRef.current == null) return
-      if(logRef.current.scrollTop + logRef.current.offsetHeight >= logRef.current.scrollHeight - 20){
-        logRef.current.scrollTo(0, logRef.current.scrollHeight);
+      if (logRef.current == null) return
+      if (logRef.current.scrollTop + logRef.current.offsetHeight >= logRef.current.scrollHeight - 20) {
+        logRef.current.scrollTo(0, logRef.current.scrollHeight)
       }
     },
     [setOutput],
   )
 
   return (
-    <div className="flex-1 m-8 shadow-lg p-4 flex flex-col gap-2 min-w-0">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex-1 m-8 shadow-lg p-4 flex flex-col gap-2 min-w-0"
+    >
       <AlertDialog open={dialogVisible} onOpenChange={setDialogVisible}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -93,6 +98,6 @@ export default function Install() {
       <div className="shadow-sm shadow-slate-950 flex-1 p-2 overflow-auto min-h-0 min-w-0">
         <pre ref={logRef}>{output}</pre>
       </div>
-    </div>
+    </motion.div>
   )
 }

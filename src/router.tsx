@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react"
 import { RouterProvider, createBrowserRouter } from "react-router-dom"
 
 import Loading from "@/components/loading"
+import { AnimatePresence } from "framer-motion"
 const PageMain = lazy(() => import("@/pages/Main"))
 const PagePreference = {
   Layout: lazy(() => import("@/pages/Preference")),
@@ -17,15 +18,27 @@ const PageAbout = lazy(() => import("@/pages/About"))
 const router = createBrowserRouter([
   {
     path: "/setup",
-    element: <PageSetup />,
+    element: (
+      <AnimatePresence mode="wait">
+        <PageSetup />
+      </AnimatePresence>
+    ),
   },
   {
     path: "/",
-    element: <PageMain />,
+    element: (
+      <AnimatePresence mode="wait">
+        <PageMain />
+      </AnimatePresence>
+    ),
   },
   {
     path: "/pref",
-    element: <PagePreference.Layout />,
+    element: (
+      <AnimatePresence mode="wait">
+        <PagePreference.Layout />
+      </AnimatePresence>
+    ),
     children: [
       {
         path: "/pref",
@@ -47,15 +60,27 @@ const router = createBrowserRouter([
   },
   {
     path: "/about",
-    element: <PageAbout />,
+    element: (
+      <AnimatePresence mode="wait">
+        <PageAbout />
+      </AnimatePresence>
+    ),
   },
   {
     path: "/setup",
-    element: <PageSetup />,
+    element: (
+      <AnimatePresence mode="wait">
+        <PageSetup />
+      </AnimatePresence>
+    ),
   },
   {
     path: "/install/:name",
-    element: <PageInstall />,
+    element: (
+      <AnimatePresence mode="wait">
+        <PageInstall />
+      </AnimatePresence>
+    ),
   },
 ])
 

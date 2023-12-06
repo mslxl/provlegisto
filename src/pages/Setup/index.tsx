@@ -28,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { motion } from "framer-motion"
 
 export default function Setup() {
   const hostname = useAtomValue(hostnameAtom)
@@ -80,7 +81,7 @@ export default function Setup() {
   }
 
   return (
-    <div className="select-none flex-1 overflow-auto">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="select-none flex-1 overflow-auto">
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -117,6 +118,6 @@ export default function Setup() {
           </li>
         </ul>
       </div>
-    </div>
+    </motion.div>
   )
 }

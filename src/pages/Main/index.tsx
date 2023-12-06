@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom"
 import * as log from "tauri-plugin-log-api"
 import { useEffect } from "react"
 import { zip } from "lodash"
+import { motion } from "framer-motion"
 
 export default function Main() {
   useZoom()
@@ -27,7 +28,7 @@ export default function Main() {
 
   const sourceIndexContent = useAtomValue(sourceIndexAtoms)
   const sourceIndexAtom = useAtomValue(sourceIndexAtomAtoms)
-  const sourceIndex= zip(sourceIndexContent, sourceIndexAtom)
+  const sourceIndex = zip(sourceIndexContent, sourceIndexAtom)
 
   useEffect(() => {
     log.info(`hostname: ${hostname}`)
@@ -36,7 +37,7 @@ export default function Main() {
   }, [hostname, setupHostname])
 
   return (
-    <div className="w-full h-full flex flex-col items-stretch">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full flex flex-col items-stretch">
       <MenuEventReceiver />
       <div className="flex-1 flex flex-row min-h-0">
         <PrimarySide />
@@ -55,6 +56,6 @@ export default function Main() {
         </div>
       </div>
       {showStatusBar ? <StatusBar className="h-6 w-full" /> : null}
-    </div>
+    </motion.div>
   )
 }

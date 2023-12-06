@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { VscClose } from "react-icons/vsc"
 import Contributer from "./contributer"
 import { useZoom } from "@/hooks/useZoom"
+import { motion } from "framer-motion"
 
 export default function About() {
   useZoom()
@@ -19,7 +20,12 @@ export default function About() {
   }, [])
 
   return (
-    <div className="m-8 w-full shadow-md shadow-slate-400 select-none relative">
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "100%" }}
+      exit={{ opacity: 0, height: 0 }}
+      className="m-8 w-full shadow-md shadow-slate-400 select-none relative"
+    >
       <button className="absolute right-4 top-4" onClick={() => navigate(-1)}>
         <VscClose />
       </button>
@@ -31,14 +37,18 @@ export default function About() {
             <span>v{version}</span>
           </div>
           <div>
-            <span className="text-xs">
+            <p className="text-xs">
               based on Tauri {tauriVersion}, React {React.version} and many open source projects
-            </span>
+            </p>
+            <p className="text-xs my-2">
+              Source:
+              <a className="underline p-1" href="https://github.com/sdufeACM/provlegisto" target="__blank">sdufeACM/provlegisto</a>{" "}
+            </p>
           </div>
         </div>
       </div>
       <Separator />
-      <Contributer/>
-    </div>
+      <Contributer />
+    </motion.div>
   )
 }

@@ -68,15 +68,17 @@ function CMEditor(props: EditorProps) {
   }, [props.onChange])
 
   useEffect(() => {
-    cm.current?.dispatch({
-      changes: [
-        {
-          from: 0,
-          to: cm.current.state.doc.length,
-          insert: props.text ?? "",
-        },
-      ],
-    })
+    if (cm.current?.state.doc.toString() != props.text) {
+      cm.current?.dispatch({
+        changes: [
+          {
+            from: 0,
+            to: cm.current.state.doc.length,
+            insert: props.text ?? "",
+          },
+        ],
+      })
+    }
   }, [props.text])
 
   return <div className={clsx(props.className, "border border-slate-400")} ref={parentRef}></div>

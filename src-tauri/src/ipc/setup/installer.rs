@@ -34,7 +34,8 @@ pub async fn execuate_pwsh_script<R: Runtime>(
     let mut cmd = Command::new(which::which("powershell").unwrap());
 
     let target = RESOURCE_DIR.get().unwrap();
-    cmd.arg(&script_file.to_str().unwrap().replace(" ", "` "));
+    cmd.args(["-ExecutionPolicy", "Bypass"]);
+    cmd.args(["-File", &script_file.to_str().unwrap()]);
     cmd.arg(target.to_str().unwrap().replace(" ", "` "));
     console::hide_new_console(&mut cmd);
 

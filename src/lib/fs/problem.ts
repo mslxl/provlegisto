@@ -151,8 +151,15 @@ export async function saveProblem(source: Source, title: string, choosePath: boo
       time: `${source.test.timeLimits}ms`,
       checker: source.test.checker,
     }
+
     return Object.entries(header)
-      .reduce((prev, cur) => `${prev}\n${commentPrefix}${capitalize(cur[0])}: ${cur[1]}`, "")
+      .reduce((prev, cur) => {
+        if (cur) {
+          return `${prev}\n${commentPrefix}${capitalize(cur[0])}: ${cur[1]}`
+        } else {
+          return prev
+        }
+      }, "")
       .trimStart()
   })()
 

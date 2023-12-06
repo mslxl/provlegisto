@@ -39,7 +39,7 @@ export default function Install() {
         .then((res) => {
           setGcc(res.gcc)
           setClangd(res.clangd)
-          setDialogMessage("Install complete!")
+          setDialogMessage("Installation completed")
           setDialogVisible(true)
         })
         .catch((e) => {
@@ -48,7 +48,7 @@ export default function Install() {
           setFatal(true)
         })
     } else {
-      setDialogMessage("No such installer")
+      setDialogMessage("No such installer file")
       setDialogVisible(true)
     }
   }, [])

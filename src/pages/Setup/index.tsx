@@ -11,10 +11,9 @@ import {
   pythonVersionAtom,
   setupDeviceAtom,
 } from "@/store/setting/setup"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import * as log from "tauri-plugin-log-api"
 import Logo from "./logo"
 import SetupCXX from "../../components/setup/setup-cxx"
 import SetupPy from "../../components/setup/setup-py"
@@ -32,7 +31,7 @@ import {
 
 export default function Setup() {
   const hostname = useAtomValue(hostnameAtom)
-  const [setupHostname, setSetupHostname] = useAtom(setupDeviceAtom)
+  const setSetupHostname = useSetAtom(setupDeviceAtom)
   const navgiate = useNavigate()
   const availableLanguageList = useAtomValue(availableLanguageListAtom)
   const [alertOpen, setAlertOpen] = useState(false)
@@ -47,13 +46,6 @@ export default function Setup() {
     readEnable: useReadAtom(enablePythonAtom),
     readPythonV: useReadAtom(pythonVersionAtom),
     readPyrightsV: useReadAtom(pyrightsVersionAtom),
-  }
-
-  log.info(`hostname: ${hostname}`)
-  log.info(`setupHostname: ${setupHostname}`)
-
-  if (setupHostname == hostname) {
-    navgiate("/editor")
   }
 
   async function done() {
@@ -84,7 +76,7 @@ export default function Setup() {
       return
     }
     setSetupHostname(hostname)
-    navgiate("/editor")
+    navgiate("/")
   }
 
   return (

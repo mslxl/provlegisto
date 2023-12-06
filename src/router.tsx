@@ -16,11 +16,11 @@ const PageInstall = lazy(() => import("@/pages/Install"))
 const PageAbout = lazy(() => import("@/pages/About"))
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/setup",
     element: <PageSetup />,
   },
   {
-    path: "/editor",
+    path: "/",
     element: <PageMain />,
   },
   {

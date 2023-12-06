@@ -11,19 +11,30 @@ import { sourceIndexAtomAtoms } from "@/store/source"
 import EditorTabPanel from "./editor-tabpane"
 import Runner from "@/components/runner"
 import MenuEventReceiver from "./menu-event"
+import { hostnameAtom, setupDeviceAtom } from "@/store/setting/setup"
+import { useNavigate } from "react-router-dom"
+import * as log from "tauri-plugin-log-api"
+import { useEffect } from "react"
 
 export default function Main() {
   useZoom()
-
+  const hostname = useAtomValue(hostnameAtom)
+  const setupHostname = useAtomValue(setupDeviceAtom)
+  const navgiate = useNavigate()
   const [activePrimaryPanel] = useAtom(primaryPanelShowAtom)
   const [showStatusBar] = useAtom(statusBarShowAtom)
 
   const sourceIndexAtom = useAtomValue(sourceIndexAtomAtoms)
 
+  useEffect(() => {
+    log.info(`hostname: ${hostname}`)
+    log.info(`setupHostname: ${setupHostname}`)
+    if (setupHostname != hostname) navgiate("/setup")
+  }, [hostname, setupHostname])
 
   return (
     <div className="w-full h-full flex flex-col items-stretch">
-      <MenuEventReceiver/>
+      <MenuEventReceiver />
       <div className="flex-1 flex flex-row min-h-0">
         <PrimarySide />
         <PrimaryPanel
@@ -31,7 +42,7 @@ export default function Main() {
             hidden: activePrimaryPanel === null,
           })}
         >
-        <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} />
+          <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} />
         </PrimaryPanel>
         <div className="flex-1 flex flex-col w-0 min-h-0">
           <Tabbar className="h-8" />

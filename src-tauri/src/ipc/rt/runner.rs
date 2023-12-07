@@ -149,12 +149,6 @@ impl<R: Runtime> RunnerOutputUpdater<R> {
     async fn append_stderr(&self, msg: String) {
         let mut guard = self.stderr.lock().await;
         guard.push_str(&msg);
-        self.win
-            .emit(
-                &self.task_id,
-                RunnerOutputCommand::AppendStderr { line: msg },
-            )
-            .unwrap();
     }
 
     async fn flush(&self) {

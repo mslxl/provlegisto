@@ -1,58 +1,48 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Link } from "react-router-dom"
+import allContributorSrc from "../../../.all-contributorsrc?raw"
+import { startCase } from "lodash"
+import styled from "styled-components"
 
-type Contributer = {
+type Contributor = {
+  login: string
   name: string
-  avatar: string
-  fallback: string
-  ty: string
+  avatar_url: string
   profile: string
+  contributions: string[]
 }
 
-const contributers: Contributer[] = [
-  {
-    name: "Mslxl",
-    avatar: "https://avatars.githubusercontent.com/u/11132880?v=4",
-    fallback: "M",
-    ty: "Main developer",
-    profile: "https://github.com/mslxl",
-  },
-  {
-    name: "xia0ne",
-    avatar: "https://avatars.githubusercontent.com/u/32591223?v=4",
-    fallback: "Y",
-    ty: "Debug",
-    profile: "https://github.com/xia0ne",
-  },
-  {
-    name: "Galong",
-    avatar: "https://avatars.githubusercontent.com/u/94678496?v=4",
-    fallback: "G",
-    ty: "Advice & Debug",
-    profile: "https://github.com/gjh303987897",
-  },
-]
+const allContributors = JSON.parse(allContributorSrc).contributors as Contributor[]
+
+const ContributorGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+`
 
 export default function Component() {
   return (
     <div>
-      <h3 className="sm:text-center text-lg mt-4 mx-8">Contributors</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3">
-        {contributers.map((dev) => (
+      <h3 className="sm:text-center text-xl font-bold mt-4 mx-8">Contributors</h3>
+      <ContributorGrid>
+        {allContributors.map((dev) => (
           <Link key={dev.profile} to={dev.profile} target="__blank">
             <div className="flex gap-2 items-center m-4">
               <Avatar>
-                <AvatarImage src={dev.avatar} />
-                <AvatarFallback>{dev.fallback}</AvatarFallback>
+                <AvatarImage src={dev.avatar_url} />
+                <AvatarFallback>{dev.name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <span className="block">{dev.name}</span>
-                <span className="block text-xs">{dev.ty}</span>
+                <span className="block font-semibold">{dev.name}</span>
+                {dev.contributions.map((contri) => (
+                  <span className="text-xs mr-2 px-2 py-0.5 rounded-lg shadow-sm italic bg-neutral-200">
+                    {startCase(contri)}
+                  </span>
+                ))}
               </div>
             </div>
           </Link>
         ))}
-      </div>
+      </ContributorGrid>
     </div>
   )
 }

@@ -106,29 +106,8 @@ export async function openProblem(): Promise<[string, Source][]> {
   return Promise.all(map(problemFiles, parseSrcFile))
 }
 
-export async function saveProblem(source: Source, title: string, choosePath: boolean) {
-  const extension = (() => {
-    if (source.code.language == LanguageMode.CXX) return "cpp"
-    else if (source.code.language == LanguageMode.PY) return "py"
-    return "txt"
-  })()
+export async function saveProblem(source: Source, title: string, filepath: string) {
 
-  const filepath = await (async () => {
-    if (source.path != undefined && !choosePath) {
-      return source.path!
-    } else {
-      return await dialog.save({
-        filters: [
-          {
-            name: "Source File",
-            extensions: [extension],
-          },
-        ],
-      })
-    }
-  })()
-
-  if (filepath == null) return
 
   const sourceCode = (() => {
     let result = problemHeader()(source.code.source)
@@ -154,7 +133,7 @@ export async function saveProblem(source: Source, title: string, choosePath: boo
 
     return Object.entries(header)
       .reduce((prev, cur) => {
-        if (cur) {
+        if (cur[1]) {
           return `${prev}\n${commentPrefix}${capitalize(cur[0])}: ${cur[1]}`
         } else {
           return prev

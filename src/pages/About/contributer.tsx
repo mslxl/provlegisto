@@ -34,7 +34,7 @@ export default function Component() {
               <div>
                 <span className="block font-semibold">{dev.name}</span>
                 {dev.contributions.map((contri) => (
-                  <span className="text-xs mr-2 px-2 py-0.5 rounded-lg shadow-sm italic bg-neutral-200">
+                  <span key={contri} className="text-xs mr-2 px-2 py-0.5 rounded-lg shadow-sm italic bg-neutral-200">
                     {startCase(contri)}
                   </span>
                 ))}

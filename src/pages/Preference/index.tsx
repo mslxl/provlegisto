@@ -4,7 +4,7 @@ import PrefCatalog from "./catalog"
 import { Suspense } from "react"
 import Loading from "@/components/loading"
 import { useZoom } from "@/hooks/useZoom"
-import { AnimatePresence, motion } from "framer-motion"
+import { motion } from "framer-motion"
 
 export default function Preference() {
   useZoom()

@@ -1,7 +1,7 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 import "normalize.css"
-import "./styles.css"
+import "./styles.scss"
 import "@fontsource/jetbrains-mono"
 import Router from "./router"
 import { DndProvider } from "react-dnd"
@@ -17,6 +17,11 @@ async function maskContextMenu() {
   const debug = await isDebug()
   if (!debug) {
     document.oncontextmenu = (event) => event.preventDefault()
+    document.addEventListener("keydown", (e) => {
+      if (e.key == "r" && e.ctrlKey) {
+        e.preventDefault()
+      }
+    })
   }
 }
 

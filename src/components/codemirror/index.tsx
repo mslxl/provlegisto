@@ -52,6 +52,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
           "&": {
             "flex-grow": 1,
             outline: "none",
+            "min-width": "0px"
           },
           "&.cm-focused": {
             outline: "none",
@@ -82,6 +83,6 @@ const Codemirror = memo((props: CodemirrorProps) => {
     }
   }, [parentRef])
 
-  return <div ref={parentRef} className={clsx("flex items-stretch", props.className)} />
+  return <div ref={parentRef} className={clsx("flex items-stretch min-w-0", props.className)} />
 })
 export default Codemirror

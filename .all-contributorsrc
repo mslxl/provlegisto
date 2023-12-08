@@ -33,5 +33,23 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "projectName": "provlegisto",
-  "projectOwner": "sdufeACM"
+  "projectOwner": "sdufeACM",
+  "files": [
+    "README.md"
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "gjh303987897",
+      "name": "galong",
+      "avatar_url": "https://avatars.githubusercontent.com/u/94678496?v=4",
+      "profile": "https://github.com/gjh303987897",
+      "contributions": [
+        "code",
+        "userTesting"
+      ]
+    }
+  ]
 }

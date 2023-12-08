@@ -1,4 +1,7 @@
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 <div>
 
 <table align="center">
@@ -78,7 +81,11 @@ Also you can run `pnpm tauri dev` to debug the program.
 
 Any pull request are welcomed to this project
 
-## Contributors
+
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
@@ -87,6 +94,8 @@ Any pull request are welcomed to this project
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/gjh303987897"><img src="https://avatars.githubusercontent.com/u/94678496?v=4?s=100" width="100px;" alt="galong"/><br /><sub><b>galong</b></sub></a><br /><a href="#code-gjh303987897" title="Code">💻</a> <a href="#userTesting-gjh303987897" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://blog.myyrh.com"><img src="https://avatars.githubusercontent.com/u/32591223?v=4?s=100" width="100px;" alt="YuRuiH"/><br /><sub><b>YuRuiH</b></sub></a><br /><a href="#userTesting-xia0ne" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://blog.mslxl.com"><img src="https://avatars.githubusercontent.com/u/11132880?v=4?s=100" width="100px;" alt="mslxl"/><br /><sub><b>mslxl</b></sub></a><br /><a href="https://github.com/sdufeACM/provlegisto/commits?author=mslxl" title="Code">💻</a> <a href="https://github.com/sdufeACM/provlegisto/commits?author=mslxl" title="Tests">⚠️</a> <a href="#design-mslxl" title="Design">🎨</a></td>
     </tr>
   </tbody>
 </table>
@@ -95,3 +104,5 @@ Any pull request are welcomed to this project
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

@@ -6,6 +6,12 @@
   "commit": false,
   "commitType": "docs",
   "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "provlegisto",
+  "projectOwner": "sdufeACM",
   "contributors": [
     {
       "login": "LionelMessiYoung10",
@@ -15,12 +21,36 @@
       "contributions": [
         "userTesting"
       ]
+    },
+    {
+      "login": "xia0ne",
+      "name": "YuRuiH",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32591223?v=4",
+      "profile": "http://blog.myyrh.com",
+      "contributions": [
+        "userTesting"
+      ]
+    },
+    {
+      "login": "mslxl",
+      "name": "mslxl",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11132880?v=4",
+      "profile": "http://blog.mslxl.com",
+      "contributions": [
+        "code",
+        "test",
+        "design"
+      ]
+    },
+    {
+      "login": "gjh303987897",
+      "name": "galong",
+      "avatar_url": "https://avatars.githubusercontent.com/u/94678496?v=4",
+      "profile": "https://github.com/gjh303987897",
+      "contributions": [
+        "code",
+        "userTesting"
+      ]
     }
-  ],
-  "contributorsPerLine": 7,
-  "skipCi": true,
-  "repoType": "github",
-  "repoHost": "https://github.com",
-  "projectName": "provlegisto",
-  "projectOwner": "sdufeACM"
+  ]
 }

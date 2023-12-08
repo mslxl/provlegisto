@@ -19,6 +19,21 @@ Yet another IDE for competitive programming
 
 </td>
 </tr>
+
+<tr>
+
+<td colspan="2">
+
+[![GitHub tag (with filter)](https://img.shields.io/github/v/tag/sdufeacm/provlegisto?filter=v*&label=pre-release)](https://github.com/sdufeACM/provlegisto/releases)
+[![GitHub release (with filter)](https://img.shields.io/github/v/release/sdufeacm/provlegisto)](https://github.com/sdufeACM/provlegisto/releases/latest)
+
+![GitHub License](https://img.shields.io/github/license/sdufeacm/provlegisto)
+[![All Contributors](https://img.shields.io/github/all-contributors/sdufeacm/provlegisto?color=ee8449)](#contributors)
+
+</td>
+
+</tr>
+
 </table>
 </div>
 
@@ -65,7 +80,6 @@ The releases file can be found in `src-tauri\target\release\bundle\` folder
 Also you can run `pnpm tauri dev` to debug the program.
 
 Any pull request are welcomed to this project
-
 
 ## Contributors ✨
 

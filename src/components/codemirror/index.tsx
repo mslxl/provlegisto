@@ -6,7 +6,7 @@ import { basicSetup } from "codemirror"
 import { LspProvider } from "./language"
 import { Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
-import { Atom, PrimitiveAtom } from "jotai"
+import { Atom, PrimitiveAtom, useSetAtom } from "jotai"
 import { Source } from "@/store/source"
 import { useImmerAtom } from "jotai-immer"
 import { concat, map } from "lodash"
@@ -16,6 +16,7 @@ import useExtensionCompartment, { generateCommonConfigurationExtension } from "@
 type CodemirrorProps = {
   className?: string
   sourceAtom: PrimitiveAtom<Source>
+  changedStatusAtom: PrimitiveAtom<boolean>
   lspAtom: Atom<ReturnType<LspProvider>>
   keymapAtom: Atom<ReturnType<KeymapProvider>>
 }
@@ -26,6 +27,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
   const cm = useRef<EditorView | null>(null)
 
   const [source, patchSource] = useImmerAtom(props.sourceAtom)
+  const setChangeStatus = useSetAtom(props.changedStatusAtom)
 
   const configurableExtensions = concat(
     [
@@ -52,7 +54,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
           "&": {
             "flex-grow": 1,
             outline: "none",
-            "min-width": "0px"
+            "min-width": "0px",
           },
           "&.cm-focused": {
             outline: "none",
@@ -66,6 +68,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
           patchSource((prev) => {
             prev.code.source = e.state.doc.toString()
           })
+          setChangeStatus(true)
         }),
       ],
       doc: source.code.source ?? "",

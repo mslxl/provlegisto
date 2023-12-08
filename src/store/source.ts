@@ -37,6 +37,10 @@ export type SourceCode = {
   source: string
 }
 
+type SourceChangedStatus = {
+  [key: number]: boolean
+}
+
 type SourceStore = {
   [key: number]: Source
 }
@@ -74,14 +78,20 @@ sourceIndexAtoms.debugLabel = "source.indexSplit"
 export const sourceStoreAtom = atom<SourceStore>({})
 sourceIndexAtoms.debugLabel = "source.store"
 
+export const sourceCodeChangedAtom = atom<SourceChangedStatus>({})
+
 export function useAddSource() {
   const [, setSrc] = useImmerAtom(sourceStoreAtom)
+  const [, setChange] = useImmerAtom(sourceCodeChangedAtom)
   const [counter, incCounter] = useAtom(counterAtom)
   const dispatch = useSetAtom(sourceIndexAtomAtoms)
 
   return (title: string, source: Source) => {
     setSrc((prev) => {
       prev[counter] = source
+    })
+    setChange((prev)=>{
+      prev[counter] = false
     })
 
     dispatch({

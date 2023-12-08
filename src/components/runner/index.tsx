@@ -142,9 +142,9 @@ function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }
         >
           New Testcase
         </Button>
-        <Button size="sm" className="flex-1 py-0 bg-blue-500 hover:bg-blue-400">
+        {/* <Button size="sm" className="flex-1 py-0 bg-blue-500 hover:bg-blue-400">
           Submit
-        </Button>
+        </Button> */}
       </div>
     </div>
   )

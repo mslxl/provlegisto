@@ -1,6 +1,6 @@
 import clsx from "clsx"
 import { useEffect, useMemo, useRef } from "react"
-import { VscAdd, VscClose } from "react-icons/vsc"
+import { VscAdd, VscCircleFilled, VscClose } from "react-icons/vsc"
 import { useDrag, useDrop } from "react-dnd"
 import { useHoverDirty, useMouseWheel } from "react-use"
 import { styled } from "styled-components"
@@ -16,6 +16,7 @@ import {
   SourceHeader,
   activeIdAtom,
   emptySource,
+  sourceCodeChangedAtom,
   sourceIndexAtomAtoms,
   sourceStoreAtom,
   useAddSource,
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
 import { defaultLanguageAtom } from "@/store/setting/setup"
+import { dialog } from "@tauri-apps/api"
 
 const HorizontalUnorderedList = styled.ul`
   position: relative;
@@ -76,13 +78,16 @@ export default function Tabbar({ className }: { className: string }) {
               key={index}
               className="h-full"
               atom={atom}
-              removeAtom={() => patchSourceIndexAtoms({ type: "remove", atom })}
+              onRemove={() => patchSourceIndexAtoms({ type: "remove", atom })}
               moveAtom={(from, to) => patchSourceIndexAtoms({ type: "move", atom: from, before: to })}
             />
           </li>
         ))}
         <li>
-          <button className="w-4 h-full mx-2 my-auto" onClick={() => addSource("Unamed", emptySource(defaultLanguage!))}>
+          <button
+            className="w-4 h-full mx-2 my-auto"
+            onClick={() => addSource("Unamed", emptySource(defaultLanguage!))}
+          >
             <VscAdd />
           </button>
         </li>
@@ -95,16 +100,21 @@ function Bar({
   className,
   atom,
   moveAtom,
-  removeAtom,
+  onRemove,
 }: {
   className?: string
   atom: PrimitiveAtom<SourceHeader>
   moveAtom: (fromAtom: PrimitiveAtom<SourceHeader>, toId: PrimitiveAtom<SourceHeader>) => void
-  removeAtom: () => void
+  onRemove: () => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
+
   const [content, setContent] = useAtom(atom)
   const [activeId, setActiveId] = useAtom(activeIdAtom)
+
+  const sourceChangedAtom = useMemo(() => focusAtom(sourceCodeChangedAtom, (optic) => optic.prop(activeId)), [activeId])
+  const sourceChange = useAtomValue(sourceChangedAtom)
+
   const currentLanguageAtom = useMemo(
     () => focusAtom(sourceStoreAtom, (optic) => optic.prop(content.id).prop("code").prop("language")),
     [atom, content],
@@ -134,6 +144,20 @@ function Bar({
   const [changeLanguageDialog, showChangeLanguageDialog] = useChangeLanguageDialog(currentLanguageAtom as any)
 
   dragRef(dropRef(ref))
+
+  async function confirmRemove() {
+    if (sourceChange) {
+      const confirm = !await dialog.ask(`${content.title} was changed, close file without saving?`, {
+        type: "info",
+        okLabel: "No",
+        cancelLabel: "Close"
+      })
+      if (!confirm) {
+        return
+      }
+    }
+    onRemove()
+  }
   return (
     <ContextMenu>
       {renameDialog}
@@ -163,15 +187,15 @@ function Bar({
           className={clsx("w-4 h-full ml-2", {
             invisible: content.id != activeId,
           })}
-          onClick={removeAtom}
+          onClick={confirmRemove}
         >
-          <VscClose />
+          {sourceChange ? <VscCircleFilled /> : <VscClose />}
         </button>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={() => showRenameDialog(content.title)}>Rename</ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={removeAtom}>Close</ContextMenuItem>
+        <ContextMenuItem onClick={confirmRemove}>Close</ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem>Copy Path</ContextMenuItem>
         <ContextMenuSeparator />

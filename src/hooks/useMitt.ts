@@ -3,6 +3,7 @@ import { DependencyList, useEffect } from "react"
 type Events = {
   fileMenu: "new" | "newContest" | "open" | "openContest" | "save" | "saveAs"
   run: "all" | string
+  cache: number
 }
 
 const emitter = mitt<Events>()

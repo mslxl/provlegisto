@@ -43,6 +43,7 @@ Yet another IDE for competitive programming
   + [X] C++
   + [ ] Python
 - [X] Coding
+- [X] Keep codes after close app
 - [X] Compile, Run and Check
   + [X] C++
   + [X] Python

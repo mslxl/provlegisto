@@ -15,11 +15,9 @@ import { useRenameDialog } from "../../hooks/useRenameDialog"
 import {
   SourceHeader,
   activeIdAtom,
-  emptySource,
   sourceCodeChangedAtom,
   sourceIndexAtomAtoms,
   sourceStoreAtom,
-  useAddSource,
 } from "@/store/source"
 import { PrimitiveAtom, useAtom, useAtomValue } from "jotai"
 import { focusAtom } from "jotai-optics"
@@ -32,8 +30,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
-import { defaultLanguageAtom } from "@/store/setting/setup"
 import { dialog } from "@tauri-apps/api"
+import { emit } from "@/hooks/useMitt"
+import * as cache from "@/lib/fs/cache"
 
 const HorizontalUnorderedList = styled.ul`
   position: relative;
@@ -58,7 +57,6 @@ export default function Tabbar({ className }: { className: string }) {
   const mouseWheel = useMouseWheel()
   const lastWheel = useRef(0)
   const ulHover = useHoverDirty(ulRef)
-  const defaultLanguage = useAtomValue(defaultLanguageAtom)
   useEffect(() => {
     let delta = mouseWheel - lastWheel.current
     lastWheel.current = mouseWheel
@@ -67,7 +65,6 @@ export default function Tabbar({ className }: { className: string }) {
   }, [ulHover, mouseWheel])
 
   const [sourceIndexAtoms, patchSourceIndexAtoms] = useAtom(sourceIndexAtomAtoms)
-  const addSource = useAddSource()
 
   return (
     <>
@@ -78,16 +75,16 @@ export default function Tabbar({ className }: { className: string }) {
               key={index}
               className="h-full"
               atom={atom}
-              onRemove={() => patchSourceIndexAtoms({ type: "remove", atom })}
+              onRemove={(id) => {
+                cache.dropCache(id)
+                patchSourceIndexAtoms({ type: "remove", atom })
+              }}
               moveAtom={(from, to) => patchSourceIndexAtoms({ type: "move", atom: from, before: to })}
             />
           </li>
         ))}
         <li>
-          <button
-            className="w-4 h-full mx-2 my-auto"
-            onClick={() => addSource("Unamed", emptySource(defaultLanguage!))}
-          >
+          <button className="w-4 h-full mx-2 my-auto" onClick={() => emit("fileMenu", "new")}>
             <VscAdd />
           </button>
         </li>
@@ -105,15 +102,14 @@ function Bar({
   className?: string
   atom: PrimitiveAtom<SourceHeader>
   moveAtom: (fromAtom: PrimitiveAtom<SourceHeader>, toId: PrimitiveAtom<SourceHeader>) => void
-  onRemove: () => void
+  onRemove: (id: number) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
 
   const [content, setContent] = useAtom(atom)
   const [activeId, setActiveId] = useAtom(activeIdAtom)
 
-  const sourceChangedAtom = useMemo(() => focusAtom(sourceCodeChangedAtom, (optic) => optic.prop(activeId)), [activeId])
-  const sourceChange = useAtomValue(sourceChangedAtom)
+  const sourceChange = useAtomValue(sourceCodeChangedAtom)[activeId]
 
   const currentLanguageAtom = useMemo(
     () => focusAtom(sourceStoreAtom, (optic) => optic.prop(content.id).prop("code").prop("language")),
@@ -147,16 +143,16 @@ function Bar({
 
   async function confirmRemove() {
     if (sourceChange) {
-      const confirm = !await dialog.ask(`${content.title} was changed, close file without saving?`, {
+      const confirm = !(await dialog.ask(`${content.title} was changed, close file without saving?`, {
         type: "info",
         okLabel: "No",
-        cancelLabel: "Close"
-      })
+        cancelLabel: "Close",
+      }))
       if (!confirm) {
         return
       }
     }
-    onRemove()
+    onRemove(content.id)
   }
   return (
     <ContextMenu>

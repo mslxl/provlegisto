@@ -4,7 +4,7 @@ import useReadAtom from "@/hooks/useReadAtom"
 import { LanguageMode } from "@/lib/ipc"
 import { keymapExtensionAtom } from "@/store/setting/keymap"
 import { clangdPathAtom, pyrightsPathAtom } from "@/store/setting/setup"
-import { SourceHeader, activeIdAtom, sourceCodeChangedAtom, sourceStoreAtom } from "@/store/source"
+import { SourceHeader, activeIdAtom, sourceStoreAtom } from "@/store/source"
 import { Extension } from "@codemirror/state"
 import clsx from "clsx"
 import { PrimitiveAtom, atom, useAtomValue } from "jotai"
@@ -21,10 +21,6 @@ export default function EditorTabPanel(props: EditorProps) {
   const sourceAtom = useMemo(() => focusAtom(sourceStoreAtom, (optic) => optic.prop(header.id)), [header.id])
   const sourceCodeLanguageAtom = useMemo(
     () => focusAtom(sourceStoreAtom, (optic) => optic.prop(header.id).prop("code").prop("language")),
-    [header.id],
-  )
-  const sourceChangedStatusAtom = useMemo(
-    () => focusAtom(sourceCodeChangedAtom, (optic) => optic.prop(header.id)),
     [header.id],
   )
   const sourceCodeLanguage = useAtomValue(sourceCodeLanguageAtom)
@@ -46,7 +42,8 @@ export default function EditorTabPanel(props: EditorProps) {
           hidden: active != header.id,
         })}
         sourceAtom={sourceAtom}
-        changedStatusAtom={sourceChangedStatusAtom}
+        id={header.id}
+        title={header.title}
         keymapAtom={keymapExtensionAtom}
         lspAtom={lspExtensionAtom}
       />

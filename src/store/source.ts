@@ -3,6 +3,7 @@ import { Test } from "./testcase"
 import { atom, useAtom, useSetAtom } from "jotai"
 import { atomWithReducer, splitAtom } from "jotai/utils"
 import { useImmerAtom } from "jotai-immer"
+import { crc16 } from "crc"
 
 export type SourceHeader = {
   id: number
@@ -34,6 +35,7 @@ export function emptySource(language: LanguageMode): Source {
 
 export type SourceCode = {
   language: LanguageMode
+  savedCrc?: number
   source: string
 }
 
@@ -76,31 +78,41 @@ export const sourceIndexAtomAtoms = splitAtom(sourceIndexAtoms)
 sourceIndexAtoms.debugLabel = "source.indexSplit"
 
 export const sourceStoreAtom = atom<SourceStore>({})
-sourceIndexAtoms.debugLabel = "source.store"
+sourceStoreAtom.debugLabel = "source.store"
 
-export const sourceCodeChangedAtom = atom<SourceChangedStatus>({})
+export const sourceCodeChangedAtom = atom<SourceChangedStatus>((get) => {
+  const store = get(sourceStoreAtom)
+  let status: SourceChangedStatus = {}
+  for (const k of Object.keys(store)) {
+    let id = parseInt(k)
+    if(store[id].code.savedCrc == undefined){
+      status[id] = store[id].code.source.trim().length != 0
+    }else{
+      status[id] = store[id].code.savedCrc != crc16(store[id].code.source)
+    }
+  }
+  return status
+})
 
-export function useAddSource() {
+export function useAddSources() {
   const [, setSrc] = useImmerAtom(sourceStoreAtom)
-  const [, setChange] = useImmerAtom(sourceCodeChangedAtom)
   const [counter, incCounter] = useAtom(counterAtom)
   const dispatch = useSetAtom(sourceIndexAtomAtoms)
 
-  return (title: string, source: Source) => {
-    setSrc((prev) => {
-      prev[counter] = source
-    })
-    setChange((prev)=>{
-      prev[counter] = false
-    })
-
-    dispatch({
-      type: "insert",
-      value: {
-        id: counter,
-        title,
-      },
-    })
-    incCounter()
+  return (sources: { title: string; source: Source }[]) => {
+    for (let i = 0; i < sources.length; i++) {
+      let cnt = counter + i
+      setSrc((prev) => {
+        prev[cnt] = sources[i].source
+      })
+      dispatch({
+        type: "insert",
+        value: {
+          id: cnt,
+          title: sources[i].title,
+        },
+      })
+    }
+    incCounter(sources.length)
   }
 }

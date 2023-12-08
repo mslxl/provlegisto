@@ -1,49 +1,33 @@
-import { useMitt } from "@/hooks/useMitt"
+import { emit, useMitt } from "@/hooks/useMitt"
 import useReadAtom from "@/hooks/useReadAtom"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
 import { LanguageMode } from "@/lib/ipc"
 import { defaultLanguageAtom } from "@/store/setting/setup"
-import {
-  activeIdAtom,
-  counterAtom,
-  emptySource,
-  sourceIndexAtomAtoms,
-  sourceIndexAtoms,
-  sourceStoreAtom,
-  useAddSource,
-} from "@/store/source"
+import { activeIdAtom, emptySource, sourceIndexAtoms, sourceStoreAtom, useAddSources } from "@/store/source"
 import { dialog } from "@tauri-apps/api"
-import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import { useAtomValue } from "jotai"
 import { useImmerAtom } from "jotai-immer"
+import { crc16 } from "crc"
 
 export default function MenuEventReceiver() {
-  const [counter, incCounter] = useAtom(counterAtom)
-  const dispatchSourceIndex = useSetAtom(sourceIndexAtomAtoms)
   const [sourceCodeStore, setSourceCodeStore] = useImmerAtom(sourceStoreAtom)
 
   const readActiveId = useReadAtom(activeIdAtom)
   const readSourceIndex = useReadAtom(sourceIndexAtoms)
-  const addSource = useAddSource()
+  const addSources = useAddSources()
   const defaultLanguage = useAtomValue(defaultLanguageAtom)
 
   useMitt("fileMenu", async (event) => {
     if (event == "new") {
-      addSource("Unamed", emptySource(defaultLanguage!))
+      addSources([
+        {
+          title: "Unamed",
+          source: emptySource(defaultLanguage!),
+        },
+      ])
     } else if (event == "open") {
-      const problems = await openProblem()
-      for (let i = 0; i < problems.length; i++) {
-        setSourceCodeStore((store) => {
-          store[counter + i] = problems[i][1]
-        })
-        dispatchSourceIndex({
-          type: "insert",
-          value: {
-            id: counter + i,
-            title: problems[i][0],
-          },
-        })
-      }
-      incCounter(problems.length)
+      const problems = (await openProblem()).map(([title, source]) => ({ title, source }))
+      addSources(problems)
     } else if (event == "save" || event == "saveAs") {
       const id = readActiveId()
       console.log(id)
@@ -76,9 +60,12 @@ export default function MenuEventReceiver() {
       if (filepath == null) return
       setSourceCodeStore((prev) => {
         prev[id].path = filepath
+        prev[id].code.savedCrc = crc16(prev[id].code.source)
       })
       await saveProblem(source, title, filepath)
+
     }
+    emit('cache', -1)
   })
 
   return null

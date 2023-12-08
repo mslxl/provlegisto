@@ -23,7 +23,7 @@ import EmptyRunner from "./empty"
 export default function Runnner({ className }: { className?: string }) {
   const activeId = useAtomValue(activeIdAtom)
   if (activeId == -1) {
-    return <EmptyRunner className={className}/>
+    return <EmptyRunner className={className} />
   }
   return <RunnerContent className={className} activeIdAtom={activeIdAtom} />
 }
@@ -84,6 +84,7 @@ function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }
   const testcaseList = testcases.map((atom, index) => (
     <SingleRunner
       key={index}
+      id={activeId}
       sourceAtom={sourceCodeAtom}
       testcaseAtom={atom}
       onDelete={() => dispatchTestcases({ type: "remove", atom })}

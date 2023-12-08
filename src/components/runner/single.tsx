@@ -25,6 +25,7 @@ type SingleRunnerProps = {
   timeLimitsAtom: Atom<number>
   memoryLimitsAtom: Atom<number>
   checkerAtom: Atom<string>
+  id: number
   taskId: string
   onDelete: () => void
 }
@@ -67,8 +68,17 @@ export default function SingleRunner(props: SingleRunnerProps) {
   const inputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("input")), [props.testcaseAtom])
   const outputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("output")), [props.testcaseAtom])
 
-  const [input, setInput] = useAtom(inputAtom)
-  const [output, setOutput] = useAtom(outputAtom)
+  const [input, setInputAtom] = useAtom(inputAtom)
+  const [output, setOutputAtom] = useAtom(outputAtom)
+
+  function setInput(inp: string){
+    setInputAtom(inp)
+    emit('cache', props.id)
+  }
+  function setOutput(oup: string){
+    setOutputAtom(oup)
+    emit('cache', props.id)
+  }
 
   const [actualStdout, setActualStdout] = useState("")
   const [actualStderr, setActualStderr] = useState("")
@@ -80,6 +90,8 @@ export default function SingleRunner(props: SingleRunnerProps) {
   useEffect(() => {
     setJudgeStatus("UK")
     setCheckerReport("")
+    setActualStderr("")
+    setActualStdout("")
   }, [props.sourceAtom])
 
   useMitt(

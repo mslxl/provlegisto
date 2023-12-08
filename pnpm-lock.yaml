@@ -113,6 +113,9 @@ dependencies:
   codemirror-languageserver:
     specifier: ^1.11.0
     version: 1.11.0(@codemirror/language@6.9.2)(@lezer/common@1.1.1)
+  crc:
+    specifier: ^4.3.2
+    version: 4.3.2
   events:
     specifier: ^3.3.0
     version: 3.3.0
@@ -3322,6 +3325,16 @@ packages:
       parse-json: 5.2.0
       path-type: 4.0.0
       typescript: 5.2.2
+    dev: false
+
+  /crc@4.3.2:
+    resolution: {integrity: sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      buffer: '>=6.0.3'
+    peerDependenciesMeta:
+      buffer:
+        optional: true
     dev: false
 
   /crelt@1.0.6:

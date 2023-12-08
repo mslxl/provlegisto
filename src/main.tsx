@@ -11,7 +11,7 @@ import { attachConsole } from "tauri-plugin-log-api"
 import { loadSettingsStore } from "./store/setting"
 import { LanguageMode, isDebug } from "./lib/ipc"
 import { useCompetitiveCompanion } from "./hooks/useCompetitiveCompanion"
-import { Source, useAddSource } from "./store/source"
+import { Source, useAddSources } from "./store/source"
 
 async function maskContextMenu() {
   const debug = await isDebug()
@@ -26,7 +26,7 @@ async function maskContextMenu() {
 }
 
 function CompetitiveCompanion() {
-  const addSource = useAddSource()
+  const addSources = useAddSources()
   useCompetitiveCompanion((p) => {
     let title = p.name
     let source: Source = {
@@ -43,7 +43,7 @@ function CompetitiveCompanion() {
         testcases: p.tests,
       },
     }
-    addSource(title, source)
+    addSources([{ title, source }])
   })
   return null
 }

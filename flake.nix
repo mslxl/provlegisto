@@ -35,6 +35,9 @@
           # tauri
           webkitgtk
           dbus
+
+          # github
+          act
         ];
       in
       rec {

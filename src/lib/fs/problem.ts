@@ -6,6 +6,7 @@ import { ProblemHeader, problemHeader } from "../parse/problem"
 import { parse, right } from "../parse"
 import { capitalize, map } from "lodash"
 import { TestCase } from "@/store/testcase"
+import { crc16 } from "crc"
 
 function parseLanguageMode(extName: string) {
   let e = extName.toLowerCase()
@@ -106,9 +107,15 @@ export async function openProblem(): Promise<[string, Source][]> {
   return Promise.all(map(problemFiles, parseSrcFile))
 }
 
-export async function saveProblem(source: Source, title: string, filepath: string) {
-
-
+/**
+ * Save source object to file
+ * This function will remove the header and generate new header according to source object
+ * @param source 
+ * @param title 
+ * @param filepath 
+ * @returns CRC16
+ */
+export async function saveProblem(source: Source, title: string, filepath: string): Promise<number> {
   const sourceCode = (() => {
     let result = problemHeader()(source.code.source)
     if (result.ty == "left") return source.code.source
@@ -142,7 +149,8 @@ export async function saveProblem(source: Source, title: string, filepath: strin
       .trimStart()
   })()
 
-  await fs.writeTextFile(filepath, `${header}\n${sourceCode}`)
+  const filecontent = `${header}\n${sourceCode}`
+  await fs.writeTextFile(filepath, filecontent)
   const extname = await path.extname(filepath)
   const dirname = await path.dirname(filepath)
   const basename = await path.basename(filepath, `.${extname}`)
@@ -156,4 +164,5 @@ export async function saveProblem(source: Source, title: string, filepath: strin
       fs.writeTextFile(output, source.test.testcases[i].output),
     ])
   }
+  return crc16(filecontent)
 }

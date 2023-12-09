@@ -7,7 +7,6 @@ import { activeIdAtom, emptySource, sourceIndexAtoms, sourceStoreAtom, useAddSou
 import { dialog } from "@tauri-apps/api"
 import { useAtomValue } from "jotai"
 import { useImmerAtom } from "jotai-immer"
-import { crc16 } from "crc"
 
 export default function MenuEventReceiver() {
   const [sourceCodeStore, setSourceCodeStore] = useImmerAtom(sourceStoreAtom)
@@ -58,12 +57,11 @@ export default function MenuEventReceiver() {
         }
       })()
       if (filepath == null) return
+      const crc = await saveProblem(source, title, filepath)
       setSourceCodeStore((prev) => {
         prev[id].path = filepath
-        prev[id].code.savedCrc = crc16(prev[id].code.source)
+        prev[id].code.savedCrc = crc
       })
-      await saveProblem(source, title, filepath)
-
     }
     emit('cache', -1)
   })

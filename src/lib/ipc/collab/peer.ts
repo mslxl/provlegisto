@@ -1,7 +1,9 @@
 import { Update } from "@codemirror/collab"
+import { Client } from "@open-rpc/client-js"
+import { Text } from "@codemirror/state"
 
-export function pushUpdates(
-  connection: WebSocket,
+export async function pushUpdates(
+  client: Client,
   version: number,
   documentId: number,
   fullUpdates: readonly Update[],
@@ -10,67 +12,42 @@ export function pushUpdates(
     clientID: u.clientID,
     changes: u.changes.toJSON(),
   }))
-  let data = {
-    type: "pushUpdates",
+  let packet = {
+    documentID: documentId,
     version,
     updates,
   }
+  await client.request({
+    method: "pushUpdates",
+    params: packet,
+  })
+}
+
+export async function pullUpdates(client: Client, version: number, documentId: number): Promise<Update[]> {
   let packet = {
     documentID: documentId,
-    data
+    version,
   }
-  return new Promise((resolve, reject)=>{
-    connection.onmessage = (message) => {
-      connection.onmessage = null
-      resolve(message.data)
-    }
-    connection.onerror = (err) => {
-      connection.onerror = null
-      reject(err)
-    }
-    connection.send(JSON.stringify(packet))
-  })
+  return await client.request(
+    {
+      method: "pullUpdates",
+      params: packet,
+    },
+    24 * 60 * 60 * 1000,
+  )
 }
 
-export function pullUpdates(connection: WebSocket, version: number, documentId: number): Promise<Update[]> {
-  return new Promise((resolve, reject) => {
-    connection.onmessage = (message) => {
-      connection.onmessage = null
-      resolve(message.data)
-    }
-    connection.onerror = (err) => {
-      connection.onerror = null
-      reject(err)
-    }
-    let data = {
-      type: "pullUpdates",
-      version,
-    }
-    let packet  = {
-      documentID: documentId,
-      data
-    }
-    connection.send(JSON.stringify(packet))
-  })
-}
-
-export function getDocument(connection: WebSocket, documentId: number) {
-  return new Promise((resolve, reject) => {
-    connection.onmessage = (message) => {
-      connection.onmessage = null
-      resolve(message.data)
-    }
-    connection.onerror = (err) => {
-      connection.onerror = null
-      reject(err)
-    }
-    let data = {
-      type: "getDocument",
-    }
-    let packet = {
-      documentID: documentId,
-      data
-    }
-    connection.send(JSON.stringify(packet))
-  })
+export async function getDocument(client: Client, documentId: number) {
+  let packet = {
+    documentID: documentId,
+  }
+  return await client
+    .request({
+      method: "getDocument",
+      params: packet,
+    })
+    .then((data) => ({
+      version: data.version,
+      doc: Text.of(data.doc.split("\n")),
+    }))
 }

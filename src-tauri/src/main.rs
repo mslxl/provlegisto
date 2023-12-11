@@ -3,6 +3,7 @@
 
 use std::{env, path::PathBuf};
 
+use ipc::collab::authority::CollabState;
 use ipc::{
     cmd::{bind::LSPState, competitive_companion::CompetitiveCompanionState},
     rt::{checker::CheckerState, compiler::CompilerState, runner::RunnerState},
@@ -62,6 +63,7 @@ fn main() {
             app.manage(RunnerState::default());
             app.manage(CheckerState::default());
             app.manage(PwshScriptState::default());
+            app.manage(CollabState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -81,6 +83,8 @@ fn main() {
             ipc::rt::runner::run_redirect,
             ipc::rt::checker::abort_all_checker,
             ipc::rt::checker::check_answer,
+            ipc::collab::authority::collab_start,
+            ipc::collab::authority::collab_reply,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

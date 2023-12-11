@@ -6,7 +6,7 @@ import { basicSetup } from "codemirror"
 import { LspProvider } from "./language"
 import { Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
-import { Atom, PrimitiveAtom } from "jotai"
+import { Atom, PrimitiveAtom, useAtomValue } from "jotai"
 import { Source } from "@/store/source"
 import { useImmerAtom } from "jotai-immer"
 import { concat, map } from "lodash"
@@ -15,6 +15,8 @@ import useExtensionCompartment, { generateCommonConfigurationExtension } from "@
 import useTimeoutInvoke from "@/hooks/useTimeoutInvoke"
 import * as cache from "@/lib/fs/cache"
 import { useMitt } from "@/hooks/useMitt"
+import { PeerProvider } from "./peer"
+import { hostIPAtom, hostPortAtom } from "@/store/collab"
 
 type CodemirrorProps = {
   className?: string
@@ -23,6 +25,7 @@ type CodemirrorProps = {
   sourceAtom: PrimitiveAtom<Source>
   lspAtom: Atom<ReturnType<LspProvider>>
   keymapAtom: Atom<ReturnType<KeymapProvider>>
+  peerAtom: Atom<ReturnType<PeerProvider>>
 }
 
 const Codemirror = memo((props: CodemirrorProps) => {
@@ -31,11 +34,16 @@ const Codemirror = memo((props: CodemirrorProps) => {
   const cm = useRef<EditorView | null>(null)
 
   const [source, patchSource] = useImmerAtom(props.sourceAtom)
+  const peerConfig = {
+    ip: useAtomValue(hostIPAtom),
+    port: useAtomValue(hostPortAtom),
+  }
 
   const configurableExtensions = concat(
     [
       useExtensionCompartment(cm, props.lspAtom, (v: any) => v()),
       useExtensionCompartment(cm, props.keymapAtom, (v: any) => v()),
+      useExtensionCompartment(cm, props.peerAtom, (v:any) => v(peerConfig.ip, peerConfig.port, props.id)),
     ],
     generateCommonConfigurationExtension(cm),
   )
@@ -47,7 +55,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
     if (id == props.id || id == -1) doCacheOnTimeout({} as never)
   })
 
-  useEffect(()=>{
+  useEffect(() => {
     doCacheOnTimeout({} as never)
   }, [props.title])
 

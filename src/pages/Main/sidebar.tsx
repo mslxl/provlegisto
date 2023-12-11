@@ -30,7 +30,7 @@ export default function PrimarySide() {
   const panelBtn = (
     [
       ["run", <VscVmRunning className="text-2xl my-4" />],
-      ["team", <VscOrganization className="text-2xl my-4 hidden" />],
+      ["collab", <VscOrganization className="text-2xl my-4" />],
       ["version", <VscTypeHierarchySub className="text-2xl my-4 hidden" />],
     ] as [string, ReactNode][]
   ).map((item, index) => (

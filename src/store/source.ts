@@ -74,6 +74,11 @@ counterAtom.debugLabel = "source.counter"
 export const sourceIndexAtoms = atom<SourceHeader[]>([])
 sourceIndexAtoms.debugLabel = "source.index"
 
+export const haveSourceOpenedAtom = atom((get)=>{
+  return get(sourceIndexAtoms).length != 0
+})
+haveSourceOpenedAtom.debugLabel = "source.haveOpen"
+
 export const sourceIndexAtomAtoms = splitAtom(sourceIndexAtoms)
 sourceIndexAtoms.debugLabel = "source.indexSplit"
 

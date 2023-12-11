@@ -8,6 +8,8 @@ import { PrefSelectItem } from "@/components/pref/Select"
 import { loadable } from "jotai/utils"
 
 export const hostnameAtom = atom(() => getHostname())
+hostnameAtom.debugLabel = "sys.os.hostname"
+
 export const setupDeviceAtom = atomWithSettings("setup", "")
 
 const internalDefaultLanguageAtom = atomWithSettings("setup.language", LanguageMode.CXX)

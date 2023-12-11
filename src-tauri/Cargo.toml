@@ -1,7 +1,7 @@
 [package]
 name = "provlegisto"
 version = "0.0.0"
-description = "A simple IDE for ACMer"
+description = "Provlegisto"
 authors = ["mslxl"]
 license = "agpl"
 repository = "sdufeacm/provlegisto"

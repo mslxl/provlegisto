@@ -2,7 +2,6 @@
 
 import { Update, rebaseUpdates } from "@codemirror/collab"
 import { ChangeSet, Text } from "@codemirror/state"
-import { window } from "@tauri-apps/api"
 
 type AuthorityRequest = {
   type: "pullUpdates" | "pushUpdates" | "getDocument"
@@ -12,23 +11,15 @@ type AuthorityRequest = {
 
 type AuthorityCallBack = (response: any) => void
 
-class Authority {
+export class Authority {
   updates: Update[] = []
   doc = Text.of([""])
   id: number
-  listener: Promise<() => void>
 
   pendingPullUpdates: AuthorityCallBack[] = []
 
   constructor(id: number) {
     this.id = id
-    this.listener = window.getCurrent().listen("prov://collab-recv", (event) => {
-      let payload = event.payload as any
-      let connectID = payload.connect
-      this.accept(payload.data, (res)=>{
-
-      });
-    })
   }
 
   accept(request: AuthorityRequest, cb: AuthorityCallBack) {
@@ -63,11 +54,4 @@ class Authority {
       cb({ version: this.updates.length, doc: this.doc.toString() })
     }
   }
-  public destroy() {
-    this.listener.then((fn) => fn())
-  }
 }
-
-// export default function getAuthority(id: number): Authority {}
-
-// export default function closeAuthority(id: number) {}

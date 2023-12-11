@@ -4,3 +4,4 @@ import { atom } from "jotai"
 export const systemNameAtom = atom(async () => {
   return getSystemName()
 })
+systemNameAtom.debugLabel = "sys.os.name"

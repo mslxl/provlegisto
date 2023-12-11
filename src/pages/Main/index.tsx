@@ -16,6 +16,7 @@ import { useEffect } from "react"
 import { zip } from "lodash"
 import { motion } from "framer-motion"
 import * as log from "tauri-plugin-log-api"
+import Collab from "@/components/collab-info"
 
 export default function Main() {
   useZoom()
@@ -37,7 +38,7 @@ export default function Main() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full flex flex-col items-stretch">
-      <MainEventRegister/>
+      <MainEventRegister />
       <div className="flex-1 flex flex-row min-h-0">
         <PrimarySide />
         <PrimaryPanel
@@ -46,6 +47,7 @@ export default function Main() {
           })}
         >
           <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} />
+          <Collab className={clsx({ hidden: activePrimaryPanel != "collab" })} />
         </PrimaryPanel>
         <div className="flex-1 flex flex-col w-0 min-h-0">
           <Tabbar className="h-8" />

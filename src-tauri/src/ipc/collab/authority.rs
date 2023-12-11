@@ -19,17 +19,17 @@ pub struct CollabState {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct ConnectID(u64);
+struct ConnectID(i32);
 
-fn calculate_hash<T: Hash>(t: &T) -> u64 {
+fn calculate_hash<T: Hash>(t: &T) -> i32 {
     let mut s = DefaultHasher::new();
     t.hash(&mut s);
-    s.finish()
+    s.finish() as i32
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct CollabRecvPayload {
-    connect: u64,
+    connection: i32,
     data: String,
 }
 
@@ -45,7 +45,7 @@ async fn bridge_rx<R: Runtime>(
             .emit(
                 "prov://collab-recv",
                 &CollabRecvPayload {
-                    connect: id.0,
+                    connection: id.0,
                     data: text,
                 },
             )
@@ -104,14 +104,14 @@ pub async fn collab_start<R: Runtime>(
 #[tauri::command]
 pub async fn collab_reply(
     state: tauri::State<'_, CollabState>,
-    id: u64,
+    id: i32,
     data: String,
 ) -> Result<(), String> {
     let id = ConnectID(id);
-    let mut tx_guard = state.tx_pool.lock().await;
+    let mut tx_guard: tokio::sync::MutexGuard<'_, HashMap<ConnectID, SplitSink<WebSocketStream<TcpStream>, Message>>> = state.tx_pool.lock().await;
     let tx = tx_guard
         .get_mut(&id)
-        .ok_or(String::from("No such connection"))?;
+        .ok_or(format!("No such connection {}", id.0))?;
     tx.send(Message::Text(data))
         .await
         .map_err(|e| e.to_string())?;

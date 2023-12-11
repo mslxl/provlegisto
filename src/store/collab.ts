@@ -13,10 +13,12 @@ hostingAtom.debugLabel = "collab.server"
 export const connectAtom = atom(false)
 connectAtom.debugLabel = "collab.connect"
 
+export const collaAtom = atom((get) => get(hostingAtom) || get(connectAtom))
+
 export const peerExtensionAtom = atom((get) => {
   const ip = get(hostIPAtom)
   const port = get(hostPortAtom)
-  if (get(hostingAtom) || get(connectAtom)) {
+  if (get(collaAtom) && port != 0) {
     return peer(ip, port)
   } else {
     return noPeer(ip, port)

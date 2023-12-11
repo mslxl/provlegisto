@@ -30,7 +30,7 @@ export class Authority {
   }
 
   accept(request: OTOpenRPCRequest, cb: AuthorityCallBack) {
-    log.info(JSON.stringify(request))
+    log.info("authority: " + JSON.stringify(request))
     if (request.method == "pullUpdates") {
       if (request.params.version < this.updates.length) {
         cb(this.updates.slice(request.params.version))

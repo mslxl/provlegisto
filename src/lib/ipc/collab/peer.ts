@@ -1,6 +1,7 @@
 import { Update } from "@codemirror/collab"
 import { Client } from "@open-rpc/client-js"
-import { Text } from "@codemirror/state"
+import { ChangeSet, Text } from "@codemirror/state"
+import * as log from "tauri-plugin-log-api"
 
 export async function pushUpdates(
   client: Client,
@@ -17,10 +18,12 @@ export async function pushUpdates(
     version,
     updates,
   }
-  await client.request({
+  let result = await client.request({
     method: "pushUpdates",
     params: packet,
   })
+  log.info("push updates: " + JSON.stringify(updates))
+  return result
 }
 
 export async function pullUpdates(client: Client, version: number, documentId: number): Promise<Update[]> {
@@ -28,20 +31,29 @@ export async function pullUpdates(client: Client, version: number, documentId: n
     documentID: documentId,
     version,
   }
-  return await client.request(
-    {
-      method: "pullUpdates",
-      params: packet,
-    },
-    24 * 60 * 60 * 1000,
-  )
+  let updates = await client
+    .request(
+      {
+        method: "pullUpdates",
+        params: packet,
+      },
+      24 * 60 * 60 * 1000,
+    )
+    .then((updates) =>
+      (updates as Update[]).map((u) => ({
+        changes: ChangeSet.fromJSON(u.changes),
+        clientID: u.clientID,
+      })),
+    )
+  log.info("pull updates: " + JSON.stringify(updates))
+  return updates
 }
 
 export async function getDocument(client: Client, documentId: number) {
   let packet = {
     documentID: documentId,
   }
-  return await client
+  let doc = await client
     .request({
       method: "getDocument",
       params: packet,
@@ -50,4 +62,6 @@ export async function getDocument(client: Client, documentId: number) {
       version: data.version,
       doc: Text.of(data.doc.split("\n")),
     }))
+  log.info("get document: " + JSON.stringify(doc))
+  return doc
 }

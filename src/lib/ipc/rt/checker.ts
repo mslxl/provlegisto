@@ -9,7 +9,7 @@ type ExternalChecker = {
   suggest_output_path?: string
 }
 
-export const availableInternalChecker = ["wcmp", "ncmp" , "ncmp9" , "rcmp" , "rcmp4" , "rcmp6" , "yesno"]
+export const availableInternalChecker = ["wcmp", "ncmp" , "ncmp9" , "rcmp" , "rcmp4" , "rcmp6" , "yesno", "ac"]
 type InternalChecker = {
   type: "Internal"
   name: typeof availableInternalChecker[number]

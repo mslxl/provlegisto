@@ -30,5 +30,6 @@ fn main() {
     gcc("src-util/rcmp9.cpp", "src-util/build/ncmp9");
     gcc("src-util/wcmp.cpp", "src-util/build/wcmp");
     gcc("src-util/yesno.cpp", "src-util/build/yesno");
+    gcc("src-util/ac.cpp", "src-util/build/ac");
     tauri_build::build();
 }

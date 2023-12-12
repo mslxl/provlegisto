@@ -6,10 +6,12 @@ import { Button } from "../ui/button"
 import * as log from "tauri-plugin-log-api"
 import * as z from "zod"
 import useReadAtom from "@/hooks/useReadAtom"
-import { connectAtom, hostIPAtom, hostPortAtom, hostingAtom } from "@/store/collab"
+import { connectionAtom, hostIPAtom, hostPortAtom, hostingAtom } from "@/store/collab"
 import { dialog } from "@tauri-apps/api"
 import { haveSourceOpenedAtom } from "@/store/source"
 import { useAtomValue, useSetAtom } from "jotai"
+import TauriWSTransport from "@/lib/TauriWSTransport"
+import Client, { RequestManager } from "@open-rpc/client-js"
 
 const connectSchema = z.object({
   host: z.string().ip({ version: "v4" }),
@@ -26,9 +28,9 @@ export default function Connect() {
   const readHosting = useReadAtom(hostingAtom)
   const haveOpened = useAtomValue(haveSourceOpenedAtom)
 
-  const setIsConnect = useSetAtom(connectAtom)
   const setHostPort = useSetAtom(hostPortAtom)
   const setHostIp = useSetAtom(hostIPAtom)
+  const setConnection = useSetAtom(connectionAtom)
 
   async function onSubmit(values: z.infer<typeof connectSchema>) {
     log.info("connect " + JSON.stringify(values))
@@ -46,7 +48,15 @@ export default function Connect() {
     }
     setHostIp(values.host)
     setHostPort(values.port)
-    setIsConnect(true)
+    const transport = new TauriWSTransport(`ws://${values.host}:${values.port}`)
+    const requestManager = new RequestManager([transport])
+    const client = new Client(requestManager)
+    try{
+      await client.request({method: 'ping'})
+    }catch{
+      return
+    }
+    setConnection(client)
   }
 
   return (

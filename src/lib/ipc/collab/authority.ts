@@ -2,19 +2,18 @@
 
 import { Update, rebaseUpdates } from "@codemirror/collab"
 import { ChangeSet, Text } from "@codemirror/state"
-import * as log from 'tauri-plugin-log-api'
+import * as log from "tauri-plugin-log-api"
 
 type OTOpenRPCRequest = {
-  id: string,
-  jsonrpc: string,
-  method: "pullUpdates" | "pushUpdates" | "getDocument"
+  id: string
+  jsonrpc: string
+  method: "pullUpdates" | "pushUpdates" | "getDocument" | "ping"
   params: {
     documentID: number
     version: number
     updates: Update[]
   }
 }
-
 
 type AuthorityCallBack = (response: any) => void
 
@@ -60,6 +59,6 @@ export class Authority {
       }
     } else if (request.method == "getDocument") {
       cb({ version: this.updates.length, doc: this.doc.toString() })
-    }
+    } 
   }
 }

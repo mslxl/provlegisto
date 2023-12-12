@@ -24,7 +24,7 @@ type CodemirrorProps = {
   sourceAtom: PrimitiveAtom<Source>
   lspAtom: Atom<ReturnType<LspProvider>>
   keymapAtom: Atom<ReturnType<KeymapProvider>>
-  peerAtom: Atom<ReturnType<PeerProvider>>
+  peerAtom: Atom<Promise<ReturnType<PeerProvider>>>
 }
 
 const Codemirror = memo((props: CodemirrorProps) => {

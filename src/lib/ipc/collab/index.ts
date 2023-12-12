@@ -1,5 +1,6 @@
 import { invoke, window } from "@tauri-apps/api"
 import { Authority } from "./authority"
+import * as log from "tauri-plugin-log-api"
 
 const authorities = new Map<number, Authority>()
 let cancelListener: null | Promise<() => void> = null
@@ -11,16 +12,32 @@ export async function collabStart() {
     let connectionID = res.connection
 
     let data = JSON.parse(res.data)
-    if (!authorities.has(data.documentID)) {
-      authorities.set(data.documentID, new Authority(data.documentID))
+    if (data.method == "ping") {
+      log.info("pong")
+      collabReply(
+        connectionID,
+        JSON.stringify({
+          id: data.id,
+          jsonrpc: data.jsonrpc,
+          result: "pong",
+        }),
+      )
+      return
     }
-    let authority = authorities.get(data.documentID)!
+    let documentID = data.params.documentID
+    if (!authorities.has(documentID)) {
+      authorities.set(documentID, new Authority(documentID))
+    }
+    let authority = authorities.get(documentID)!
     authority.accept(data, (response) => {
-      collabReply(connectionID, JSON.stringify({
-        id: data.id,
-        jsonrpc: data.jsonrpc,
-        result: response
-      }))
+      collabReply(
+        connectionID,
+        JSON.stringify({
+          id: data.id,
+          jsonrpc: data.jsonrpc,
+          result: response,
+        }),
+      )
     })
   })
   return invoke<number>("collab_start")

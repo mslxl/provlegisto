@@ -1,15 +1,11 @@
 import { Extension } from "@codemirror/state"
 import peerExtension from "./extension/peerExetnsion"
-import Client, { RequestManager } from "@open-rpc/client-js"
-import TauriWSTransport from "@/lib/TauriWSTransport"
+import Client from "@open-rpc/client-js"
 
-export type PeerProvider = (host: string, port: number) => (documentID: number) => Extension
+export type PeerProvider = (client: Client) => (documentID: number) => Extension
 
-export const noPeer: PeerProvider = () => () => []
+export const noPeer  = () => () => []
 
-export const peer: PeerProvider = (host, port) => (documentID) => {
-  const transport = new TauriWSTransport(`ws://${host}:${port}`)
-  const requestManager = new RequestManager([transport])
-  const client = new Client(requestManager)
+export const peer: PeerProvider = (client: Client) => (documentID) => {
   return peerExtension(0, documentID, client)
 }

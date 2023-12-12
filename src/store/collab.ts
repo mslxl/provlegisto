@@ -1,4 +1,5 @@
 import { noPeer, peer } from "@/components/codemirror/peer"
+import Client from "@open-rpc/client-js"
 import { atom } from "jotai"
 
 export const hostPortAtom = atom(0)
@@ -10,17 +11,25 @@ hostIPAtom.debugLabel = "collab.host"
 export const hostingAtom = atom(false)
 hostingAtom.debugLabel = "collab.server"
 
-export const connectAtom = atom(false)
-connectAtom.debugLabel = "collab.connect"
+export const connectionAtom = atom<Client|null>(null)
+connectionAtom.debugLabel = "collab.connect"
 
-export const collaAtom = atom((get) => get(hostingAtom) || get(connectAtom))
+export const collaAtom = atom(async(get) => {
+  const client = get(connectionAtom)
+  if(client == null) return false
+  try{
+    return await client.request({method: 'ping'}) != null
+  }catch {
+    return false
+  }
+})
 
-export const peerExtensionAtom = atom((get) => {
-  const ip = get(hostIPAtom)
-  const port = get(hostPortAtom)
-  if (get(collaAtom) && port != 0) {
-    return peer(ip, port)
+export const peerExtensionAtom = atom(async(get) => {
+  const connection = get(connectionAtom)
+  const isConnected = await get(collaAtom)
+  if (isConnected) {
+    return peer(connection!)
   } else {
-    return noPeer(ip, port)
+    return noPeer()
   }
 })

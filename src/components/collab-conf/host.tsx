@@ -1,20 +1,32 @@
 import { useAtom, useSetAtom } from "jotai"
 import { Label } from "../ui/label"
 import { Switch } from "../ui/switch"
-import { hostIPAtom, hostPortAtom, hostingAtom } from "@/store/collab"
+import { connectionAtom, hostIPAtom, hostPortAtom, hostingAtom } from "@/store/collab"
 import { collabStart } from "@/lib/ipc/collab"
+import TauriWSTransport from "@/lib/TauriWSTransport"
+import Client, { RequestManager } from "@open-rpc/client-js"
 
 export default function Host() {
   const [isHosting, setIsHosting] = useAtom(hostingAtom)
   const [hostPort, setHostPort] = useAtom(hostPortAtom)
   const setHostIp = useSetAtom(hostIPAtom)
+  const setConnection = useSetAtom(connectionAtom)
 
   async function setHost(status: boolean) {
     if (status) {
-      collabStart().then((port) => {
-        setHostPort(port)
-        setHostIp("127.0.0.1")
-      })
+      const port = await collabStart()
+      setHostPort(port)
+      setHostIp("127.0.0.1")
+
+      const transport = new TauriWSTransport(`ws://127.0.0.1:${port}`)
+      const requestManager = new RequestManager([transport])
+      const client = new Client(requestManager)
+      try {
+        await client.request({ method: "ping" })
+      } catch {
+        return
+      }
+      setConnection(client)
     }
     setIsHosting(status)
   }

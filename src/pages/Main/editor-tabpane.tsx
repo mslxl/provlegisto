@@ -2,7 +2,6 @@ import Codemirror from "@/components/codemirror"
 import { cxxLsp, noLsp, pyLsp } from "@/components/codemirror/language"
 import useReadAtom from "@/hooks/useReadAtom"
 import { LanguageMode } from "@/lib/ipc"
-import { peerExtensionAtom } from "@/store/collab"
 import { keymapExtensionAtom } from "@/store/setting/keymap"
 import { clangdPathAtom, pyrightsPathAtom } from "@/store/setting/setup"
 import { SourceHeader, activeIdAtom, sourceStoreAtom } from "@/store/source"
@@ -26,6 +25,7 @@ export default function EditorTabPanel(props: EditorProps) {
   )
   const sourceCodeLanguage = useAtomValue(sourceCodeLanguageAtom)
 
+  // init lsp
   const readClangdPath = useReadAtom(clangdPathAtom)
   const readPyrightsPath = useReadAtom(pyrightsPathAtom)
 
@@ -47,7 +47,6 @@ export default function EditorTabPanel(props: EditorProps) {
         title={header.title}
         keymapAtom={keymapExtensionAtom}
         lspAtom={lspExtensionAtom}
-        peerAtom={peerExtensionAtom}
       />
     </Suspense>
   )

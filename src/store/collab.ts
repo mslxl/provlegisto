@@ -1,35 +1,45 @@
-import { noPeer, peer } from "@/components/codemirror/peer"
-import Client from "@open-rpc/client-js"
-import { atom } from "jotai"
+import { atom, useAtom, useAtomValue } from "jotai"
+import { Doc } from "yjs"
+import { signalingServerAtom, whoamiAtom } from "./setting/collab"
+import { WebrtcProvider } from "y-webrtc"
+import * as log from "tauri-plugin-log-api"
+import { generateColorFromString, shadeColor } from "@/lib/utils"
 
-export const hostPortAtom = atom(0)
-hostPortAtom.debugLabel = "collab.port"
+export const collabRoomAtom = atom<string | null>(null)
 
-export const hostIPAtom = atom("127.0.0.1")
-hostIPAtom.debugLabel = "collab.host"
+export const collabDocumentAtom = atom(new Doc())
 
-export const hostingAtom = atom(false)
-hostingAtom.debugLabel = "collab.server"
+export const collabProviderAtom = atom<WebrtcProvider | null>(null)
 
-export const connectionAtom = atom<Client|null>(null)
-connectionAtom.debugLabel = "collab.connect"
+export function useSetupWebRTC() {
+  const roomId = useAtomValue(collabRoomAtom)
+  const signalingServer = useAtomValue(signalingServerAtom)
+  const username = useAtomValue(whoamiAtom)
+  const [webrtc, setWebRtc] = useAtom(collabProviderAtom)
+  const ydoc = useAtomValue(collabDocumentAtom)
 
-export const collaAtom = atom(async(get) => {
-  const client = get(connectionAtom)
-  if(client == null) return false
-  try{
-    return await client.request({method: 'ping'}) != null
-  }catch {
-    return false
+  return (enable: boolean) => {
+    if (webrtc != null) {
+      webrtc.destroy()
+    }
+    if(!enable){
+      setWebRtc(null)
+      return
+    }
+    if(roomId == null || roomId.length < 4){
+      throw new Error('room id length must >= 4')
+    }
+
+    const provider = new WebrtcProvider(roomId, ydoc, {
+      signaling: [signalingServer],
+    })
+    const cursorColor = generateColorFromString(username)
+    provider.awareness.setLocalStateField("user", {
+      name: username,
+      color: cursorColor,
+      colorLight: shadeColor(cursorColor, 110),
+    })
+    log.info(`create WebRtc Provider with signal server ${signalingServer} and room ${roomId}`)
+    setWebRtc(provider)
   }
-})
-
-export const peerExtensionAtom = atom(async(get) => {
-  const connection = get(connectionAtom)
-  const isConnected = await get(collaAtom)
-  if (isConnected) {
-    return peer(connection!)
-  } else {
-    return noPeer()
-  }
-})
+}

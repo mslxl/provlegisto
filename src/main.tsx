@@ -1,18 +1,9 @@
-import React from "react"
+import React, { lazy } from "react"
 import ReactDOM from "react-dom/client"
-import "normalize.css"
-import "./styles.scss"
-import "@fontsource/jetbrains-mono"
-import Router from "./router"
-import { DndProvider } from "react-dnd"
-import { HTML5Backend } from "react-dnd-html5-backend"
 import { DevTools } from "jotai-devtools"
 import { attachConsole } from "tauri-plugin-log-api"
 import { loadSettingsStore } from "./store/setting"
-import { LanguageMode, isDebug } from "./lib/ipc"
-import { useCompetitiveCompanion } from "./hooks/useCompetitiveCompanion"
-import { Source, useAddSources } from "./store/source"
-
+import { isDebug } from "./lib/ipc"
 async function maskContextMenu() {
   const debug = await isDebug()
   if (!debug) {
@@ -24,44 +15,12 @@ async function maskContextMenu() {
     })
   }
 }
-
-function CompetitiveCompanion() {
-  const addSources = useAddSources()
-  useCompetitiveCompanion((p) => {
-    let title = p.name
-    let source: Source = {
-      url: p.url,
-      contest: p.group,
-      code: {
-        language: LanguageMode.CXX,
-        source: "",
-      },
-      test: {
-        timeLimits: p.timeLimit,
-        memoryLimits: p.memoryLimit,
-        checker: "wcmp",
-        testcases: p.tests,
-      },
-    }
-    addSources([{ title, source }])
-  })
-  return null
-}
-
-function Root() {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <CompetitiveCompanion />
-      <Router />
-    </DndProvider>
-  )
-}
-
-Promise.all([attachConsole(), loadSettingsStore(), maskContextMenu()])
+Promise.all([loadSettingsStore(), attachConsole(), maskContextMenu()])
   .then(() => {
+    const Root = lazy(()=>import("@/root"))
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <React.StrictMode>
-        <Root />
+        <Root/>
         <DevTools />
       </React.StrictMode>,
     )

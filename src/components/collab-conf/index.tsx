@@ -2,8 +2,7 @@ import { Suspense } from "react"
 import Loading from "../loading"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import Host from "./host"
-import Connect from "./connect"
+import Join from "./Join"
 
 type CollabConfProps = {
   open: boolean
@@ -24,12 +23,12 @@ export default function CollabConf(props: CollabConfProps) {
               </TabsList>
               <TabsContent value="host" className="flex-1" asChild>
                 <Suspense fallback={<Loading />}>
-                  <Host />
+                  <Join />
                 </Suspense>
               </TabsContent>
               <TabsContent value="connect" asChild>
                 <Suspense fallback={<Loading />}>
-                  <Connect />
+                  <Join />
                 </Suspense>
               </TabsContent>
             </Tabs>

@@ -7,6 +7,7 @@ import { parse, right } from "../parse"
 import { capitalize, map } from "lodash"
 import { TestCase } from "@/store/testcase"
 import { crc16 } from "crc"
+import {v4 as uuidv4} from 'uuid'
 
 function parseLanguageMode(extName: string) {
   let e = extName.toLowerCase()
@@ -76,6 +77,7 @@ async function parseSrcFile(filePath: string): Promise<[string, Source]> {
     url: header.url,
     path: filePath,
     contest: header.contest,
+    uuid: uuidv4(),
     code: {
       language: languageMode,
       source: source,

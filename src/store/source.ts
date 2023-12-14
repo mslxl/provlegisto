@@ -4,6 +4,7 @@ import { atom, useAtom, useSetAtom } from "jotai"
 import { atomWithReducer, splitAtom } from "jotai/utils"
 import { useImmerAtom } from "jotai-immer"
 import { crc16 } from "crc"
+import {v4 as uuidv4} from 'uuid'
 
 export type SourceHeader = {
   id: number
@@ -14,12 +15,15 @@ export type Source = {
   url?: string
   path?: string
   contest?: string
+  uuid: string
+  remote?: boolean
   code: SourceCode
   test: Test
 }
 
 export function emptySource(language: LanguageMode): Source {
   return {
+    uuid: uuidv4(),
     code: {
       language,
       source: "",
@@ -90,6 +94,11 @@ export const sourceCodeChangedAtom = atom<SourceChangedStatus>((get) => {
   let status: SourceChangedStatus = {}
   for (const k of Object.keys(store)) {
     let id = parseInt(k)
+    if(store[id].remote){
+      status[id] = false
+      continue
+    }
+
     if(store[id].code.savedCrc == undefined){
       status[id] = store[id].code.source.trim().length != 0
     }else{

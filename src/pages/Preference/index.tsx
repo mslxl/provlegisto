@@ -27,6 +27,9 @@ export default function Preference() {
               <Link to="/pref/editor">Editor</Link>
             </li>
             <li>
+              <Link to="/pref/collab">Collaborative</Link>
+            </li>
+            <li>
               <Link to="/pref/keymap">Keymap</Link>
             </li>
             <li>

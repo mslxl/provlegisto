@@ -1,6 +1,14 @@
-import { random } from "lodash"
+import { atom } from "jotai"
 import { atomWithSettings } from "."
 
-export const signalingServerAtom = atomWithSettings("collab.signal", "ws://127.0.0.1:4444")
+export const collabEnableAtom = atomWithSettings("collab.enable", true)
 
-export const whoamiAtom = atomWithSettings("collab.who", `Anonymous-${random(0, 65535)}`)
+export const collabSignalingServerAtom = atomWithSettings("collab.signal", "ws://127.0.0.1:4444")
+
+export const collabUsernameAtom = atomWithSettings("collab.username", "")
+export const collabDisplayNameAtom = atomWithSettings("collab.display", "")
+export const collabCookieAtom = atomWithSettings<string>("collab.session", "")
+export const collabLoginAtom = atom(async(get)=>{
+  const cookie = await get(collabCookieAtom)
+  return cookie.length != 0
+})

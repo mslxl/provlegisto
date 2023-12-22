@@ -12,11 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { emit } from "@/hooks/useMitt"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { ReactNode } from "react"
 import { openDevTools } from "@/lib/ipc"
 import { Link, useNavigate } from "react-router-dom"
 import clsx from "clsx"
+import { collabEnableAtom } from "@/store/setting/collab"
 
 export default function PrimarySide() {
   const [panel, setPanel] = useAtom(primaryPanelShowAtom)
@@ -27,10 +28,12 @@ export default function PrimarySide() {
     else setPanel(panelId)
   }
 
+  const collabEnable = useAtomValue(collabEnableAtom)
+
   const panelBtn = (
     [
       ["run", <VscVmRunning className="text-2xl my-4" />],
-      ["collab", <VscOrganization className="text-2xl my-4" />],
+      ["collab", <VscOrganization className={clsx("text-2xl my-4", { hidden: !collabEnable })} />],
       ["version", <VscTypeHierarchySub className="text-2xl my-4 hidden" />],
     ] as [string, ReactNode][]
   ).map((item, index) => (
@@ -73,7 +76,7 @@ export default function PrimarySide() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => emit("fileMenu", "save")}>Save</DropdownMenuItem>
               <DropdownMenuItem onClick={() => emit("fileMenu", "saveAs")}>Save As...</DropdownMenuItem>
-              <DropdownMenuSeparator/>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/pref">Preferences</Link>
               </DropdownMenuItem>
@@ -93,7 +96,7 @@ export default function PrimarySide() {
       </DropdownMenu>
       {panelBtn}
       <Sidebar.Space />
-      <Sidebar.Button onClick={()=>navigate("/pref")}>
+      <Sidebar.Button onClick={() => navigate("/pref")}>
         <VscSettingsGear className="text-2xl my-4" />
       </Sidebar.Button>
     </Sidebar.Root>

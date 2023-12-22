@@ -9,6 +9,7 @@ const PagePreference = {
   Appearance: lazy(() => import("@/pages/Preference/appearance")),
   Editor: lazy(() => import("@/pages/Preference/editor")),
   Keymap: lazy(() => import("@/pages/Preference/keymap")),
+  Collab: lazy(() => import("@/pages/Preference/collab")),
   Language: lazy(() => import("@/pages/Preference/language")),
 }
 const PageSetup = lazy(() => import("@/pages/Setup"))
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
       {
         path: "/pref/lang",
         element: <PagePreference.Language />,
+      },
+      {
+        path: "/pref/collab",
+        element: <PagePreference.Collab />,
       },
     ],
   },

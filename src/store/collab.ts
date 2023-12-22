@@ -1,45 +1,101 @@
-import { atom, useAtom, useAtomValue } from "jotai"
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai"
 import { Doc } from "yjs"
-import { signalingServerAtom, whoamiAtom } from "./setting/collab"
+import { collabSignalingServerAtom } from "./setting/collab"
 import { WebrtcProvider } from "y-webrtc"
-import * as log from "tauri-plugin-log-api"
 import { generateColorFromString, shadeColor } from "@/lib/utils"
+import { useSignalServerAxios } from "@/hooks/useAxios"
+import * as log from "tauri-plugin-log-api"
 
-export const collabRoomAtom = atom<string | null>(null)
+export const collabRoomIdAtom = atom<number | null>(null)
+export const collabSessionUuidAtom = atom<string | null>(null)
+
 
 export const collabDocumentAtom = atom(new Doc())
 
 export const collabProviderAtom = atom<WebrtcProvider | null>(null)
 
-export function useSetupWebRTC() {
-  const roomId = useAtomValue(collabRoomAtom)
-  const signalingServer = useAtomValue(signalingServerAtom)
-  const username = useAtomValue(whoamiAtom)
+export function useExitRoom() {
   const [webrtc, setWebRtc] = useAtom(collabProviderAtom)
-  const ydoc = useAtomValue(collabDocumentAtom)
-
-  return (enable: boolean) => {
+  const setRoomId = useSetAtom(collabRoomIdAtom)
+  return () => {
     if (webrtc != null) {
       webrtc.destroy()
-    }
-    if(!enable){
       setWebRtc(null)
-      return
+      setRoomId(null)
     }
-    if(roomId == null || roomId.length < 4){
-      throw new Error('room id length must >= 4')
-    }
+  }
+}
 
-    const provider = new WebrtcProvider(roomId, ydoc, {
-      signaling: [signalingServer],
+type UserProfile = {
+  username: string
+  displayName: string
+  realName: string
+  supervisor: boolean
+}
+export function useFetchProfile() {
+  const { axios, loading } = useSignalServerAxios()
+  const request = async () => {
+    const response = await axios.get("/user/profile")
+    const data = response.data
+    if (data.status == 0) {
+      return {
+        status: 0,
+        data: data.data as UserProfile,
+      }
+    }
+    return {
+      status: data.status as number,
+      error: data.error as string,
+    }
+  }
+
+  return {
+    loading,
+    requestProfile: request,
+  }
+}
+
+export function useJoinRoomController() {
+  const setRoomId = useSetAtom(collabRoomIdAtom)
+  const signalingServer = useAtomValue(collabSignalingServerAtom)
+  const setWebRtc = useSetAtom(collabProviderAtom)
+  const ydoc = useAtomValue(collabDocumentAtom)
+  const { axios, loading } = useSignalServerAxios()
+  const exitRoom = useExitRoom()
+  const profileFetcher = useFetchProfile()
+
+  const send = async (roomId: number, password?: string) => {
+    exitRoom()
+    setRoomId(roomId)
+    const profileResponse = await profileFetcher.requestProfile()
+    if (profileResponse.status != 0) return profileResponse
+    const profile = profileResponse.data!
+
+    const data = (await axios.get(`/room/${roomId}`, { params: { password } })).data
+    if (data.status != 0) return data
+
+    const uuid = data.data
+    const url = new URL(signalingServer)
+    const protocal = url.protocol == "http:" ? "ws:" : "wss:"
+    const hostPort = `${url.host}:${url.port}`
+
+    const signalingSession = `${protocal}//${hostPort}/session/${uuid}`
+    const provider = new WebrtcProvider(roomId.toString(), ydoc, {
+      signaling: [signalingSession],
     })
-    const cursorColor = generateColorFromString(username)
+
+    const cursorColor = generateColorFromString(profile.displayName)
     provider.awareness.setLocalStateField("user", {
-      name: username,
+      name: profile.displayName,
       color: cursorColor,
       colorLight: shadeColor(cursorColor, 110),
     })
-    log.info(`create WebRtc Provider with signal server ${signalingServer} and room ${roomId}`)
-    setWebRtc(provider)
+    log.info(`create WebRtc Provider with signal server ${signalingSession} and room ${roomId}`)
+    setWebRtc(provider) 
+    return {
+      status: 0,
+      data: {}
+    }
   }
+  return { send, loading: loading || profileFetcher.loading }
 }

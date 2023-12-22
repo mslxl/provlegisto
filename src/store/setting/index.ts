@@ -37,7 +37,7 @@ export function atomWithSettings<T>(key: string, initialValue: T) {
       },
     },
     {
-      unstable_getOnInit: true,
+      getOnInit: true,
     },
   )
   atom.debugLabel = `settings.${key}`

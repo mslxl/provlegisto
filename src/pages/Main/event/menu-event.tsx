@@ -30,7 +30,7 @@ export default function MenuEventReceiver() {
     } else if (event == "save" || event == "saveAs") {
       const id = readActiveId()
       console.log(id)
-      if (id < 0) return
+      if (id == null) return
       const title = readSourceIndex().find((h) => h.id == id)!.title
       const source = sourceCodeStore[id]
 
@@ -63,7 +63,7 @@ export default function MenuEventReceiver() {
         prev[id].code.savedCrc = crc
       })
     }
-    emit('cache', -1)
+    emit('cache')
   })
 
   return null

@@ -15,7 +15,7 @@ import AdditionMessage from "./addition-msg"
 import * as log from "tauri-plugin-log-api"
 import { Atom, PrimitiveAtom, useAtom } from "jotai"
 import { TestCase } from "@/store/testcase"
-import { SourceCode } from "@/store/source"
+import { SourceCode, SourceId } from "@/store/source"
 import useReadAtom from "@/hooks/useReadAtom"
 import { focusAtom } from "jotai-optics"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
@@ -25,7 +25,7 @@ type SingleRunnerProps = {
   timeLimitsAtom: Atom<number>
   memoryLimitsAtom: Atom<number>
   checkerAtom: Atom<string>
-  id: number
+  id: SourceId
   taskId: string
   onDelete: () => void
 }
@@ -71,13 +71,13 @@ export default function SingleRunner(props: SingleRunnerProps) {
   const [input, setInputAtom] = useAtom(inputAtom)
   const [output, setOutputAtom] = useAtom(outputAtom)
 
-  function setInput(inp: string){
+  function setInput(inp: string) {
     setInputAtom(inp)
-    emit('cache', props.id)
+    emit("cache", props.id)
   }
-  function setOutput(oup: string){
+  function setOutput(oup: string) {
     setOutputAtom(oup)
-    emit('cache', props.id)
+    emit("cache", props.id)
   }
 
   const [actualStdout, setActualStdout] = useState("")
@@ -213,9 +213,9 @@ export default function SingleRunner(props: SingleRunnerProps) {
       </AccordionTrigger>
       <AccordionContent>
         <span className="text-sm px-2">Input:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} editable/>
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} editable />
         <span className="text-sm px-2">Expected Output:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} editable/>
+        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} editable />
         <span className="text-sm px-2">Ouput:</span>
         <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} editable={false} />
         <Popover>

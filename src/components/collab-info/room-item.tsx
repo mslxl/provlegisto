@@ -20,7 +20,7 @@ type RoomItemProps = {
 export function RoomItem(props: RoomItemProps) {
   const r = props.room
   return (
-    <li key={r.id} className={clsx("py-1 hover:bg-neutral-200", props.className)} onClick={props.onClick}>
+    <li key={r.id} className={clsx("py-1", props.className)} onClick={props.onClick}>
       <div>
         <div className="flex items-center min-h-0">
           <div className="flex-1">

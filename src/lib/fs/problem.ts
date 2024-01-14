@@ -77,7 +77,7 @@ async function parseSrcFile(filePath: string): Promise<[string, Source]> {
     url: header.url,
     path: filePath,
     contest: header.contest,
-    uuid: uuidv4(),
+    id: uuidv4(),
     code: {
       language: languageMode,
       source: source,

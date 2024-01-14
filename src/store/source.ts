@@ -1,13 +1,15 @@
 import { LanguageMode } from "@/lib/ipc"
 import { Test } from "./testcase"
-import { atom, useAtom, useSetAtom } from "jotai"
-import { atomWithReducer, splitAtom } from "jotai/utils"
+import { atom, useSetAtom } from "jotai"
+import { splitAtom } from "jotai/utils"
 import { useImmerAtom } from "jotai-immer"
 import { crc16 } from "crc"
-import {v4 as uuidv4} from 'uuid'
+import { v4 as uuidv4 } from "uuid"
+
+export type SourceId = string
 
 export type SourceHeader = {
-  id: number
+  id: SourceId
   title: string
 }
 
@@ -15,7 +17,7 @@ export type Source = {
   url?: string
   path?: string
   contest?: string
-  uuid: string
+  id: SourceId
   remote?: boolean
   code: SourceCode
   test: Test
@@ -23,7 +25,7 @@ export type Source = {
 
 export function emptySource(language: LanguageMode): Source {
   return {
-    uuid: uuidv4(),
+    id: uuidv4(),
     code: {
       language,
       source: "",
@@ -44,41 +46,35 @@ export type SourceCode = {
 }
 
 type SourceChangedStatus = {
-  [key: number]: boolean
+  [key: SourceId]: boolean
 }
 
 type SourceStore = {
-  [key: number]: Source
+  [key: SourceId]: Source
 }
 
-const activeIdInternalAtom = atom(-1)
+const activeIdInternalAtom = atom<SourceId | null>(null)
 activeIdInternalAtom.debugLabel = "source.active.internal"
 
 export const activeIdAtom = atom(
   (get) => {
     let headers = get(sourceIndexAtoms)
-    if (headers.length == 0) return -1
+    if (headers.length == 0) return null
     let id = get(activeIdInternalAtom)
-    if (id == -1 && headers.length != 0) return headers[0].id
-    if (id != -1 && headers.findIndex((p) => p.id == id) == -1) return -1
+    if (id == null && headers.length != 0) return headers[0].id
+    if (id != null && headers.findIndex((p) => p.id == id) == -1) return null
     return id
   },
-  (_get, set, value: number) => {
+  (_get, set, value: SourceId | null) => {
     set(activeIdInternalAtom, value)
   },
 )
 activeIdAtom.debugLabel = "source.active"
 
-export const counterAtom = atomWithReducer(0, (prev, value: number | undefined) => {
-  if (value == undefined) return prev + 1
-  return prev + value
-})
-counterAtom.debugLabel = "source.counter"
-
 export const sourceIndexAtoms = atom<SourceHeader[]>([])
 sourceIndexAtoms.debugLabel = "source.index"
 
-export const haveSourceOpenedAtom = atom((get)=>{
+export const haveSourceOpenedAtom = atom((get) => {
   return get(sourceIndexAtoms).length != 0
 })
 haveSourceOpenedAtom.debugLabel = "source.haveOpen"
@@ -92,16 +88,15 @@ sourceStoreAtom.debugLabel = "source.store"
 export const sourceCodeChangedAtom = atom<SourceChangedStatus>((get) => {
   const store = get(sourceStoreAtom)
   let status: SourceChangedStatus = {}
-  for (const k of Object.keys(store)) {
-    let id = parseInt(k)
-    if(store[id].remote){
+  for (const id of Object.keys(store)) {
+    if (store[id].remote) {
       status[id] = false
       continue
     }
 
-    if(store[id].code.savedCrc == undefined){
+    if (store[id].code.savedCrc == undefined) {
       status[id] = store[id].code.source.trim().length != 0
-    }else{
+    } else {
       status[id] = store[id].code.savedCrc != crc16(store[id].code.source)
     }
   }
@@ -110,23 +105,20 @@ export const sourceCodeChangedAtom = atom<SourceChangedStatus>((get) => {
 
 export function useAddSources() {
   const [, setSrc] = useImmerAtom(sourceStoreAtom)
-  const [counter, incCounter] = useAtom(counterAtom)
   const dispatch = useSetAtom(sourceIndexAtomAtoms)
 
   return (sources: { title: string; source: Source }[]) => {
-    for (let i = 0; i < sources.length; i++) {
-      let cnt = counter + i
+    for (let src of sources) {
       setSrc((prev) => {
-        prev[cnt] = sources[i].source
+        prev[src.source.id] = src.source
       })
       dispatch({
         type: "insert",
         value: {
-          id: cnt,
-          title: sources[i].title,
+          id: src.source.id,
+          title: src.title,
         },
       })
     }
-    incCounter(sources.length)
   }
 }

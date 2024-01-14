@@ -18,14 +18,16 @@ import { JoinRoomComponent } from "./join-room"
 import { Room, RoomItem } from "./room-item"
 import { VscCommentDiscussion, VscError } from "react-icons/vsc"
 import { Separator } from "../ui/separator"
+import { UserProfile } from "./user"
 
 export default function SignalRoom() {
   const { axios, loading } = useSignalServerAxios()
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<Room[]>([])
-  const [dialogVisible, setDialogVisible] = useState(false)
   const [selectRoom, setSelectRoom] = useState<Room | null>(null)
-  const [createDialogVisible, setCreateDialogVisible] = useState(false)
+  const [joinRoomDialogVisible, setJoinRoomDialogVisible] = useState(false)
+  const [createRoomDialogVisible, setCreateRoomDialogVisible] = useState(false)
+  const [userInfoDialogVisible, setUserInfoDialogVisible] = useState(false)
 
   async function fetchPage() {
     setError(null)
@@ -47,7 +49,7 @@ export default function SignalRoom() {
 
   function showJoinRoomDialogOf(room: Room) {
     setSelectRoom(room)
-    setDialogVisible(true)
+    setJoinRoomDialogVisible(true)
   }
 
   if (loading) {
@@ -55,19 +57,27 @@ export default function SignalRoom() {
   }
 
   function showCreateDialog() {
-    setCreateDialogVisible(true)
+    setCreateRoomDialogVisible(true)
+  }
+  function showUserInfoDialog(){
+    setUserInfoDialogVisible(true)
   }
 
   return (
     <div className="h-full overflow-y-auto flex flex-col">
-      <Dialog open={dialogVisible} onOpenChange={setDialogVisible}>
+      <Dialog open={joinRoomDialogVisible} onOpenChange={setJoinRoomDialogVisible}>
         <DialogContent>
-          <JoinRoomComponent onOpenChanged={setDialogVisible} room={selectRoom} />
+          <JoinRoomComponent onOpenChanged={setJoinRoomDialogVisible} room={selectRoom} />
         </DialogContent>
       </Dialog>
-      <Dialog open={createDialogVisible} onOpenChange={setCreateDialogVisible}>
+      <Dialog open={createRoomDialogVisible} onOpenChange={setCreateRoomDialogVisible}>
         <DialogContent>
-          <CreateRoomComponent onOpenChanged={setCreateDialogVisible} />
+          <CreateRoomComponent onOpenChanged={setCreateRoomDialogVisible} />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={userInfoDialogVisible} onOpenChange={setUserInfoDialogVisible}>
+        <DialogContent>
+          <UserProfile/>
         </DialogContent>
       </Dialog>
 
@@ -85,6 +95,9 @@ export default function SignalRoom() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
+            <DropdownMenuItem disabled={error != null} onClick={showUserInfoDialog}>
+              User
+            </DropdownMenuItem>
             <DropdownMenuItem disabled={error != null} onClick={showCreateDialog}>
               Create Room
             </DropdownMenuItem>
@@ -135,7 +148,7 @@ export default function SignalRoom() {
           <div className="h-full overflow-auto">
             <ul>
               {data.map((r) => (
-                <RoomItem room={r} className="px-4" onClick={() => showJoinRoomDialogOf(r)} />
+                <RoomItem room={r} className="px-4 hover:bg-neutral-200" onClick={() => showJoinRoomDialogOf(r)} />
               ))}
             </ul>
           </div>

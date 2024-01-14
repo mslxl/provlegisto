@@ -1,5 +1,5 @@
 import { path, fs } from "@tauri-apps/api"
-import { Source } from "@/store/source"
+import { Source, SourceId } from "@/store/source"
 import * as log from "tauri-plugin-log-api"
 
 async function getDataDir() {
@@ -10,19 +10,19 @@ async function getDataDir() {
   return filesDir
 }
 
-async function getFilePath(id: number): Promise<string> {
+async function getFilePath(id: SourceId): Promise<string> {
   const dir = await getDataDir()
   const file = await path.join(dir, `${id}.dat`)
   return file
 }
 
-export async function updateCache(id: number, title: string, src: Source) {
+export async function updateCache(id: SourceId, title: string, src: Source) {
   const file = await getFilePath(id)
   log.info(`update cache ${id} to path ${file}`)
   fs.writeTextFile(file, JSON.stringify({ src, title }))
 }
 
-export async function dropCache(id: number) {
+export async function dropCache(id: SourceId) {
   const file = await getFilePath(id)
   log.info(`drop cache ${id} (${file})`)
   if ((await fs.exists(file))) {

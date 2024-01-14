@@ -1,9 +1,10 @@
+import { SourceId } from "@/store/source"
 import mitt, { Handler } from "mitt"
 import { DependencyList, useEffect } from "react"
 type Events = {
   fileMenu: "new" | "newContest" | "open" | "openContest" | "save" | "saveAs"
   run: "all" | string
-  cache: number
+  cache: SourceId | undefined
 }
 
 const emitter = mitt<Events>()

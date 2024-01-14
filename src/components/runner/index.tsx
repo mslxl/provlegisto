@@ -11,8 +11,8 @@ import SingleRunner from "./single"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import Configuration from "./conf"
 import * as log from "tauri-plugin-log-api"
-import { Atom, useAtom, useAtomValue } from "jotai"
-import { activeIdAtom, sourceStoreAtom } from "@/store/source"
+import { Atom, atom, useAtom, useAtomValue } from "jotai"
+import { SourceId, activeIdAtom, sourceStoreAtom } from "@/store/source"
 import { focusAtom } from "jotai-optics"
 import { splitAtom } from "jotai/utils"
 import { emptyTestcase } from "@/store/testcase"
@@ -22,13 +22,29 @@ import EmptyRunner from "./empty"
 
 export default function Runnner({ className }: { className?: string }) {
   const activeId = useAtomValue(activeIdAtom)
-  if (activeId == -1) {
+  const nonNullActiveIdAtom = useMemo(
+    () =>
+      atom(
+        (get) => get(activeIdAtom)!,
+        (_get, set, value: SourceId) => {
+          set(activeIdAtom, value)
+        },
+      ),
+    [activeIdAtom],
+  )
+  nonNullActiveIdAtom.debugLabel = "acitve id(not null)"
+  if (activeId == null) {
     return <EmptyRunner className={className} />
   }
-  return <RunnerContent className={className} activeIdAtom={activeIdAtom} />
+  return <RunnerContent className={className} activeIdAtom={nonNullActiveIdAtom} />
 }
 
-function RunnerContent(props: { className?: string; activeIdAtom: Atom<number> }) {
+type RunnerContentProps = {
+  className?: string
+  activeIdAtom: Atom<SourceId>
+}
+
+function RunnerContent(props: RunnerContentProps) {
   const activeId = useAtomValue(props.activeIdAtom)
   const sourceCodeAtom = useMemo(
     () => focusAtom(sourceStoreAtom, (optic) => optic.prop(activeId).prop("code")),

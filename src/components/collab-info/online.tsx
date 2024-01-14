@@ -45,7 +45,7 @@ export default function OnlineUsers() {
       sources: sourceIndex
         .filter((head) => !sourceStore[head.id].remote)
         .map((head) => ({
-          uuid: sourceStore[head.id].uuid,
+          uuid: sourceStore[head.id].id,
           title: head.title,
           url: sourceStore[head.id].url,
           lang: sourceStore[head.id].code.language,
@@ -96,7 +96,7 @@ export default function OnlineUsers() {
   const addSources = useAddSources()
   function openUUID(uuid: string, language: LanguageMode, title: string) {
     const src = emptySource(LanguageMode.CXX)
-    src.uuid = uuid
+    src.id = uuid
     src.remote = true
     src.code.language = language
     addSources([{ title, source: src }])

@@ -14,6 +14,7 @@ import {
 import { useRenameDialog } from "../../hooks/useRenameDialog"
 import {
   SourceHeader,
+  SourceId,
   activeIdAtom,
   sourceCodeChangedAtom,
   sourceIndexAtomAtoms,
@@ -93,27 +94,24 @@ export default function Tabbar({ className }: { className: string }) {
   )
 }
 
-function Bar({
-  className,
-  atom,
-  moveAtom,
-  onRemove,
-}: {
+type BarProps = {
   className?: string
   atom: PrimitiveAtom<SourceHeader>
   moveAtom: (fromAtom: PrimitiveAtom<SourceHeader>, toId: PrimitiveAtom<SourceHeader>) => void
-  onRemove: (id: number) => void
-}) {
+  onRemove: (id: SourceId) => void
+}
+
+function Bar({ className, atom, moveAtom, onRemove }: BarProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   const [content, setContent] = useAtom(atom)
   const [activeId, setActiveId] = useAtom(activeIdAtom)
 
-  const sourceChange = useAtomValue(sourceCodeChangedAtom)[activeId]
+  const sourceChange = activeId != null && useAtomValue(sourceCodeChangedAtom)[activeId]
 
   const currentLanguageAtom = useMemo(
     () => focusAtom(sourceStoreAtom, (optic) => optic.prop(content.id).prop("code").prop("language")),
-    [atom, content],
+    [content],
   )
   const [, dragRef] = useDrag({
     type: "tabbox",

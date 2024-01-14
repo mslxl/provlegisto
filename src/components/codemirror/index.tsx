@@ -7,7 +7,7 @@ import { LspProvider } from "./language"
 import { Compartment, Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
 import { Atom, PrimitiveAtom, useAtomValue } from "jotai"
-import { Source, activeIdAtom } from "@/store/source"
+import { Source, SourceId, activeIdAtom } from "@/store/source"
 import { useImmerAtom } from "jotai-immer"
 import { concat, map } from "lodash"
 import "@fontsource/jetbrains-mono"
@@ -23,7 +23,7 @@ import { yCollab } from "y-codemirror.next"
 
 type CodemirrorProps = {
   className?: string
-  id: number
+  id: SourceId
   title: string
   sourceAtom: PrimitiveAtom<Source>
   lspAtom: Atom<ReturnType<LspProvider>>
@@ -40,7 +40,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
   const collabProvider = useAtomValue(collabProviderAtom)
 
   const yCollabCompartment = useRef(new Compartment())
-  const ytext = ydoc.getText(`src-${source.uuid}`)
+  const ytext = ydoc.getText(`code-${source.id}`)
   const undoManager = new UndoManager(ytext)
   const activeId = useAtomValue(activeIdAtom)
 
@@ -96,7 +96,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
   }, 1000)
 
   useMitt("cache", (id) => {
-    if (id == props.id || id == -1) doCacheOnTimeout({} as never)
+    if (id == props.id || id == undefined) doCacheOnTimeout({} as never)
   })
 
   useEffect(() => {

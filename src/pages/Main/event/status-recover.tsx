@@ -21,12 +21,11 @@ export default function StatusRecover() {
     recovered.current = true
     if (isRecovered()) return // prevent compontent re-mount trigger load
     setIsRecovered(true)
-
     ;(async () => {
       const data = (await cache.recoverAllCache()).map(([title, source]) => ({ title, source }))
       addSources(data)
       await cache.dropAll()
-      await Promise.all(data.map((d, id) => cache.updateCache(id, d.title, d.source)))
+      await Promise.all(data.map((d) => cache.updateCache(d.source.id, d.title, d.source)))
     })()
   }, [])
 

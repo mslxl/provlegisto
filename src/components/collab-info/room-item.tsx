@@ -1,6 +1,5 @@
 import { VscAccount, VscLock } from "react-icons/vsc"
 import clsx from "clsx"
-import { Separator } from "../ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 export type Room = {

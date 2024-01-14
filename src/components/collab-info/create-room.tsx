@@ -45,7 +45,7 @@ export default function CreateRoom(props: CreateRoomProps) {
     ).data
     console.log(response)
     if (response.status != 0) {
-      dialog.message(response.error, {
+      await dialog.message(response.error, {
         title: "Create Room Fail",
         type: "error",
       })
@@ -54,13 +54,11 @@ export default function CreateRoom(props: CreateRoomProps) {
     const roomId = response.data as number
     const joinRes = await joinController.send(roomId, value.password)
     if(joinRes.status != 0){
-      dialog.message(response.error, {
+      await dialog.message(response.error, {
         title: "Join Room Fail",
         type: "error",
       })
-      return
     }
-
     props.onOpenChanged(false)
   }
 

@@ -15,12 +15,13 @@ export type Room = {
 
 type RoomItemProps = {
   room: Room
+  className?: string
   onClick?: () => void
 }
 export function RoomItem(props: RoomItemProps) {
   const r = props.room
   return (
-    <li key={r.id} className="px-4" onClick={props.onClick}>
+    <li key={r.id} className={clsx("py-1 hover:bg-neutral-200", props.className)} onClick={props.onClick}>
       <div>
         <div className="flex items-center min-h-0">
           <div className="flex-1">
@@ -57,7 +58,6 @@ export function RoomItem(props: RoomItemProps) {
         </div>
         <span className="text-sm text-neutral-600">{r.owner}</span>
       </div>
-      <Separator className="my-2" />
     </li>
   )
 }

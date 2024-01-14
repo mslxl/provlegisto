@@ -8,18 +8,19 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "../ui/dialog"
 import Loading from "../loading"
 import CreateRoomComponent from "./create-room"
 import { JoinRoomComponent } from "./join-room"
 import { Room, RoomItem } from "./room-item"
-
-
+import { VscCommentDiscussion, VscError } from "react-icons/vsc"
+import { Separator } from "../ui/separator"
 
 export default function SignalRoom() {
   const { axios, loading } = useSignalServerAxios()
-  const [page, setPage] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<Room[]>([])
   const [dialogVisible, setDialogVisible] = useState(false)
@@ -29,11 +30,7 @@ export default function SignalRoom() {
   async function fetchPage() {
     setError(null)
     const response = (
-      await axios.get("/room", {
-        params: {
-          page,
-        },
-      })
+      await axios.get("/room")
     ).data
     console.log(response)
     if (response.status != 0) {
@@ -46,17 +43,7 @@ export default function SignalRoom() {
 
   useEffect(() => {
     fetchPage()
-  }, [page])
-  function nextPage() {
-    if (data.length > 0) {
-      setPage((v) => v + 1)
-    }
-  }
-  function prevPage() {
-    if (page > 0) {
-      setPage((v) => v - 1)
-    }
-  }
+  }, [])
 
   function showJoinRoomDialogOf(room: Room) {
     setSelectRoom(room)
@@ -67,11 +54,15 @@ export default function SignalRoom() {
     return <Loading />
   }
 
+  function showCreateDialog() {
+    setCreateDialogVisible(true)
+  }
+
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto flex flex-col">
       <Dialog open={dialogVisible} onOpenChange={setDialogVisible}>
         <DialogContent>
-          <JoinRoomComponent onOpenChanged={setDialogVisible} room={selectRoom}/>
+          <JoinRoomComponent onOpenChanged={setDialogVisible} room={selectRoom} />
         </DialogContent>
       </Dialog>
       <Dialog open={createDialogVisible} onOpenChange={setCreateDialogVisible}>
@@ -81,32 +72,43 @@ export default function SignalRoom() {
       </Dialog>
 
       <div className="flex gap-2 justify-end p-2">
-        <Button size="icon" variant="outline" onClick={fetchPage}>
+        <div className="flex-1">
+          <h3 className="font-semibold text-sm">Room List</h3>
+        </div>
+        <Button size="icon" variant="ghost" onClick={fetchPage} className="w-[16px] h-[16px]">
           <LucideRefreshCcw />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" variant="outline">
+            <Button size="icon" variant="ghost" className="w-[16px] h-[16px]">
               <LucideMenu />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setCreateDialogVisible(true)}>Create Room</DropdownMenuItem>
+            <DropdownMenuItem disabled={error != null} onClick={showCreateDialog}>
+              Create Room
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="px-4 flex-1 min-h-0">
+      <Separator />
+      <div className="flex-1 min-h-0">
         {error != null ? (
-          <div className="flex flex-row">
+          <div className="h-full flex flex-row items-center">
             <div className="p-4 min-h-0 flex-shrink">
-              <h3 className="font-bold text-3xl text-center">Error</h3>
               <Dialog>
                 <DialogTrigger asChild>
-                  <div className="border-neutral-800 border-2 text-ellipsis h-1/3  overflow-hidden p-4 select-text hover:bg-neutral-400">
-                    {error}
+                  <div className="p-4">
+                    <h3 className="text-4xl text-red-700 flex flex-col items-center p-2">
+                      <VscError />
+                    </h3>
+                    <div className="text-ellipsis overflow-hidden select-text line-clamp-3">{error}</div>
                   </div>
                 </DialogTrigger>
                 <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Error</DialogTitle>
+                  </DialogHeader>
                   <DialogDescription>{error}</DialogDescription>
                   <DialogClose asChild>
                     <Button>Close</Button>
@@ -115,24 +117,28 @@ export default function SignalRoom() {
               </Dialog>
             </div>
           </div>
+        ) : data.length == 0 ? (
+          <div className="h-full flex flex-row items-center justify-center">
+            <div className="p-4">
+              <h3 className="text-4xl flex flex-col items-center p-2">
+                <VscCommentDiscussion />
+              </h3>
+              <div className="space-y-2">
+                <div className="text-center">It's so slience now</div>
+                <Button variant="secondary" onClick={showCreateDialog}>
+                  Create My Room
+                </Button>
+              </div>
+            </div>
+          </div>
         ) : (
-          <ul>
-            {data.map((r) => (
-              <RoomItem room={r} onClick={() => showJoinRoomDialogOf(r)} />
-            ))}
-            <li className="m-4 grid grid-cols-3 gap-4">
-              <span>
-                Page:
-                {page}
-              </span>
-              <Button onClick={prevPage} variant="outline">
-                Prev
-              </Button>
-              <Button onClick={nextPage} variant="outline">
-                Next
-              </Button>
-            </li>
-          </ul>
+          <div className="h-full overflow-auto">
+            <ul>
+              {data.map((r) => (
+                <RoomItem room={r} className="px-4" onClick={() => showJoinRoomDialogOf(r)} />
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </div>

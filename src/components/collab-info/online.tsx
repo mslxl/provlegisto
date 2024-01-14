@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useAtomValue } from "jotai"
 import { collabProviderAtom, useExitRoom } from "@/store/collab"
 import { Separator } from "../ui/separator"
 import styled from "styled-components"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
-import { emptySource, sourceIndexAtoms, sourceStoreAtom, useAddSources } from "@/store/source"
+import { activeIdAtom, emptySource, sourceIndexAtoms, sourceStoreAtom, useAddSources } from "@/store/source"
 import { LanguageMode } from "@/lib/ipc"
 import * as log from "tauri-plugin-log-api"
 import { Button } from "../ui/button"
-import { LucideDelete } from "lucide-react"
+import { LucideDoorOpen } from "lucide-react"
+import { find } from "lodash"
 
 type User = {
   name: string
@@ -35,27 +36,34 @@ export default function OnlineUsers() {
 
   const sourceIndex = useAtomValue(sourceIndexAtoms)
   const sourceStore = useAtomValue(sourceStoreAtom)
+  const activeSourceId = useAtomValue(activeIdAtom)
 
-  // upload info
+  // calc user info
+  const localUserAwareData = useMemo(
+    () => ({
+      active: find(sourceIndex, (v) => v.id == activeSourceId)?.title,
+      sources: sourceIndex
+        .filter((head) => !sourceStore[head.id].remote)
+        .map((head) => ({
+          uuid: sourceStore[head.id].uuid,
+          title: head.title,
+          url: sourceStore[head.id].url,
+          lang: sourceStore[head.id].code.language,
+          contest: sourceStore[head.id].contest,
+        })),
+    }),
+    [sourceStore, sourceIndex, activeSourceId],
+  )
+
+  // push info
   useEffect(() => {
     if (yProvider == null) return
 
-    const data: UserDoc[] = sourceIndex
-      .filter((head) => !sourceStore[head.id].remote)
-      .map((head) => ({
-        uuid: sourceStore[head.id].uuid,
-        title: head.title,
-        url: sourceStore[head.id].url,
-        lang: sourceStore[head.id].code.language,
-        contest: sourceStore[head.id].contest,
-      }))
-
     const awareness = yProvider.awareness
-    awareness.setLocalStateField("doc", data)
-  }, [yProvider, sourceStore, sourceIndex])
+    awareness.setLocalStateField("doc", localUserAwareData)
+  }, [yProvider, localUserAwareData])
 
-  // update local cursor info
-  const uuidTitleDict = useRef(new Map<string, string>())
+  // pull info from other peers
   useEffect(() => {
     if (yProvider == null) {
       setUsers([])
@@ -67,23 +75,19 @@ export default function OnlineUsers() {
       const data = Array.from(awareness.getStates().values())
       log.info(`awareness: ${JSON.stringify(data)}`)
       const result: User[] = data
-        .filter((u) => u.user && u.cursor && u.doc)
+        .filter((u) => u.user != undefined)
         .map((u) => ({
           name: u.user.name,
-          focus: u.cursor?.head.tname ?? "none",
+          focus: u.doc.active,
           color: u.user.color,
-          doc: u.doc ?? [],
+          doc: u.doc.sources ?? [],
         }))
 
-      for (let u of result) {
-        for (let doc of u.doc) {
-          uuidTitleDict.current.set(`src-${doc.uuid}`, `${u.name}/${doc.title}`)
-        }
-      }
       setUsers(result)
     }
 
     yProvider.awareness.on("change", updater)
+    updater()
     return () => {
       yProvider.awareness.off("change", updater)
     }
@@ -104,10 +108,10 @@ export default function OnlineUsers() {
     <div className="p-4">
       <div>
         <div className="flex">
-          <h3 className="font-bold text-xl my-2 flex-1">Online Users</h3>
-          <Button size="icon" onClick={exitRoom} variant="outline">
-            <LucideDelete />
+          <Button size="icon" onClick={exitRoom} variant="ghost">
+            <LucideDoorOpen />
           </Button>
+          <h3 className="font-bold text-xl my-2 flex-1">Online Users</h3>
         </div>
         <Separator />
         <Accordion type="multiple">
@@ -116,7 +120,7 @@ export default function OnlineUsers() {
               <AccordionTrigger className="py-2">
                 <Username color={u.color}>{u.name}</Username>
                 <span className="flex-1"></span>
-                <span className="text-xs text-neutral-600">{uuidTitleDict.current.get(u.focus)}</span>
+                <span className="text-xs text-neutral-600">{u.focus}</span>
               </AccordionTrigger>
               <AccordionContent>
                 <ul>

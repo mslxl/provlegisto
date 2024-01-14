@@ -66,7 +66,6 @@ export function useJoinRoomController() {
 
   const send = async (roomId: number, password?: string) => {
     exitRoom()
-    setRoomId(roomId)
     const profileResponse = await profileFetcher.requestProfile()
     if (profileResponse.status != 0) return profileResponse
     const profile = profileResponse.data!
@@ -74,6 +73,7 @@ export function useJoinRoomController() {
     const data = (await axios.get(`/room/${roomId}`, { params: { password } })).data
     if (data.status != 0) return data
 
+    setRoomId(roomId)
     const uuid = data.data
     const url = new URL(signalingServer)
     const protocal = url.protocol == "http:" ? "ws:" : "wss:"

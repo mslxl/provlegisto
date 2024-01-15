@@ -8,22 +8,10 @@ import { map } from "lodash"
 import { useEffect, useRef } from "react"
 
 type EditorProps = {
-  kernel: "codemirror" | "textarea"
   className?: string
   text?: string
   onChange?: (text: string) => void
   editable?: boolean
-}
-function TextareaEditor(props: EditorProps) {
-  return (
-    <div className={clsx(props.className, "m-2 border border-slate-400")}>
-      <textarea
-        value={props.text}
-        className="w-full h-full p-1"
-        onChange={(e) => props.onChange && props.onChange(e.target.value)}
-      ></textarea>
-    </div>
-  )
 }
 
 function CMEditor(props: EditorProps) {
@@ -59,7 +47,7 @@ function CMEditor(props: EditorProps) {
     return () => {
       cm.current?.destroy()
     }
-  }, [])
+  }, [props.text])
 
   useExtensionCompartment(cm, editorThemeExtensionAtom, (v: any) => v())
 
@@ -95,6 +83,5 @@ function CMEditor(props: EditorProps) {
 
 export default function Editor(props: EditorProps) {
   const stylesheet = "w-full shadow-sm shadow-slate-950"
-  if (props.kernel == "codemirror") return <CMEditor className={clsx(props.className, stylesheet)} {...props} />
-  else return <TextareaEditor className={clsx(props.className, stylesheet, "w-full")} {...props} />
+  return <CMEditor className={clsx(props.className, stylesheet)} {...props} />
 }

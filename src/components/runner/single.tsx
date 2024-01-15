@@ -13,12 +13,13 @@ import clsx from "clsx"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import AdditionMessage from "./addition-msg"
 import * as log from "tauri-plugin-log-api"
-import { Atom, PrimitiveAtom, useAtom } from "jotai"
-import { TestCase } from "@/store/testcase"
+import { Atom, PrimitiveAtom, useAtom, useAtomValue } from "jotai"
+import { TestCase, TestCaseId } from "@/store/testcase"
 import { SourceCode, SourceId } from "@/store/source"
 import useReadAtom from "@/hooks/useReadAtom"
 import { focusAtom } from "jotai-optics"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
+import { collabDocumentAtom } from "@/store/collab"
 type SingleRunnerProps = {
   testcaseAtom: PrimitiveAtom<TestCase>
   sourceAtom: Atom<SourceCode>
@@ -27,7 +28,7 @@ type SingleRunnerProps = {
   checkerAtom: Atom<string>
   id: SourceId
   taskId: string
-  onDelete: () => void
+  onDelete: (id: TestCaseId) => void
 }
 
 type JudgeStatus = "AC" | "TLE" | "WA" | "RE" | "PD" | "CE" | "UK" | "INT"
@@ -66,19 +67,14 @@ export default function SingleRunner(props: SingleRunnerProps) {
   // const readMemoryLimits = useReadAtom(props.memoryLimitsAtom)
   const readChecker = useReadAtom(props.checkerAtom)
   const inputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("input")), [props.testcaseAtom])
+  inputAtom.debugLabel = "testcase input atom"
   const outputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("output")), [props.testcaseAtom])
+  outputAtom.debugLabel = "testcase output atom"
+  const testcase = useAtomValue(props.testcaseAtom)
 
   const [input, setInputAtom] = useAtom(inputAtom)
   const [output, setOutputAtom] = useAtom(outputAtom)
 
-  function setInput(inp: string) {
-    setInputAtom(inp)
-    emit("cache", props.id)
-  }
-  function setOutput(oup: string) {
-    setOutputAtom(oup)
-    emit("cache", props.id)
-  }
 
   const [actualStdout, setActualStdout] = useState("")
   const [actualStderr, setActualStderr] = useState("")
@@ -170,6 +166,44 @@ export default function SingleRunner(props: SingleRunnerProps) {
     [props.taskId],
   )
 
+  const testcaseUUID = testcase.id
+  const collabDoc = useAtomValue(collabDocumentAtom)
+
+  const inputYText = useMemo(()=>collabDoc.getText(`${testcaseUUID}-inp`), [testcaseUUID, collabDoc])
+  const outputYText = useMemo(()=>collabDoc.getText(`${testcaseUUID}-oup`), [testcaseUUID, collabDoc])
+
+  function setInput(inp: string) {
+    setInputAtom(inp)
+    if(inp != inputYText.toString()){
+      inputYText.delete(0, inputYText.length)
+      inputYText.insert(0, inp)
+    }
+    emit("cache", props.id)
+  }
+  function setOutput(oup: string) {
+    setOutputAtom(oup)
+    if(oup != outputYText.toString()){
+      outputYText.delete(0, outputYText.length)
+      outputYText.insert(0, oup)
+    }
+    emit("cache", props.id)
+  }
+
+  useEffect(()=>{
+    function updateInp(){
+      setInput(inputYText.toString())
+    }
+    function updateOup(){
+      setOutput(outputYText.toString())
+    }
+    inputYText.observe(updateInp)
+    outputYText.observe(updateOup)
+    return ()=>{
+      inputYText.unobserve(updateInp)
+      outputYText.unobserve(updateOup)
+    }
+  }, [inputYText, outputYText])
+
   return (
     <AccordionItem value={props.taskId} className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}>
       <AccordionTrigger className="px-1 py-1" asChild>
@@ -202,7 +236,7 @@ export default function SingleRunner(props: SingleRunnerProps) {
               variant="destructive"
               className="h-7 w-7 p-0"
               onClick={(e) => {
-                props.onDelete()
+                props.onDelete(testcaseUUID)
                 e.preventDefault()
               }}
             >
@@ -213,11 +247,11 @@ export default function SingleRunner(props: SingleRunnerProps) {
       </AccordionTrigger>
       <AccordionContent>
         <span className="text-sm px-2">Input:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} editable />
+        <Editor className="min-w-0 m-2" text={input} onChange={setInput} editable />
         <span className="text-sm px-2">Expected Output:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} editable />
+        <Editor className="min-w-0 m-2" text={output} onChange={setOutput} editable />
         <span className="text-sm px-2">Ouput:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} editable={false} />
+        <Editor className="min-w-0 m-2" text={actualStdout} editable={false} />
         <Popover>
           <PopoverTrigger asChild>
             <span className="text-end text-xs w-full px-2 hover:text-gray-600">See Report&gt;&gt;</span>

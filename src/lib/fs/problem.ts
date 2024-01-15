@@ -27,7 +27,7 @@ function parseHeader(source: string) {
 }
 
 async function readTestcases(dirname: string, basename: string): Promise<TestCase[]> {
-  let result = []
+  let result: TestCase[] = []
   for (let index = 1; ; index++) {
     let input = await path.join(dirname, `${basename}_${index}.in`)
     let output = await path.join(dirname, `${basename}_${index}.out`)
@@ -36,6 +36,7 @@ async function readTestcases(dirname: string, basename: string): Promise<TestCas
     result.push({
       input: inp,
       output: oup,
+      id: uuidv4()
     })
   }
   return result

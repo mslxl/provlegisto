@@ -17,7 +17,6 @@ export default function Page() {
             text={
               'The quick fox jump over the lazy dog\nif 2 != 1 && 3 >= 2 {\n\tprintln!("=== greet from {}", "provlegisto");\n } '
             }
-            kernel="codemirror"
           />
         </div>
       </li>

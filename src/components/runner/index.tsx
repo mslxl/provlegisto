@@ -4,7 +4,7 @@ import { VscDebugRestart, VscGear } from "react-icons/vsc"
 import { compileSource, runDetach } from "@/lib/ipc"
 import { ContextMenu, ContextMenuItem, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { motion } from "framer-motion"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Accordion } from "../ui/accordion"
 import { emit, useMitt } from "@/hooks/useMitt"
 import SingleRunner from "./single"
@@ -19,6 +19,8 @@ import { emptyTestcase } from "@/store/testcase"
 import useReadAtom from "@/hooks/useReadAtom"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
 import EmptyRunner from "./empty"
+import { collabDocumentAtom } from "@/store/collab"
+import { YArrayEvent } from "yjs"
 
 export default function Runnner({ className }: { className?: string }) {
   const activeId = useAtomValue(activeIdAtom)
@@ -53,12 +55,15 @@ function RunnerContent(props: RunnerContentProps) {
   const readSourceCode = useReadAtom(sourceCodeAtom)
 
   const testAtom = useMemo(() => focusAtom(sourceStoreAtom, (optic) => optic.prop(activeId).prop("test")), [activeId])
-  const testcasesAtom = useMemo(() => splitAtom(focusAtom(testAtom, (optic) => optic.prop("testcases"))), [testAtom])
+  const testcasesAtomsAtom = useMemo(
+    () => splitAtom(focusAtom(testAtom, (optic) => optic.prop("testcases"))),
+    [testAtom],
+  )
   const timeLimitsAtom = useMemo(() => focusAtom(testAtom, (optic) => optic.prop("timeLimits")), [testAtom])
   const memoryAtom = useMemo(() => focusAtom(testAtom, (optic) => optic.prop("memoryLimits")), [testAtom])
   const checkerAtom = useMemo(() => focusAtom(testAtom, (optic) => optic.prop("checker")), [testAtom])
 
-  const [testcases, dispatchTestcases] = useAtom(testcasesAtom)
+  const [testcasesAtoms, dispatchTestcasesAtoms] = useAtom(testcasesAtomsAtom)
 
   const [runAllAnimate, setRunAllAnimate] = useState(false)
 
@@ -97,13 +102,51 @@ function RunnerContent(props: RunnerContentProps) {
     }
   }
 
-  const testcaseList = testcases.map((atom, index) => (
+  // sync testcase with remote
+  const collabDocument = useAtomValue(collabDocumentAtom)
+  const tests = useAtomValue(testAtom)
+  const testcasesAtom = useMemo(() => focusAtom(testAtom, (optics) => optics.prop("testcases")), [testAtom])
+  const [testcases, _setTestcases] = useAtom(testcasesAtom)
+  const testcaseListRemote = useMemo(() => collabDocument.getArray<string>(`testcase-array-${activeId}`), [activeId])
+  useEffect(() => {
+    let remoteTestcaseSet = new Set([...testcaseListRemote.toArray()])
+    let remoteLackId = tests.testcases.filter((item) => !remoteTestcaseSet.has(item.id)).map((item) => item.id)
+    if (remoteLackId.length > 0) {
+      testcaseListRemote.push(remoteLackId)
+    }
+  }, [activeId, testcasesAtoms])
+
+  useEffect(() => {
+    function observer(ty: YArrayEvent<string>) {
+      let changes = ty.changes.delta
+      let existsTestcase = new Set([...testcases.map((item) => item.id)])
+      changes
+        .filter((item) => item.insert)
+        .map((item) => item.insert)
+        .flat()
+        .filter((id) => !existsTestcase.has(id))
+        .forEach((id) => {
+          dispatchTestcasesAtoms({ type: "insert", value: { input: "", output: "", id } })
+        })
+      //TODO
+      let toRemove = changes.filter((item) => item.delete).map((item) => item.delete)
+      console.log(toRemove)
+    }
+
+    testcaseListRemote.observe(observer)
+    return () => testcaseListRemote.unobserve(observer)
+  }, [activeId, testcaseListRemote, testcases])
+
+  const testcaseList = testcasesAtoms.map((atom, index) => (
     <SingleRunner
       key={index}
       id={activeId}
       sourceAtom={sourceCodeAtom}
       testcaseAtom={atom}
-      onDelete={() => dispatchTestcases({ type: "remove", atom })}
+      onDelete={(uuid) => {
+        testcaseListRemote.delete(testcaseListRemote.toArray().indexOf(uuid))
+        dispatchTestcasesAtoms({ type: "remove", atom })
+      }}
       taskId={index.toString()}
       checkerAtom={checkerAtom}
       timeLimitsAtom={timeLimitsAtom}
@@ -155,7 +198,7 @@ function RunnerContent(props: RunnerContentProps) {
         <Button
           size="sm"
           className="flex-1 py-0  bg-green-600 hover:bg-green-500"
-          onClick={() => dispatchTestcases({ type: "insert", value: emptyTestcase() })}
+          onClick={() => dispatchTestcasesAtoms({ type: "insert", value: emptyTestcase() })}
         >
           New Testcase
         </Button>

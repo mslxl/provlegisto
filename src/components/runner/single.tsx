@@ -190,6 +190,15 @@ export default function SingleRunner(props: SingleRunnerProps) {
   }
 
   useEffect(()=>{
+    // pull initial data if exists
+    if(inputYText.toString()!="" && inputYText.toString() != input){
+      setInput(inputYText.toString())
+    }
+    if(outputYText.toString()!="" && outputYText.toString() != output){
+      setOutput(outputYText.toString())
+    }
+
+    // update info
     function updateInp(){
       setInput(inputYText.toString())
     }

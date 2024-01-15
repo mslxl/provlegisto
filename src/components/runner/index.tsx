@@ -106,7 +106,7 @@ function RunnerContent(props: RunnerContentProps) {
   const collabDocument = useAtomValue(collabDocumentAtom)
   const tests = useAtomValue(testAtom)
   const testcasesAtom = useMemo(() => focusAtom(testAtom, (optics) => optics.prop("testcases")), [testAtom])
-  const [testcases, _setTestcases] = useAtom(testcasesAtom)
+  const [testcases, setTestcases] = useAtom(testcasesAtom)
   const testcaseListRemote = useMemo(() => collabDocument.getArray<string>(`testcase-array-${activeId}`), [activeId])
   useEffect(() => {
     let remoteTestcaseSet = new Set([...testcaseListRemote.toArray()])
@@ -120,6 +120,12 @@ function RunnerContent(props: RunnerContentProps) {
     function observer(ty: YArrayEvent<string>) {
       let changes = ty.changes.delta
       let existsTestcase = new Set([...testcases.map((item) => item.id)])
+      let toRemove = new Set([
+        ...changes
+          .filter((item) => item.delete)
+          .map((item) => item.delete!)
+          .map((index) => testcaseListRemote.get(index)),
+      ])
       changes
         .filter((item) => item.insert)
         .map((item) => item.insert)
@@ -128,9 +134,7 @@ function RunnerContent(props: RunnerContentProps) {
         .forEach((id) => {
           dispatchTestcasesAtoms({ type: "insert", value: { input: "", output: "", id } })
         })
-      //TODO
-      let toRemove = changes.filter((item) => item.delete).map((item) => item.delete)
-      console.log(toRemove)
+      setTestcases((prev) => [...prev.filter((item) => !toRemove.has(item.id))])
     }
 
     testcaseListRemote.observe(observer)

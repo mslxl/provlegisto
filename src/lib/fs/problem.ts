@@ -1,4 +1,4 @@
-import { Source } from "@/store/source"
+import { Source } from "@/store/source/model"
 import { dialog, fs, path } from "@tauri-apps/api"
 import { LanguageMode, availableInternalChecker } from "../ipc"
 import * as log from "tauri-plugin-log-api"

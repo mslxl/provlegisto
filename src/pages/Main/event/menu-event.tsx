@@ -3,67 +3,27 @@ import useReadAtom from "@/hooks/useReadAtom"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
 import { LanguageMode } from "@/lib/ipc"
 import { defaultLanguageAtom } from "@/store/setting/setup"
-import { activeIdAtom, emptySource, sourceIndexAtoms, sourceStoreAtom, useAddSources } from "@/store/source"
+import { createSourceAtom } from "@/store/source"
 import { dialog } from "@tauri-apps/api"
-import { useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { useImmerAtom } from "jotai-immer"
 
 export default function MenuEventReceiver() {
-  const [sourceCodeStore, setSourceCodeStore] = useImmerAtom(sourceStoreAtom)
-
-  const readActiveId = useReadAtom(activeIdAtom)
-  const readSourceIndex = useReadAtom(sourceIndexAtoms)
-  const addSources = useAddSources()
   const defaultLanguage = useAtomValue(defaultLanguageAtom)
+  const createSource = useSetAtom(createSourceAtom)
 
   useMitt("fileMenu", async (event) => {
     if (event == "new") {
-      addSources([
-        {
-          title: "Unamed",
-          source: emptySource(defaultLanguage!),
-        },
-      ])
+      //TODO: set default language
+      createSource(LanguageMode.CXX)
     } else if (event == "open") {
-      const problems = (await openProblem()).map(([title, source]) => ({ title, source }))
-      addSources(problems)
+      //TODO: open source code
+      dialog.message('Unimplemented!', {type: 'error', title: 'Error'})
     } else if (event == "save" || event == "saveAs") {
-      const id = readActiveId()
-      console.log(id)
-      if (id < 0) return
-      const title = readSourceIndex().find((h) => h.id == id)!.title
-      const source = sourceCodeStore[id]
-
-      const choosePathWhenAlreadySaved = event == "saveAs"
-
-      const extension = (() => {
-        if (source.code.language == LanguageMode.CXX) return "cpp"
-        else if (source.code.language == LanguageMode.PY) return "py"
-        return "txt"
-      })()
-
-      const filepath = await (async () => {
-        if (source.path != undefined && !choosePathWhenAlreadySaved) {
-          return source.path!
-        } else {
-          return await dialog.save({
-            filters: [
-              {
-                name: "Source File",
-                extensions: [extension],
-              },
-            ],
-          })
-        }
-      })()
-      if (filepath == null) return
-      const crc = await saveProblem(source, title, filepath)
-      setSourceCodeStore((prev) => {
-        prev[id].path = filepath
-        prev[id].code.savedCrc = crc
-      })
+      //TODO: save source code
+      dialog.message('Unimplemented!', {type: 'error', title: 'Error'})
     }
-    emit('cache', -1)
+    // emit('cache', -1)
   })
 
   return null

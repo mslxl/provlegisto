@@ -4,26 +4,19 @@ import useReadAtom from "@/hooks/useReadAtom"
 import { LanguageMode } from "@/lib/ipc"
 import { keymapExtensionAtom } from "@/store/setting/keymap"
 import { clangdPathAtom, pyrightsPathAtom } from "@/store/setting/setup"
-import { SourceHeader, activeIdAtom, sourceStoreAtom } from "@/store/source"
+import { Source } from "@/store/source/model"
 import { Extension } from "@codemirror/state"
-import clsx from "clsx"
-import { PrimitiveAtom, atom, useAtomValue } from "jotai"
-import { focusAtom } from "jotai-optics"
+import { atom } from "jotai"
 import { Suspense, useMemo } from "react"
 
 type EditorProps = {
   className?: string
-  headerAtom: PrimitiveAtom<SourceHeader>
+  source: Source
 }
 export default function EditorTabPanel(props: EditorProps) {
-  const header = useAtomValue(props.headerAtom)
-  const active = useAtomValue(activeIdAtom)
-  const sourceAtom = useMemo(() => focusAtom(sourceStoreAtom, (optic) => optic.prop(header.id)), [header.id])
-  const sourceCodeLanguageAtom = useMemo(
-    () => focusAtom(sourceStoreAtom, (optic) => optic.prop(header.id).prop("code").prop("language")),
-    [header.id],
-  )
-  const sourceCodeLanguage = useAtomValue(sourceCodeLanguageAtom)
+  props.source.language
+  const sourceCodeLanguage = props.source.useLanguage()
+  const title = props.source.useName()
 
   const readClangdPath = useReadAtom(clangdPathAtom)
   const readPyrightsPath = useReadAtom(pyrightsPathAtom)
@@ -35,18 +28,10 @@ export default function EditorTabPanel(props: EditorProps) {
       return noLsp("")
     })
   }, [sourceCodeLanguage])
+
   return (
     <Suspense>
-      <Codemirror
-        className={clsx(props.className, {
-          hidden: active != header.id,
-        })}
-        sourceAtom={sourceAtom}
-        id={header.id}
-        title={header.title}
-        keymapAtom={keymapExtensionAtom}
-        lspAtom={lspExtensionAtom}
-      />
+      <Codemirror source={props.source} title={title} keymapAtom={keymapExtensionAtom} lspAtom={lspExtensionAtom} />
     </Suspense>
   )
 }

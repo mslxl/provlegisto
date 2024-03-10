@@ -1,5 +1,5 @@
 import { path, fs } from "@tauri-apps/api"
-import { Source } from "@/store/source"
+import { Source } from "@/store/source/model"
 import * as log from "tauri-plugin-log-api"
 
 async function getDataDir() {

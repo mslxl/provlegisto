@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Badge } from "../ui/badge"
 import { ChevronDown } from "lucide-react"
@@ -13,20 +13,13 @@ import clsx from "clsx"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import AdditionMessage from "./addition-msg"
 import * as log from "tauri-plugin-log-api"
-import { Atom, PrimitiveAtom, useAtom } from "jotai"
-import { TestCase } from "@/store/testcase"
-import { SourceCode } from "@/store/source"
-import useReadAtom from "@/hooks/useReadAtom"
-import { focusAtom } from "jotai-optics"
+import { Source, Testcase } from "@/store/source/model"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
+
 type SingleRunnerProps = {
-  testcaseAtom: PrimitiveAtom<TestCase>
-  sourceAtom: Atom<SourceCode>
-  timeLimitsAtom: Atom<number>
-  memoryLimitsAtom: Atom<number>
-  checkerAtom: Atom<string>
-  id: number
-  taskId: string
+  testcase: Testcase
+  source: Source
+  checker: string
   onDelete: () => void
 }
 
@@ -47,7 +40,7 @@ const JudgeStatusBorderStyle: JudgeStatusStyle = {
   INT: "border-l-violet-600",
 }
 
-const JudgeStatusTextStype: JudgeStatusStyle = {
+const JudgeStatusTextStyle: JudgeStatusStyle = {
   AC: "bg-green-700",
   TLE: "bg-blue-600",
   WA: "bg-red-700",
@@ -59,131 +52,105 @@ const JudgeStatusTextStype: JudgeStatusStyle = {
 }
 
 export default function SingleRunner(props: SingleRunnerProps) {
-  const [judgeStatus, setJudgeStatus] = useState<JudgeStatus>("UK")
-
-  const readSourceCode = useReadAtom(props.sourceAtom)
-  const readTimeLimits = useReadAtom(props.timeLimitsAtom)
-  // const readMemoryLimits = useReadAtom(props.memoryLimitsAtom)
-  const readChecker = useReadAtom(props.checkerAtom)
-  const inputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("input")), [props.testcaseAtom])
-  const outputAtom = useMemo(() => focusAtom(props.testcaseAtom, (optic) => optic.prop("output")), [props.testcaseAtom])
-
-  const [input, setInputAtom] = useAtom(inputAtom)
-  const [output, setOutputAtom] = useAtom(outputAtom)
-
-  function setInput(inp: string){
-    setInputAtom(inp)
-    emit('cache', props.id)
-  }
-  function setOutput(oup: string){
-    setOutputAtom(oup)
-    emit('cache', props.id)
-  }
-
-  const [actualStdout, setActualStdout] = useState("")
-  const [actualStderr, setActualStderr] = useState("")
-  const acutalStdoutLinesCnt = useRef(0)
   const [running, setRunning] = useState(false)
-  const [checkerReport, setCheckerReport] = useState("")
+  const stdoutLineCount = useRef(0)
   const getLanguageCompiler = useGetLanguageCompiler()
-
-  useEffect(() => {
-    setJudgeStatus("UK")
-    setCheckerReport("")
-    setActualStderr("")
-    setActualStdout("")
-  }, [props.sourceAtom])
 
   useMitt(
     "run",
     async (taskId) => {
-      if (props.taskId != taskId && taskId != "all") return
+      if (props.testcase.id != taskId && taskId != "all") return
       setRunning(true)
-      setJudgeStatus("PD")
-      acutalStdoutLinesCnt.current = 0
-      setCheckerReport("")
-      setActualStderr("")
-      setActualStdout("")
+      const testcases = props.testcase
+      testcases.status = "PD"
+      testcases.stderr = ""
+      testcases.stdout = ""
+      const sourceCode = props.source
 
-      const sourceCode = readSourceCode()
-
-      const checker = readChecker()
+      const checker = props.checker
       log.info(`compile in ${sourceCode.language} mode with checker ${checker}`)
 
       compileRunCheck(
         sourceCode.language,
-        sourceCode.source,
-        props.taskId,
-        input,
-        output,
+        sourceCode.source.toString(),
+        props.testcase.id,
+        props.testcase.input.toString(),
+        props.testcase.except.toString(),
         {
           type: "Internal",
           name: checker,
         },
-        readTimeLimits(),
+        sourceCode.timelimit,
         {
           path: (await getLanguageCompiler(sourceCode.language)) ?? undefined,
         },
       )
         .then((result) => {
           log.info(JSON.stringify(result))
-
           if (result.type == "WA") {
-            setCheckerReport(result.report)
+            testcases.report = result.report
           } else if (result.type == "CE") {
             let line = ""
             for (let i of result.data) {
               line += `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`
             }
-            setCheckerReport(line)
+            testcases.report = line
           } else {
-            setCheckerReport(" ")
+            testcases.report = ""
           }
-
           setRunning(false)
-          setJudgeStatus(result.type as any)
+          testcases.status = result.type
         })
         .catch((e) => {
           console.error(e)
           setRunning(false)
         })
     },
-    [props.taskId, props.sourceAtom, input, output],
-  )
-  useTauriEvent(
-    props.taskId,
-    (event) => {
-      const payload = event.payload as any
-      if (payload.type == "Clear") {
-        acutalStdoutLinesCnt.current = 0
-      } else if (payload.type == "AppendStdout") {
-        acutalStdoutLinesCnt.current += 1
-        if (acutalStdoutLinesCnt.current > 200) {
-          setActualStdout((prev) => prev + "...")
-        } else {
-          setActualStdout((prev) => prev + payload.line)
-        }
-      } else if (payload.type == "AppendStderr") {
-        setActualStderr((prev) => prev + payload.line)
-      }
-    },
-    [props.taskId],
+    [props.testcase, props.testcase.id],
   )
 
+  useTauriEvent(
+    props.testcase.id,
+    (event) => {
+      const payload = event.payload as any
+      const testcase = props.testcase
+      if (payload.type == "Clear") {
+        testcase.stdout = ""
+        stdoutLineCount.current = 0
+      } else if (payload.type == "AppendStdout") {
+        //TODO: 这里需要防抖，否则(网络)性能会爆炸
+        stdoutLineCount.current += 1
+        if (stdoutLineCount.current > 200) {
+          testcase.stdout += "..."
+        } else {
+          testcase.stdout += payload.line
+        }
+      } else if (payload.type == "AppendStderr") {
+        //TODO: 这里需要防抖，否则(网络)性能会爆炸
+        testcase.stderr += payload.line
+      }
+    },
+    [props.testcase, props.testcase.id],
+  )
+  const judgeStatus = props.testcase.useStatus() as JudgeStatus  //TODO: 需要约束一下类型，无效值设为默认
+
+  const stdout = props.testcase.useStdout()
+  const stderr = props.testcase.useStderr()
+  const report = props.testcase.useReport()
+
   return (
-    <AccordionItem value={props.taskId} className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}>
+    <AccordionItem value={props.testcase.id} className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}>
       <AccordionTrigger className="px-1 py-1" asChild>
         <div className="flex">
           <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200" />
           <h3 className="text-sm whitespace-nowrap">
-            Testcase #{props.taskId}
-            <Badge className={clsx("mx-2 text-white", JudgeStatusTextStype[judgeStatus])}>{judgeStatus}</Badge>
+            <Badge className={clsx("mx-2 text-white", JudgeStatusTextStyle[judgeStatus])}>{judgeStatus}</Badge>
           </h3>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               onClick={(e) => {
-                emit("run", props.taskId)
+                emit("run", props.testcase.id)
                 e.preventDefault()
               }}
               variant="outline"
@@ -213,17 +180,17 @@ export default function SingleRunner(props: SingleRunnerProps) {
       </AccordionTrigger>
       <AccordionContent>
         <span className="text-sm px-2">Input:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={input} onChange={setInput} editable/>
+        <Editor className="min-w-0 m-2" text={props.testcase.input} />
         <span className="text-sm px-2">Expected Output:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={output} onChange={setOutput} editable/>
+        <Editor className="min-w-0 m-2" text={props.testcase.except} />
         <span className="text-sm px-2">Ouput:</span>
-        <Editor kernel="codemirror" className="min-w-0 m-2" text={actualStdout} editable={false} />
+        <Editor className="min-w-0 m-2" text={stdout} />
         <Popover>
           <PopoverTrigger asChild>
             <span className="text-end text-xs w-full px-2 hover:text-gray-600">See Report&gt;&gt;</span>
           </PopoverTrigger>
           <PopoverContent side="right">
-            <AdditionMessage checkReport={checkerReport} stderrLog={actualStderr} />
+            <AdditionMessage checkReport={report} stderrLog={stderr} />
           </PopoverContent>
         </Popover>
       </AccordionContent>

@@ -21,7 +21,16 @@ export default function useExtensionCompartment<T>(
   return () => compartment.current.of(builder(value))
 }
 
-export function generateCommonConfigurationExtension(cm: RefObject<EditorView | null>) {
+/**
+ * Create extension compartments by config
+ * Including:
+ * - editor colorscheme
+ * - font size
+ * - font family
+ * @param cm 
+ * @returns 
+ */
+export function useCommonConfigurationExtension(cm: RefObject<EditorView | null>) {
   return [
     useExtensionCompartment(cm, editorFontFamilyAtom, (fontfamily: any) =>
       EditorView.theme({

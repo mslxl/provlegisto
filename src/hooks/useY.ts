@@ -1,3 +1,5 @@
+import { Getter } from "jotai"
+import { atomWithObservable } from "jotai/utils"
 import { useEffect, useState } from "react"
 import { Text, Array, AbstractType, Map, Doc } from "yjs"
 
@@ -11,6 +13,40 @@ export function createYjsHook<T, V extends AbstractType<any>>(initialValue: T, o
     return () => observer.unobserve(observeCallback)
   }, [observer])
   return content
+}
+
+/**
+ * Create an atom from yjs, note that useMemo is needed when the atom is created inside component
+ * @param initialValue
+ * @param observer
+ * @param updater
+ */
+export function createYjsHookAtom<T, A, V extends AbstractType<any>>(
+  initialValue: T,
+  observerGet: (atomData: A)=>V,
+  dataGet: (y: V, a: A,) => T,
+  atomGet: (get: Getter) => A,
+) {
+  return atomWithObservable(
+    (get) => {
+      const atomData = atomGet(get)
+      const yjsObserver = observerGet(atomData)
+      return {
+        subscribe(observer: { next: (data: T) => void }): { unsubscribe: () => void } {
+          const cb = () => {
+            observer.next(dataGet(yjsObserver, atomData))
+          }
+          yjsObserver.observe(cb)
+          return {
+            unsubscribe() {
+              yjsObserver.unobserve(cb)
+            },
+          }
+        },
+      }
+    },
+    { initialValue:  initialValue},
+  )
 }
 
 export function useYText(ytext: Text): string {
@@ -30,7 +66,7 @@ export class YjsNS {
   id: string
   public constructor(doc: Doc, id: string) {
     const map = doc.getMap()
-    this.id  = id
+    this.id = id
     if (map.has(id)) {
       this.doc = map.get(id) as Doc
     } else {
@@ -62,7 +98,7 @@ export class YjsNS {
 
   public getNumber(name: string): number {
     const map = this.getPrimitiveValueMap()
-    if (map.has(name)) {
+    if (!map.has(name)) {
       map.set(name, 0)
     }
     return map.get(name) as number
@@ -74,17 +110,17 @@ export class YjsNS {
 
   public useNumber(name: string): number {
     const map = this.getPrimitiveValueMap()
-    if (map.has(name)) {
+    if (!map.has(name)) {
       map.set(name, 0)
     }
-    return (createYjsHook(0, map, (v) => v.get(name)) as number) ?? 0
+    return (createYjsHook(map.get(name) as number, map, (v) => v.get(name)) as number) ?? 0
   }
 
   public setString(name: string, value: string | undefined) {
     const map = this.getStringValueMap()
-    if(value){
+    if (value) {
       map.set(name, value)
-    }else{
+    } else {
       map.delete(name)
     }
   }

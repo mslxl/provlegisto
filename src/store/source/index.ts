@@ -1,11 +1,10 @@
-import { Doc } from "yjs"
+import { Doc, Array } from "yjs"
 import { SourceStore } from "./model"
 import { atom } from "jotai"
-import { atomWithObservable } from "jotai/utils"
 import { includes, isEmpty } from "ramda"
-import * as log from 'tauri-plugin-log-api'
+import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
-import { defaultLanguageAtom } from "../setting/setup"
+import { createYjsHookAtom } from "@/hooks/useY"
 
 export const docAtom = atom(new Doc())
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
@@ -15,24 +14,11 @@ export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
  * which just for use source ids handy inside react component
  * 很难想象我是怀着什么样的心情写出这种抽象的 atom
  */
-export const sourceIdsAtom = atomWithObservable(
-  (get) => {
-    const list = get(sourceAtom).list
-    return {
-      subscribe(observer: { next: (data: string[]) => void }): { unsubscribe: () => void } {
-        const cb = () => {
-          observer.next(list.toArray())
-        }
-        list.observe(cb)
-        return {
-          unsubscribe() {
-            list.unobserve(cb)
-          },
-        }
-      },
-    }
-  },
-  { initialValue: [] },
+export const sourceIdsAtom = createYjsHookAtom<string[], Array<string>, Array<string>>(
+  [],
+  (ob) => ob,
+  (v) => v.toArray(),
+  (get) => get(sourceAtom).list,
 )
 
 const activedSourceIdUncheckedAtom = atom<string | null>(null)
@@ -45,10 +31,10 @@ export const activedSourceIdAtom = atom<string | null, [id: string | null], void
   (get) => {
     const id = get(activedSourceIdUncheckedAtom)
     const idsList = get(sourceIdsAtom)
-    if(id == null && !isEmpty(idsList)){
+    if (id == null && !isEmpty(idsList)) {
       return idsList[0]
     }
-    if (includes(id, )) {
+    if (includes(id)) {
       return id
     }
     return null
@@ -66,18 +52,18 @@ export const activedSourceIdAtom = atom<string | null, [id: string | null], void
  * Current actived source object
  * Readonly atom
  */
-export const activedSourceAtom = atom((get)=>{
+export const activedSourceAtom = atom((get) => {
   const activedId = get(activedSourceIdAtom)
   const store = get(sourceAtom)
-  if(activedId == null) return null
+  if (activedId == null) return null
   return store.get(activedId)!!
 })
 
 /**
  * Create an empty source object inside doc
- * Return the new source 
+ * Return the new source
  */
-export const createSourceAtom = atom(null, (get, _, targetLanguage:LanguageMode)=>{
+export const createSourceAtom = atom(null, (get, _, targetLanguage: LanguageMode) => {
   const store = get(sourceAtom)
   const [source, id] = store.create()
   source.language = targetLanguage
@@ -86,13 +72,11 @@ export const createSourceAtom = atom(null, (get, _, targetLanguage:LanguageMode)
   return source
 })
 
-
 /**
  * Delete an source by id
  * Do noting if it not exists
  */
-export const deleteSourceAtom = atom(null, (get, _, id:string)=>{
+export const deleteSourceAtom = atom(null, (get, _, id: string) => {
   const store = get(sourceAtom)
   store.delete(id)
 })
-

@@ -15,6 +15,17 @@ type EditorProps = {
   text: Text | string
 }
 
+const cmStyleNoOutline = [
+  EditorView.theme({
+    "&": {
+      outline: "none",
+    },
+    "&.cm-focused": {
+      outline: "none",
+    },
+  }),
+]
+
 /**
  * Lite editor based codemirror
  * it will be readonly if the type of text primitive string
@@ -22,14 +33,14 @@ type EditorProps = {
  * @returns
  */
 export default function Editor(props: EditorProps) {
-  const editable = props.text instanceof Text
   const parentRef = useRef<HTMLDivElement>(null)
   const cm = useRef<EditorView | null>(null)
+
+  // ycollab compartment, used to modify and share text if its type is Text(not primitive)
   const collabCompartment = new Compartment()
+  const editorCompartment = new Compartment()
 
   const configurableExtensions = useCommonConfigurationExtension(cm)
-  // TODO: modify store via collab extension
-
   useEffect(() => {
     if (parentRef.current == null) return
 
@@ -37,19 +48,11 @@ export default function Editor(props: EditorProps) {
       extensions: [
         minimalSetup,
         ...map(configurableExtensions, (e: () => Extension) => e()),
-        EditorView.editable.of(editable ?? true),
+        editorCompartment.of(EditorView.editable.of(false)),
         collabCompartment.of([]),
-        [
-          EditorView.theme({
-            "&": {
-              outline: "none",
-            },
-            "&.cm-focused": {
-              outline: "none",
-            },
-          }),
-        ],
+        cmStyleNoOutline,
       ],
+      doc: props.text.toString(),
       parent: parentRef.current,
     })
 
@@ -60,8 +63,12 @@ export default function Editor(props: EditorProps) {
 
   useExtensionCompartment(cm, editorThemeExtensionAtom, (v: any) => v())
 
+  // update text if its type
   useEffect(() => {
     if (typeof props.text == "string") {
+      cm.current?.dispatch({
+        effects: [editorCompartment.reconfigure(EditorView.editable.of(false)), collabCompartment.reconfigure([])],
+      })
       cm.current?.dispatch({
         changes: [
           {
@@ -71,19 +78,16 @@ export default function Editor(props: EditorProps) {
           },
         ],
       })
-    }
-  }, [props.text])
-  useEffect(() => {
-    if (props.text instanceof Text) {
+    } else if (props.text instanceof Text) {
       const undoManager = new UndoManager(props.text)
-      collabCompartment.reconfigure([yCollab(props.text, null, { undoManager })])
+      cm.current?.dispatch({
+        effects: [
+          editorCompartment.reconfigure(EditorView.editable.of(true)),
+          collabCompartment.reconfigure([yCollab(props.text, null, { undoManager })]),
+        ],
+      })
     }
   }, [props.text])
 
-  return (
-    <div
-      className={clsx("w-full", props.className, "border border-slate-400")}
-      ref={parentRef}
-    ></div>
-  )
+  return <div className={clsx("w-full", props.className, "border border-slate-400")} ref={parentRef}></div>
 }

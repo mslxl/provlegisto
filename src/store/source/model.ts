@@ -19,7 +19,7 @@ export class Testcase {
       map.set("input", new Text())
       map.set("except", new Text())
       map.set("id", uuid())
-      map.set("output", "") //TODO: rename it to stdout
+      map.set("stdout", "")
       map.set("status", "")
       map.set("stderr", "")
       map.set("report", "")
@@ -37,13 +37,13 @@ export class Testcase {
   }
 
   set stdout(value: string) {
-    this.map.set("output", value)
+    this.map.set("stdout", value)
   }
   get stdout(): string {
-    return this.map.get("output")
+    return this.map.get("stdout")
   }
   useStdout(): string {
-    return createYjsHook(this.map.get("output"), this.map, (v) => v.get("output"))
+    return createYjsHook(this.map.get("stdout"), this.map, (v) => v.get("stdout"))
   }
   get status(): string {
     return this.map.get("status")
@@ -132,6 +132,9 @@ export class Source {
   get timelimit(): number {
     return this.store.getNumber("timelimit")
   }
+  useTimelimit():number{
+    return this.store.useNumber("timelimit")
+  }
   set memorylimit(bytes: number) {
     this.store.setNumber("memorylimit", bytes)
   }
@@ -178,8 +181,8 @@ export class Source {
   pushEmptyTest() {
     this.tests.push([new Map<any>()])
   }
-  deleteTest(index: number) {
-    this.tests.delete(index)
+  deleteTest(index: number, length: number | undefined = undefined) {
+    this.tests.delete(index, length)
   }
 }
 

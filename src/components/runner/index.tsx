@@ -13,6 +13,7 @@ import * as log from "tauri-plugin-log-api"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
 import EmptyRunner from "./empty"
 import { Source } from "@/store/source/model"
+import TestConfiguration from "./conf"
 
 interface RunnerProps {
   className?: string
@@ -75,7 +76,7 @@ function RunnerContent(props: RunnerContent) {
       key={test.id}
       testcase={test}
       source={props.source}
-      checker={checker ?? "ncmp"} //TODO: use default checker from configuration
+      checker={checker ?? "wcmp"} //TODO: use default checker from configuration
       onDelete={() => {
         props.source.deleteTest(index)
       }}
@@ -114,8 +115,7 @@ function RunnerContent(props: RunnerContent) {
               </Button>
             </PopoverTrigger>
             <PopoverContent side="right">
-              <div>TODO: configuration component</div>
-              {/* <Configuration testAtom={testAtom} /> */}
+              <TestConfiguration source={props.source} />
             </PopoverContent>
           </Popover>
         </div>

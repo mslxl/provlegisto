@@ -11,9 +11,6 @@ import { Source } from "@/store/source/model"
 import { concat, map } from "lodash"
 import "@fontsource/jetbrains-mono"
 import useExtensionCompartment, { useCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
-import useTimeoutInvoke from "@/hooks/useTimeoutInvoke"
-import * as cache from "@/lib/fs/cache"
-import { useMitt } from "@/hooks/useMitt"
 import { UndoManager } from "yjs"
 // @ts-ignore
 import { yCollab } from 'y-codemirror.next'
@@ -38,8 +35,6 @@ const Codemirror = memo((props: CodemirrorProps) => {
     ],
     useCommonConfigurationExtension(cm),
   )
-  // TODO: modify store via collab extension
-
   // TODO: auto save
   // const [doCacheOnTimeout, , cancelTimeoutCache] = useTimeoutInvoke<never>(() => {
   //   cache.updateCache(props.id, props.title, source)
@@ -83,7 +78,9 @@ const Codemirror = memo((props: CodemirrorProps) => {
             "user-select": "none",
           },
         }),
-        yCollab(props.source.source, null, {undoManager}),
+        // use ycollab to modify and share source object
+        yCollab(props.source.source, null, {undoManager}), 
+
         EditorView.updateListener.of((e) => {
           if (!e.docChanged) return
           // TODO: auto save

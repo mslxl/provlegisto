@@ -5,30 +5,49 @@ import { LanguageMode } from "@/lib/ipc"
 import { defaultLanguageAtom } from "@/store/setting/setup"
 import { activedSourceAtom, createSourceAtom, sourceAtom } from "@/store/source"
 import { Source, SourceStore } from "@/store/source/model"
-import { dialog } from "@tauri-apps/api"
-import {  useAtomValue, useSetAtom } from "jotai"
+import { dialog, path } from "@tauri-apps/api"
+import { useAtomValue, useSetAtom } from "jotai"
+import { LocalSourceMetadata, getSourceMetaAtom, setSourceMetaAtom } from "@/store/source/local"
+import { crc16 } from "crc"
+import { zip } from "ramda"
 
-async function saveFile(source: Source) {
-  //TODO: save source code
+/**
+ * Save source to file
+ * It will open a dialog to select target file if target is not specify
+ * @param source
+ * @param target
+ */
+async function saveFile(source: Source, getSaveTarget?: (id: string) => string | undefined) {
   //TODO: read default path from local
   //TODO: set default ext and list extensions
   //TODO: save and saveAs are different
-  const file = await dialog.save({
-    title: "Save as",
-    filters: [
-      {
-        name: "cpp",
-        extensions: ["cpp", "c"],
-      },
-    ],
-  })
+
+  let file = null
+  if (getSaveTarget) {
+    file = getSaveTarget(source.id)
+  }
+
+  // no metadata found, let user choose file
+  if (!file) {
+    file = await dialog.save({
+      title: "Save as",
+      filters: [
+        {
+          name: "cpp",
+          extensions: ["cpp", "c"],
+        },
+      ],
+    })
+  }
+
+  // if it is null, that's means user cancel operation
   if (file) {
     const staticSourceData = fromSource(source)
     await saveProblem(staticSourceData, file)
   }
 }
 
-async function openFile(targetStore: SourceStore) {
+async function openFile(targetStore: SourceStore, setMetadata?: (id: string, data: LocalSourceMetadata) => void) {
   let files = await dialog.open({
     title: "Open",
     filters: [
@@ -44,12 +63,18 @@ async function openFile(targetStore: SourceStore) {
   if (typeof files == "string") {
     files = [files]
   }
-  //TODO: set local path
   const problems = await openProblem(files)
   targetStore.doc.transact(() => {
-    for (let problem of problems) {
+    files = files as string[]
+    for (let [filepath, problem] of zip(files, problems)) {
       const [source] = targetStore.create()
       intoSource(problem, source)
+      if(setMetadata){
+        setMetadata(source.id, {
+          crc16: crc16(source.source.toString()),
+          pathname: filepath
+        })
+      }
     }
   })
 }
@@ -59,6 +84,8 @@ export default function MenuEventReceiver() {
   const createSource = useSetAtom(createSourceAtom)
   const activedSource = useAtomValue(activedSourceAtom)
   const sourceStore = useAtomValue(sourceAtom)
+  const getSourceMeta = useSetAtom(getSourceMetaAtom)
+  const setSourceMeta = useSetAtom(setSourceMetaAtom)
 
   useMitt(
     "fileMenu",
@@ -67,10 +94,14 @@ export default function MenuEventReceiver() {
         //TODO: set default language
         createSource(LanguageMode.CXX)
       } else if (event == "open") {
-        openFile(sourceStore)
+        openFile(sourceStore, setSourceMeta)
       } else if (event == "save" || event == "saveAs") {
         if (activedSource) {
-          await saveFile(activedSource)
+          if (event == "saveAs") {
+            await saveFile(activedSource)
+          } else {
+            await saveFile(activedSource, (id) => getSourceMeta(id)?.pathname)
+          }
         } else {
           dialog.message("No file opened!", { type: "error", title: "Save Error" })
         }

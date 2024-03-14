@@ -4,7 +4,7 @@ import * as log from "tauri-plugin-log-api"
 import { ProblemHeader, problemHeader } from "../parse/problem"
 import { parse, right } from "../parse"
 import { capitalize } from "lodash"
-import { map, __, addIndex, flatten } from "ramda"
+import { map, __, flatten, zip, range } from "lodash/fp"
 import { crc16 } from "crc"
 import { StaticSourceData, StaticTestData } from "./model"
 
@@ -177,13 +177,14 @@ export async function saveProblem(source: StaticSourceData, filepath: string): P
   const dirname = await path.dirname(filepath)
   const basename = await path.basename(filepath, `.${extname}`)
 
+
   const testcaseWritingPromise = flatten(
-    addIndex(map)((testItem, index) => {
+    map(([testItem, index]) => {
       const item = testItem as StaticTestData
       const input = path.join(dirname, `${basename}_${index + 1}.in`)
       const output = path.join(dirname, `${basename}_${index + 1}.out`)
       return [input.then((f) => fs.writeTextFile(f, item.input)), output.then((f) => fs.writeTextFile(f, item.except))]
-    }, source.tests),
+    }, zip(source.tests, range(0, source.tests.length))),
   )
   await Promise.all(testcaseWritingPromise)
   return crc16(filecontent)

@@ -1,10 +1,11 @@
 import { Doc, Array } from "yjs"
 import { SourceStore } from "./model"
 import { atom } from "jotai"
-import { includes, isEmpty } from "ramda"
+import { includes, isEmpty } from "lodash/fp"
 import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
 import { createYjsHookAtom } from "@/hooks/useY"
+import {uniq} from 'lodash/fp'
 
 export const docAtom = atom(new Doc())
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
@@ -17,7 +18,7 @@ export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
 export const sourceIdsAtom = createYjsHookAtom<string[], Array<string>, Array<string>>(
   [],
   (ob) => ob,
-  (v) => v.toArray(),
+  (v) => uniq(v.toArray()),
   (get) => get(sourceAtom).list,
 )
 

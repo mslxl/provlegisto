@@ -9,7 +9,7 @@ import { dialog } from "@tauri-apps/api"
 import { useAtomValue, useSetAtom } from "jotai"
 import { LocalSourceMetadata, getSourceMetaAtom, setSourceMetaAtom } from "@/store/source/local"
 import { crc16 } from "crc"
-import { zip } from "ramda"
+import { zip } from "lodash/fp"
 
 /**
  * Save source to file
@@ -65,11 +65,11 @@ async function openFile(targetStore: SourceStore, setMetadata?: (id: string, dat
   targetStore.doc.transact(() => {
     files = files as string[]
     for (let [filepath, problem] of zip(files, problems)) {
-      const [source] = targetStore.createFromStatic(problem)
+      const [source] = targetStore.createFromStatic(problem!)
       if(setMetadata){
         setMetadata(source.id, {
           crc16: crc16(source.source.toString()),
-          pathname: filepath
+          pathname: filepath!
         })
       }
     }

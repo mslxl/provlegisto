@@ -143,6 +143,7 @@ export default function SingleRunner(props: SingleRunnerProps) {
       <AccordionTrigger className="px-1 py-1" asChild>
         <div className="flex">
           <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200" />
+          <span className="flex-1"></span>
           <h3 className="text-sm whitespace-nowrap">
             <Badge className={clsx("mx-2 text-white", JudgeStatusTextStyle[judgeStatus])}>{judgeStatus}</Badge>
           </h3>

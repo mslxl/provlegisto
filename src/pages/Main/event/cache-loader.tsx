@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import cache from "@/lib/fs/cache"
 import useReadAtom from "@/hooks/useReadAtom"
 import { sourceAtom } from "@/store/source"
-import { forEach } from "ramda"
+import { forEach } from "lodash/fp"
 import { StaticSourceData } from "@/lib/fs/model"
 
 const alreadyLoadedAtom = atom(false)

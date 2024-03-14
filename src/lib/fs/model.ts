@@ -1,5 +1,5 @@
 import { Source } from "@/store/source/model"
-import { addIndex, map, range } from "ramda"
+import { zip, map, range } from "lodash/fp"
 import { LanguageMode } from "../ipc"
 
 export interface StaticTestData {
@@ -63,12 +63,12 @@ export function intoSource(data: StaticSourceData, source: Source) {
 
   source.deleteTest(0, source.testsLength)
   for (let i = 0; i < data.tests.length; i++) source.pushEmptyTest()
-  addIndex(map)((v, index) => {
+  map(([ v, index ]) => {
     const test = v as StaticTestData
     const sharedCase = source.getTest(index)
     sharedCase.input.delete(0, sharedCase.input.length)
     sharedCase.except.delete(0, sharedCase.except.length)
     sharedCase.input.insert(0, test.input)
     sharedCase.except.insert(0, test.except)
-  }, data.tests)
+  }, zip(data.tests, range(0, data.tests.length)))
 }

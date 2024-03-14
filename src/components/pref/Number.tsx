@@ -1,4 +1,3 @@
-import { WritableAtom, useAtom } from "jotai"
 import { Input } from "../ui/input"
 import * as z from "zod"
 import { FaAngleUp, FaAngleDown } from "react-icons/fa6"

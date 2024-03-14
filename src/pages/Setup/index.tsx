@@ -11,7 +11,7 @@ import {
   pythonVersionAtom,
   setupDeviceAtom,
 } from "@/store/setting/setup"
-import { useAtomValue, useSetAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Logo from "./logo"
@@ -37,7 +37,8 @@ export default function Setup() {
   const availableLanguageList = useAtomValue(availableLanguageListAtom)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertMessage, setAlertMessage] = useState("")
-  const readDefaultLang = useReadAtom(defaultLanguageAtom)
+  const [defaultLanguage, setDefaultLanguage] = useAtom(defaultLanguageAtom)
+
   const cxxCfg = {
     readEnable: useReadAtom(enableCxxAtom),
     readGCCV: useReadAtom(gccVersionAtom),
@@ -50,8 +51,7 @@ export default function Setup() {
   }
 
   async function done() {
-    const defaultLang = await readDefaultLang()
-    if (defaultLang == null) {
+    if (defaultLanguage == null) {
       setAlertMessage("The default language must be setted")
       setAlertOpen(true)
       return
@@ -100,7 +100,9 @@ export default function Setup() {
             <PrefSelect
               leading="Default Language:"
               items={availableLanguageList.state == "hasData" ? availableLanguageList.data : []}
-              atom={defaultLanguageAtom as any}
+              //TODO: narrow type here
+              value={defaultLanguage as any} 
+              onChange={setDefaultLanguage as any}
             />
           </li>
           <li>

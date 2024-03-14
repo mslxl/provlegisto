@@ -1,5 +1,5 @@
 import { Source } from "@/store/source/model"
-import { addIndex, forEach, map, range } from "ramda"
+import { addIndex, map, range } from "ramda"
 import { LanguageMode } from "../ipc"
 
 export interface StaticTestData {

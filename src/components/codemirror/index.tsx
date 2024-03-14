@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { memo, useEffect, useRef } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef } from "react"
 import { EditorView, keymap } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
@@ -8,12 +8,14 @@ import { Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
 import { Atom } from "jotai"
 import { Source } from "@/store/source/model"
-import { concat, map } from "lodash"
+import { concat, map } from "ramda"
 import "@fontsource/jetbrains-mono"
 import useExtensionCompartment, { useCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
 import { UndoManager } from "yjs"
+import cache from "@/lib/fs/cache"
 // @ts-ignore
-import { yCollab } from 'y-codemirror.next'
+import { yCollab } from "y-codemirror.next"
+import { fromSource } from "@/lib/fs/model"
 
 type CodemirrorProps = {
   className?: string
@@ -22,6 +24,20 @@ type CodemirrorProps = {
   lspAtom: Atom<ReturnType<LspProvider>>
   keymapAtom: Atom<ReturnType<KeymapProvider>>
 }
+
+const EditorViewStyle = EditorView.theme({
+  "&": {
+    "flex-grow": 1,
+    outline: "none",
+    "min-width": "0px",
+  },
+  "&.cm-focused": {
+    outline: "none",
+  },
+  "& .cm-lineNumbers": {
+    "user-select": "none",
+  },
+})
 
 const Codemirror = memo((props: CodemirrorProps) => {
   const parentRef = useRef<HTMLDivElement>(null)
@@ -35,17 +51,23 @@ const Codemirror = memo((props: CodemirrorProps) => {
     ],
     useCommonConfigurationExtension(cm),
   )
-  // TODO: auto save
-  // const [doCacheOnTimeout, , cancelTimeoutCache] = useTimeoutInvoke<never>(() => {
-  //   cache.updateCache(props.id, props.title, source)
-  // }, 1000)
-  // useMitt("cache", (id) => {
-  //   if (id == props.id || id == -1) doCacheOnTimeout({} as never)
-  // })
 
-  // useEffect(()=>{
-  //   doCacheOnTimeout({} as never)
-  // }, [props.title])
+  const buildStaticSourceforCache = useCallback(() => fromSource(props.source), [props.source])
+  const cacheUpdateListenerExtension = useMemo(
+    () =>
+      EditorView.updateListener.of((e) => {
+        if (!e.docChanged) return
+        cache.debouncedUpdateCache(props.source.id, buildStaticSourceforCache)
+      }),
+    [props.source],
+  )
+
+  // cache file on source leave
+  useEffect(() => {
+    return () => {
+      cache.debouncedUpdateCache(props.source.id, buildStaticSourceforCache)
+    }
+  }, [props.source])
 
   useEffect(() => {
     if (parentRef.current == null) return
@@ -56,36 +78,18 @@ const Codemirror = memo((props: CodemirrorProps) => {
       return
     }
 
-    //TODO: add awareness
     const undoManager = new UndoManager(props.source.source)
-
 
     cmClosure = new EditorView({
       extensions: [
         basicSetup,
         keymap.of([indentWithTab]),
-        ...map(configurableExtensions, (e: () => Extension) => e()),
-        EditorView.theme({
-          "&": {
-            "flex-grow": 1,
-            outline: "none",
-            "min-width": "0px",
-          },
-          "&.cm-focused": {
-            outline: "none",
-          },
-          "& .cm-lineNumbers": {
-            "user-select": "none",
-          },
-        }),
+        ...map((e: () => Extension) => e(), configurableExtensions),
+        EditorViewStyle,
         // use ycollab to modify and share source object
-        yCollab(props.source.source, null, {undoManager}), 
-
-        EditorView.updateListener.of((e) => {
-          if (!e.docChanged) return
-          // TODO: auto save
-          // doCacheOnTimeout({} as never)
-        }),
+        //TODO: add awareness
+        yCollab(props.source.source, null, { undoManager }),
+        cacheUpdateListenerExtension,
       ],
       doc: props.source.source.toString(),
       parent: parentRef.current!,
@@ -96,13 +100,11 @@ const Codemirror = memo((props: CodemirrorProps) => {
       if (cmClosure != null) {
         cmClosure.destroy()
         cmClosure = null
-        // TODO: auto save
-        // cancelTimeoutCache()
       } else {
         isDestroy = true
       }
     }
-  }, [parentRef])
+  }, [parentRef, props.source])
 
   return <div ref={parentRef} className={clsx("flex items-stretch min-w-0", props.className)} />
 })

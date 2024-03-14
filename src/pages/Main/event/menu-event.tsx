@@ -1,11 +1,11 @@
 import { useMitt } from "@/hooks/useMitt"
-import { fromSource, intoSource } from "@/lib/fs/model"
+import { fromSource } from "@/lib/fs/model"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
 import { LanguageMode } from "@/lib/ipc"
 import { defaultLanguageAtom } from "@/store/setting/setup"
 import { activedSourceAtom, createSourceAtom, sourceAtom } from "@/store/source"
 import { Source, SourceStore } from "@/store/source/model"
-import { dialog, path } from "@tauri-apps/api"
+import { dialog } from "@tauri-apps/api"
 import { useAtomValue, useSetAtom } from "jotai"
 import { LocalSourceMetadata, getSourceMetaAtom, setSourceMetaAtom } from "@/store/source/local"
 import { crc16 } from "crc"
@@ -18,9 +18,7 @@ import { zip } from "ramda"
  * @param target
  */
 async function saveFile(source: Source, getSaveTarget?: (id: string) => string | undefined) {
-  //TODO: read default path from local
   //TODO: set default ext and list extensions
-  //TODO: save and saveAs are different
 
   let file = null
   if (getSaveTarget) {
@@ -67,8 +65,7 @@ async function openFile(targetStore: SourceStore, setMetadata?: (id: string, dat
   targetStore.doc.transact(() => {
     files = files as string[]
     for (let [filepath, problem] of zip(files, problems)) {
-      const [source] = targetStore.create()
-      intoSource(problem, source)
+      const [source] = targetStore.createFromStatic(problem)
       if(setMetadata){
         setMetadata(source.id, {
           crc16: crc16(source.source.toString()),

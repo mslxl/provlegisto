@@ -8,11 +8,8 @@ import MainEventRegister from "./event"
 import { useAtom, useAtomValue } from "jotai"
 import { primaryPanelShowAtom, statusBarShowAtom } from "@/store/ui"
 import { useZoom } from "@/hooks/useZoom"
-import { hostnameAtom, setupDeviceAtom } from "@/store/setting/setup"
-import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { activedSourceAtom } from "@/store/source"
-import * as log from "tauri-plugin-log-api"
 
 export default function Main() {
   useZoom()

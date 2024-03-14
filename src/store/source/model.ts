@@ -5,6 +5,7 @@ import { atom } from "jotai"
 import { map } from "ramda"
 import { useEffect, useState } from "react"
 import { Doc, Text, Array, Map } from "yjs"
+import { StaticSourceData, intoSource } from "@/lib/fs/model"
 
 export const rootDocument = atom(new Doc())
 
@@ -199,6 +200,11 @@ export class SourceStore {
     let store = new Source(subDoc)
     this.list.insert(0, [subDoc.id])
     return [store, subDoc.id]
+  }
+  createFromStatic(data: StaticSourceData): [Source, string]{
+    const [src, id] = this.create()
+    intoSource(data, src)
+    return [src, id]
   }
   get(id: string): Source | undefined {
     const map = this.doc.getMap()

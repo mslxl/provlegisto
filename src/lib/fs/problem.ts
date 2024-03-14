@@ -1,10 +1,10 @@
-import { dialog, fs, path } from "@tauri-apps/api"
+import { fs, path } from "@tauri-apps/api"
 import { LanguageMode, availableInternalChecker } from "../ipc"
 import * as log from "tauri-plugin-log-api"
 import { ProblemHeader, problemHeader } from "../parse/problem"
 import { parse, right } from "../parse"
 import { capitalize } from "lodash"
-import { map, __, zip, addIndex, flatten } from "ramda"
+import { map, __, addIndex, flatten } from "ramda"
 import { crc16 } from "crc"
 import { StaticSourceData, StaticTestData } from "./model"
 
@@ -13,7 +13,7 @@ import { StaticSourceData, StaticTestData } from "./model"
  * @param extName
  * @returns
  */
-function getLanguageModeByExt(extName: string): LanguageMode {
+export function getLanguageModeByExt(extName: string): LanguageMode {
   let e = extName.toLowerCase()
   if (e == "c" || e == "cpp") return LanguageMode.CXX
   else if (e == "py") return LanguageMode.PY
@@ -21,7 +21,7 @@ function getLanguageModeByExt(extName: string): LanguageMode {
   return LanguageMode.UNKNOW
 }
 
-function getExtByLanguageMode(language: LanguageMode): string {
+export function getExtByLanguageMode(language: LanguageMode): string {
   switch (language) {
     case LanguageMode.CXX:
       return "cpp"

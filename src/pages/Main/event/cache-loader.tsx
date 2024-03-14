@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import cache from "@/lib/fs/cache"
 import useReadAtom from "@/hooks/useReadAtom"
 import { sourceAtom } from "@/store/source"
@@ -14,15 +14,18 @@ const alreadyLoadedAtom = atom(false)
 
 export default function CacheLoader() {
   const [alreadyLoaded, setAlreadyLoaded] = useAtom(alreadyLoadedAtom)
+  const currentLoaded = useRef(false)
   const readSourceStore = useReadAtom(sourceAtom)
   useEffect(() => {
     // make sure it only be execuate once
-    if (!alreadyLoaded) {
+    if (!alreadyLoaded && !currentLoaded.current) {
       setAlreadyLoaded(true)
+      currentLoaded.current = true
+      console.log("wtf?")
       const store = readSourceStore()
       cache.loadAll().then((data) => {
         store.doc.transact(() => {
-          forEach((v: StaticSourceData)=>store.createFromStatic(v), data)
+          forEach((v: StaticSourceData)=>store.createFromStatic(v, v.id), data)
         })
       })
     }

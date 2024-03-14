@@ -18,7 +18,7 @@ export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
 export const sourceIdsAtom = createYjsHookAtom<string[], Array<string>, Array<string>>(
   [],
   (ob) => ob,
-  (v) => uniq(v.toArray()),
+  (v) => v.toArray(),
   (get) => get(sourceAtom).list,
 )
 

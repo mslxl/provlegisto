@@ -8,6 +8,7 @@ export interface StaticTestData {
 }
 
 export interface StaticSourceData {
+  readonly id: string
   readonly name: string | undefined
   readonly url: string | undefined
   readonly contestUrl: string | undefined
@@ -22,6 +23,7 @@ export interface StaticSourceData {
 
 export function fromSource(source: Source): StaticSourceData {
   return {
+    id: source.id,
     name: source.name.toString(),
     url: source.url,
     contestUrl: source.contestUrl,
@@ -47,8 +49,11 @@ export function fromSource(source: Source): StaticSourceData {
 /**
  * Fill Source with StaticSourceData
  * it's recommend to wrap it in a transact
- * @param data 
- * @param source 
+ * 
+ * Attation: it would not change the id of source object, 
+ * if you want to specify its id, use store.create plz
+ * @param data
+ * @param source
  */
 export function intoSource(data: StaticSourceData, source: Source) {
   source.url = data.url
@@ -63,12 +68,15 @@ export function intoSource(data: StaticSourceData, source: Source) {
 
   source.deleteTest(0, source.testsLength)
   for (let i = 0; i < data.tests.length; i++) source.pushEmptyTest()
-  map(([ v, index ]) => {
-    const test = v as StaticTestData
-    const sharedCase = source.getTest(index)
-    sharedCase.input.delete(0, sharedCase.input.length)
-    sharedCase.except.delete(0, sharedCase.except.length)
-    sharedCase.input.insert(0, test.input)
-    sharedCase.except.insert(0, test.except)
-  }, zip(data.tests, range(0, data.tests.length)))
+  map(
+    ([v, index]) => {
+      const test = v as StaticTestData
+      const sharedCase = source.getTest(index)
+      sharedCase.input.delete(0, sharedCase.input.length)
+      sharedCase.except.delete(0, sharedCase.except.length)
+      sharedCase.input.insert(0, test.input)
+      sharedCase.except.insert(0, test.except)
+    },
+    zip(data.tests, range(0, data.tests.length)),
+  )
 }

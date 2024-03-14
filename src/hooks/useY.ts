@@ -34,7 +34,8 @@ export function createYjsHookAtom<T, A, V extends AbstractType<any>>(
       return {
         subscribe(observer: { next: (data: T) => void }): { unsubscribe: () => void } {
           const cb = () => {
-            observer.next(dataGet(yjsObserver, atomData))
+            const data = dataGet(yjsObserver, atomData)
+            observer.next(data)
           }
           yjsObserver.observe(cb)
           return {

@@ -7,6 +7,7 @@ import { capitalize } from "lodash"
 import { map, __, flatten, zip, range } from "lodash/fp"
 import { crc16 } from "crc"
 import { StaticSourceData, StaticTestData } from "./model"
+import {v4 as uuid} from 'uuid'
 
 /**
  * get language mode from file extension name
@@ -111,6 +112,7 @@ async function parseSrcFile(filePath: string): Promise<StaticSourceData> {
   const testcases = await readTestcases(dirName, basename)
 
   let result: StaticSourceData = {
+    id: uuid(), // open from file, so it should be a new session
     name: title,
     url: header.url,
     contestUrl: header.contest,

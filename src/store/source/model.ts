@@ -82,7 +82,7 @@ export class Source {
   }
 
   get id(): string {
-    return this.store.doc.guid
+    return this.store.id
   }
 
   get name(): Text {
@@ -195,14 +195,14 @@ export class SourceStore {
   get list(): Array<string> {
     return this.doc.getArray("source/list")
   }
-  create(): [Source, string] {
-    let subDoc = new YjsNS(this.doc, this.doc.guid)
+  create(id: string = uuid() ): [Source, string] {
+    let subDoc = new YjsNS(this.doc, id)
     let store = new Source(subDoc)
     this.list.insert(0, [subDoc.id])
     return [store, subDoc.id]
   }
-  createFromStatic(data: StaticSourceData): [Source, string]{
-    const [src, id] = this.create()
+  createFromStatic(data: StaticSourceData, specifyId: string = uuid()): [Source, string]{
+    const [src, id] = this.create(specifyId)
     intoSource(data, src)
     return [src, id]
   }

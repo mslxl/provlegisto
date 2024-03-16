@@ -9,6 +9,7 @@ export function createYjsHook<T, V extends AbstractType<any>>(initialValue: T, o
     function observeCallback() {
       setContent(() => updater(observer))
     }
+    observeCallback()
     observer.observe(observeCallback)
     return () => observer.unobserve(observeCallback)
   }, [observer])

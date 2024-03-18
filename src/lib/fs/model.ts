@@ -49,21 +49,24 @@ export function fromSource(source: Source): StaticSourceData {
 /**
  * Fill Source with StaticSourceData
  * it's recommend to wrap it in a transact
- * 
- * Attation: it would not change the id of source object, 
+ *
+ * Attation: it would not change the id of source object,
  * if you want to specify its id, use store.create plz
- * @param data
- * @param source
  */
-export function intoSource(data: StaticSourceData, source: Source) {
+export function intoSource(
+  data: StaticSourceData,
+  source: Source,
+  defaultTimeLimit: number = 5000,
+  defaultMemoryLimit: number = 512 * 1024,
+) {
   source.url = data.url
   source.contestUrl = data.contestUrl
   source.private = data.private
   source.language = data.language as LanguageMode
   source.source.delete(0, source.source.length)
   source.source.insert(0, data.source)
-  source.timelimit = data.timelimit ?? 5000 // TODO: set default value by config
-  source.memorylimit = data.memorylimit ?? 128 // TODO: set default value by config
+  source.timelimit = data.timelimit ?? defaultTimeLimit
+  source.memorylimit = data.memorylimit ?? defaultMemoryLimit
   source.checker = data.checker ?? "wcmp"
 
   source.deleteTest(0, source.testsLength)

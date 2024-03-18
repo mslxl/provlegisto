@@ -73,10 +73,11 @@ function RunnerContent(props: RunnerContent) {
 
   const testsComponent = tests.map((test, index) => (
     <SingleRunner
+    name={`# ${index + 1}`}
       key={test.id}
       testcase={test}
       source={props.source}
-      checker={checker ?? "wcmp"} //TODO: use default checker from configuration
+      checker={checker ?? "wcmp"}
       onDelete={() => {
         props.source.deleteTest(index)
       }}

@@ -13,20 +13,19 @@ import clsx from "clsx"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import AdditionMessage from "./addition-msg"
 import * as log from "tauri-plugin-log-api"
-import { Source, Testcase } from "@/store/source/model"
+import { JudgeStatus, Source, Testcase } from "@/store/source/model"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
 import useDebounceBuffer from "@/hooks/useDebounceBuffer"
 type SingleRunnerProps = {
+  name?: string,
   testcase: Testcase
   source: Source
   checker: string
   onDelete: () => void
 }
 
-type JudgeStatus = "AC" | "TLE" | "WA" | "RE" | "PD" | "CE" | "UK" | "INT"
-
 type JudgeStatusStyle = {
-  [Property in JudgeStatus]: string
+  [Property in keyof typeof JudgeStatus]: string
 }
 
 const JudgeStatusBorderStyle: JudgeStatusStyle = {
@@ -38,6 +37,7 @@ const JudgeStatusBorderStyle: JudgeStatusStyle = {
   CE: "border-l-amber-500",
   UK: "border-l-transparent",
   INT: "border-l-violet-600",
+  UKE: "bg-violet-600",
 }
 
 const JudgeStatusTextStyle: JudgeStatusStyle = {
@@ -49,6 +49,7 @@ const JudgeStatusTextStyle: JudgeStatusStyle = {
   CE: "bg-amber-500",
   UK: "bg-slate-600",
   INT: "bg-violet-600",
+  UKE: "bg-violet-600",
 }
 
 export default function SingleRunner(props: SingleRunnerProps) {
@@ -66,9 +67,9 @@ export default function SingleRunner(props: SingleRunnerProps) {
       if (props.testcase.id != taskId && taskId != "all") return
       setRunning(true)
       const testcases = props.testcase
-      testcases.status = "PD"
-      setTestcaseStdErrDebounced(()=>"")
-      setTestcaseStdOutDebounced(()=>"")
+      testcases.status = JudgeStatus.PD
+      setTestcaseStdErrDebounced(() => "")
+      setTestcaseStdOutDebounced(() => "")
       const sourceCode = props.source
 
       const checker = props.checker
@@ -106,10 +107,14 @@ export default function SingleRunner(props: SingleRunnerProps) {
             setTestcaseReportDebounced(() => "")
           }
           setRunning(false)
-          testcases.status = result.type
+          if (JudgeStatus[result.type] != undefined) {
+            testcases.status = JudgeStatus[result.type]
+          } else {
+            testcases.status = JudgeStatus.UKE
+          }
         })
         .catch((e) => {
-          setTestcaseReportDebounced(()=> `Internal Error: ${e.toString()}`)
+          setTestcaseReportDebounced(() => `Internal Error: ${e.toString()}`)
           console.error(e)
           setRunning(false)
         })
@@ -143,20 +148,30 @@ export default function SingleRunner(props: SingleRunnerProps) {
     [props.testcase, props.testcase.id],
   )
 
-  const judgeStatus = props.testcase.useStatus() as JudgeStatus //TODO: 需要约束一下类型，无效值设为默认
+  const judgeStatus = props.testcase.useStatus()
 
   const stdout = props.testcase.useStdout()
   const stderr = props.testcase.useStderr()
   const report = props.testcase.useReport()
 
   return (
-    <AccordionItem value={props.testcase.id} className={clsx("border-l-4", JudgeStatusBorderStyle[judgeStatus])}>
+    <AccordionItem
+      value={props.testcase.id}
+      className={clsx("border-l-4", JudgeStatusBorderStyle[JudgeStatus[judgeStatus] as keyof typeof JudgeStatus])}
+    >
       <AccordionTrigger className="px-1 py-1" asChild>
         <div className="flex">
           <ChevronDown className="w-4 h-4 shrink-0 transition-transform duration-200" />
-          <span className="flex-1"></span>
+          <span className="flex-1">{props.name}</span>
           <h3 className="text-sm whitespace-nowrap">
-            <Badge className={clsx("mx-2 text-white", JudgeStatusTextStyle[judgeStatus])}>{judgeStatus}</Badge>
+            <Badge
+              className={clsx(
+                "mx-2 text-white",
+                JudgeStatusTextStyle[JudgeStatus[judgeStatus] as keyof typeof JudgeStatus],
+              )}
+            >
+              {JudgeStatus[judgeStatus]}
+            </Badge>
           </h3>
           <div className="flex items-center gap-2">
             <Button

@@ -9,6 +9,18 @@ import { StaticSourceData, intoSource } from "@/lib/fs/model"
 
 export const rootDocument = atom(new Doc())
 
+export enum JudgeStatus {
+  AC,
+  TLE,
+  WA,
+  RE,
+  PD,
+  CE,
+  UK,
+  UKE,
+  INT
+}
+
 /**
  * Testcase access helper
  */
@@ -46,14 +58,19 @@ export class Testcase {
   useStdout(): string {
     return createYjsHook(this.map.get("stdout"), this.map, (v) => v.get("stdout"))
   }
-  get status(): string {
-    return this.map.get("status")
+  get status(): JudgeStatus {
+    let value = this.map.get("status")
+    if(value != undefined && JudgeStatus[value] != undefined){
+      return value
+    }else {
+      return JudgeStatus.UK
+    }
   }
-  set status(value: string) {
+  set status(value: JudgeStatus) {
     this.map.set("status", value)
   }
-  useStatus(): string {
-    return createYjsHook(this.map.get("status"), this.map, (v) => v.get("status"))
+  useStatus(): JudgeStatus {
+    return createYjsHook(this.status, this.map, () => this.status)
   }
   get stderr(): string {
     return this.map.get("stderr")

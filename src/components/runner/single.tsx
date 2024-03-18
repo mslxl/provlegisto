@@ -15,7 +15,7 @@ import AdditionMessage from "./addition-msg"
 import * as log from "tauri-plugin-log-api"
 import { Source, Testcase } from "@/store/source/model"
 import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
-
+import useDebounceBuffer from "@/hooks/useDebounceBuffer"
 type SingleRunnerProps = {
   testcase: Testcase
   source: Source
@@ -56,6 +56,10 @@ export default function SingleRunner(props: SingleRunnerProps) {
   const stdoutLineCount = useRef(0)
   const getLanguageCompiler = useGetLanguageCompiler()
 
+  const setTestcaseStdOutDebounced = useDebounceBuffer("", 500, (v) => (props.testcase.stdout = v), [props.testcase])
+  const setTestcaseStdErrDebounced = useDebounceBuffer("", 500, (v) => (props.testcase.stderr = v), [props.testcase])
+  const setTestcaseReportDebounced = useDebounceBuffer("", 500, (v) => (props.testcase.report = v), [props.testcase])
+
   useMitt(
     "run",
     async (taskId) => {
@@ -63,8 +67,8 @@ export default function SingleRunner(props: SingleRunnerProps) {
       setRunning(true)
       const testcases = props.testcase
       testcases.status = "PD"
-      testcases.stderr = ""
-      testcases.stdout = ""
+      setTestcaseStdErrDebounced(()=>"")
+      setTestcaseStdOutDebounced(()=>"")
       const sourceCode = props.source
 
       const checker = props.checker
@@ -86,22 +90,26 @@ export default function SingleRunner(props: SingleRunnerProps) {
         },
       )
         .then((result) => {
+          // update UI
           log.info(JSON.stringify(result))
           if (result.type == "WA") {
-            testcases.report = result.report
+            // redirect checker error message to report
+            setTestcaseReportDebounced(() => result.report)
           } else if (result.type == "CE") {
-            let line = ""
+            // redirect compiler error message to report
+            setTestcaseReportDebounced(() => "")
             for (let i of result.data) {
-              line += `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`
+              setTestcaseReportDebounced((v) => v + `${i.ty} ${i.position[0]}:${i.position[1]} ${i.description}\n`)
             }
-            testcases.report = line
           } else {
-            testcases.report = ""
+            // compile succeed, clear report
+            setTestcaseReportDebounced(() => "")
           }
           setRunning(false)
           testcases.status = result.type
         })
         .catch((e) => {
+          setTestcaseReportDebounced(()=> `Internal Error: ${e.toString()}`)
           console.error(e)
           setRunning(false)
         })
@@ -109,30 +117,33 @@ export default function SingleRunner(props: SingleRunnerProps) {
     [props.testcase, props.testcase.id],
   )
 
+  // redirect stdout and stderr
   useTauriEvent(
     props.testcase.id,
     (event) => {
       const payload = event.payload as any
       const testcase = props.testcase
       if (payload.type == "Clear") {
-        testcase.stdout = ""
+        // clear stdout
+        setTestcaseStdOutDebounced(() => "")
+        setTestcaseStdErrDebounced(() => "")
         stdoutLineCount.current = 0
       } else if (payload.type == "AppendStdout") {
-        //TODO: 这里需要防抖，否则(网络)性能会爆炸
         stdoutLineCount.current += 1
-        if (stdoutLineCount.current > 200) {
+
+        if (stdoutLineCount.current == 200) {
           testcase.stdout += "..."
-        } else {
-          testcase.stdout += payload.line
+        } else if (stdoutLineCount.current < 200) {
+          setTestcaseStdOutDebounced((old) => old + payload.line)
         }
       } else if (payload.type == "AppendStderr") {
-        //TODO: 这里需要防抖，否则(网络)性能会爆炸
-        testcase.stderr += payload.line
+        setTestcaseStdErrDebounced((old) => old + payload.line)
       }
     },
     [props.testcase, props.testcase.id],
   )
-  const judgeStatus = props.testcase.useStatus() as JudgeStatus  //TODO: 需要约束一下类型，无效值设为默认
+
+  const judgeStatus = props.testcase.useStatus() as JudgeStatus //TODO: 需要约束一下类型，无效值设为默认
 
   const stdout = props.testcase.useStdout()
   const stderr = props.testcase.useStderr()

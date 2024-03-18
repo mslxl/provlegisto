@@ -4,6 +4,9 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { isEmpty } from "lodash/fp"
 import { VscClose, VscFile } from "react-icons/vsc"
 import SessionContextMenu from "./SessionContextMenu"
+import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
+
+import * as log from 'tauri-plugin-log-api'
 
 interface FileItemProps {
   id: string
@@ -40,18 +43,35 @@ export default function SessionPanel(props: SessionPanelProps) {
   const sourceIds = useAtomValue(sourceIdsAtom)
   const [activedSourceId, setActivedSourceId] = useAtom(activedSourceIdAtom)
   const removeSource = useSetAtom(deleteSourceAtom)
+  const sourceStore = useAtomValue(sourceAtom)
+
+  const [dialogChangeLanguage, showChangeLanguageDialog] = useChangeLanguageDialog()
+
+
+  async function changeLanguage(id: string){
+    const src = sourceStore.get(id)
+    if(!src) return
+    const newLanguage = await showChangeLanguageDialog(src.language)
+    if(newLanguage){
+      log.info(`change lang of ${id} to ${newLanguage}`)
+      src.language = newLanguage
+    }
+  }
 
   const filesList = sourceIds.map((v) => (
     <li key={v}>
-      <SessionContextMenu id={v}>
+      <SessionContextMenu id={v} onChangeLanguage={changeLanguage}>
         <FileItem id={v} onClick={setActivedSourceId} actived={activedSourceId == v} onRemove={removeSource} />
       </SessionContextMenu>
     </li>
   ))
 
   return (
-    <div className={clsx(props.className, "h-full select-none flex flex-col min-h-0 min-w-0")}>
-      <ul className="overflow-auto divide-transparent">{filesList}</ul>
-    </div>
+    <>
+      {dialogChangeLanguage}
+      <div className={clsx(props.className, "h-full select-none flex flex-col min-h-0 min-w-0")}>
+        <ul className="overflow-auto divide-transparent">{filesList}</ul>
+      </div>
+    </>
   )
 }

@@ -11,21 +11,23 @@ import { useZoom } from "@/hooks/useZoom"
 import { motion } from "framer-motion"
 import { activedSourceAtom } from "@/store/source"
 import SessionPanel from "@/components/session"
+import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
+import { isCurrentDeviceSetupAtom } from "@/store/setting/setup"
 
 export default function Main() {
   useZoom()
-  // const hostname = useAtomValue(hostnameAtom)
-  // const setupHostname = useAtomValue(setupDeviceAtom)
-  // const navgiate = useNavigate()
+  const navgiate = useNavigate()
   const [activePrimaryPanel] = useAtom(primaryPanelShowAtom)
   const [showStatusBar] = useAtom(statusBarShowAtom)
 
-  // useEffect(() => {
-  //   log.info(`hostname: ${hostname}`)
-  //   log.info(`setupHostname: ${setupHostname}`)
-  //   if (setupHostname != hostname) navgiate("/setup")
-  // }, [hostname, setupHostname])
+  const isSetup = useAtomValue(isCurrentDeviceSetupAtom)
+  useEffect(()=>{
+    if(!isSetup){
+      navgiate("/setup")
+    }
 
+  }, [isSetup])
   const activedSource = useAtomValue(activedSourceAtom)
 
   const editor = activedSource ? (

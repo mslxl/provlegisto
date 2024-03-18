@@ -1,7 +1,6 @@
 import { useMitt } from "@/hooks/useMitt"
 import { fromSource } from "@/lib/fs/model"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
-import { LanguageMode } from "@/lib/ipc"
 import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } from "@/store/setting/setup"
 import { activedSourceAtom, createSourceAtom, sourceAtom } from "@/store/source"
 import { Source, SourceStore } from "@/store/source/model"
@@ -90,8 +89,7 @@ export default function MenuEventReceiver() {
     "fileMenu",
     async (event) => {
       if (event == "new") {
-        //TODO: set default language
-        const src = createSource(LanguageMode.CXX, defaultTimeLimit, defaultMemoryLimit)
+        const src = createSource(defaultLanguage, defaultTimeLimit, defaultMemoryLimit)
         src.name.insert(0, "Unamed")
       } else if (event == "open") {
         openFile(sourceStore, setSourceMeta)

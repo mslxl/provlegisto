@@ -2,21 +2,41 @@ import PrefSelect from "@/components/pref/Select"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LanguageMode } from "@/lib/ipc"
-import { availableLanguageListAtom } from "@/store/setting/setup"
+import { availableLanguageListAtom, defaultLanguageAtom } from "@/store/setting/setup"
 import { useAtomValue } from "jotai"
-import { ReactNode, useState } from "react"
+import { ReactNode, useRef, useState } from "react"
 
-export default function useChangeLanguageDialog(value: LanguageMode, onChange:(newValue:LanguageMode)=>void): [ReactNode, () => void, boolean] {
+export default function useChangeLanguageDialog(): [
+  ReactNode,
+  (value: LanguageMode) => Promise<LanguageMode | undefined>,
+] {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const defaultValue = useAtomValue(defaultLanguageAtom)
+  const [currentValue, setCurrentValue] = useState(defaultValue)
   const available = useAtomValue(availableLanguageListAtom)
+  const resolveCallback = useRef<(value: LanguageMode | undefined) => void>()
 
-  function showDialog() {
+  function showDialog(value: LanguageMode): Promise<LanguageMode | undefined> {
+    setCurrentValue(value)
     setDialogOpen(true)
+    return new Promise((resolve) => {
+      resolveCallback.current = resolve
+    })
   }
 
-  function applyChange(v: string){
-    //TODO: narrow type here
-    onChange(v as any)
+  function confirm() {
+    setDialogOpen(false)
+    if (resolveCallback.current) {
+      resolveCallback.current(currentValue)
+    }
+    resolveCallback.current = undefined
+  }
+  function cancel() {
+    setDialogOpen(false)
+    if (resolveCallback.current) {
+      resolveCallback.current(undefined)
+    }
+    resolveCallback.current = undefined
   }
 
   let element = (
@@ -26,15 +46,23 @@ export default function useChangeLanguageDialog(value: LanguageMode, onChange:(n
           <DialogTitle>Change Language</DialogTitle>
         </DialogHeader>
         <div className="grid flex-1 gap-2">
-          <PrefSelect leading="Language" value={value} onChange={applyChange} items={available.state == "hasData" ? available.data : []} />
+          <PrefSelect
+            leading="Language"
+            value={currentValue}
+            onChange={(v) => setCurrentValue(v as LanguageMode)}
+            items={available.state == "hasData" ? available.data : []}
+          />
           <span className="text-end">
-            <Button className="m-2 bg-green-600 hover:bg-green-500" onClick={() => setDialogOpen(false)}>
+            <Button className="m-2 bg-green-600 hover:bg-green-500" onClick={confirm}>
               Ok
+            </Button>
+            <Button className="m-2" onClick={cancel}>
+              Cancel
             </Button>
           </span>
         </div>
       </DialogContent>
     </Dialog>
   )
-  return [element, showDialog, dialogOpen]
+  return [element, showDialog]
 }

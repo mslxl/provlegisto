@@ -9,6 +9,11 @@ import { loadable } from "jotai/utils"
 
 export const hostnameAtom = atom(() => getHostname())
 export const setupDeviceAtom = atomWithSettings("setup", "")
+export const isCurrentDeviceSetupAtom = atom(async(get)=>{
+  const currentHost = await get(hostnameAtom)
+  const setupHost = await get(setupDeviceAtom)
+  return currentHost == setupHost
+})
 
 const internalDefaultLanguageAtom = atomWithSettings("setup.language", LanguageMode.CXX)
 export const defaultLanguageAtom = atom(async (get)=> {
@@ -18,7 +23,7 @@ export const defaultLanguageAtom = atom(async (get)=> {
 
   if(lang == LanguageMode.CXX && cxxEnable) return LanguageMode.CXX
   if(lang == LanguageMode.PY && pyEnable) return LanguageMode.PY
-  return null
+  return LanguageMode.UNKNOW
 }, (_get, set, value: LanguageMode)=>{
   set(internalDefaultLanguageAtom, value)
 })

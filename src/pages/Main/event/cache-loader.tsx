@@ -21,7 +21,6 @@ export default function CacheLoader() {
     if (!alreadyLoaded && !currentLoaded.current) {
       setAlreadyLoaded(true)
       currentLoaded.current = true
-      console.log("wtf?")
       const store = readSourceStore()
       cache.loadAll().then((data) => {
         store.doc.transact(() => {

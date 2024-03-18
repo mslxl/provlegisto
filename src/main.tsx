@@ -5,6 +5,7 @@ import store from "./store"
 import React from "react"
 import ReactDOM from "react-dom/client"
 import Router from "./router"
+import CompetitiveCompanion from "./components/cplistener"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { attachConsole } from "tauri-plugin-log-api"
@@ -26,28 +27,6 @@ async function maskContextMenu() {
   }
 }
 
-function CompetitiveCompanion() {
-  // TODO: re-enable this widget
-  // useCompetitiveCompanion((p) => {
-  //   let title = p.name
-  //   let source: Source = {
-  //     url: p.url,
-  //     contest: p.group,
-  //     code: {
-  //       language: LanguageMode.CXX,
-  //       source: "",
-  //     },
-  //     test: {
-  //       timeLimits: p.timeLimit,
-  //       memoryLimits: p.memoryLimit,
-  //       checker: "wcmp",
-  //       testcases: p.tests,
-  //     },
-  //   }
-  //   addSources([{ title, source }])
-  // })
-  return null
-}
 
 function Root() {
   return (

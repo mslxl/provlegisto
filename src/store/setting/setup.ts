@@ -23,6 +23,9 @@ export const defaultLanguageAtom = atom(async (get)=> {
   set(internalDefaultLanguageAtom, value)
 })
 
+export const defaultTimeLimitsAtom = atomWithSettings("timelimit", 4000)
+export const defaultMemoryLimitsAtom = atomWithSettings("memorylimit", 512 * 1024)
+
 defaultLanguageAtom.debugLabel = "settings.setup.language.export"
 
 export const enableCxxAtom = atomWithSettings("setup.cxx", true)

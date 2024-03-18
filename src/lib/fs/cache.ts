@@ -22,7 +22,7 @@ async function getDataDir() {
  */
 async function getFilePath(id: string): Promise<string> {
   const dir = await getDataDir()
-  const file = await path.join(dir, `${id}.dat`)
+  const file = await path.join(dir, `${id}.src.json`)
   return file
 }
 
@@ -79,7 +79,7 @@ async function loadFile(file: string): Promise<StaticSourceData> {
 async function loadAll(): Promise<StaticSourceData[]> {
   const dir = await getDataDir()
   const files = (await fs.readDir(dir, { recursive: false }))
-    .filter((p) => p.children == null && p.name != null && p.name.endsWith(".dat"))
+    .filter((p) => p.children == null && p.name != null && p.name.endsWith(".src.json"))
     .map((e) => e.path!)
 
   const tasks = files.map(loadFile)

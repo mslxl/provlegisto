@@ -2,7 +2,7 @@ import { useMitt } from "@/hooks/useMitt"
 import { fromSource } from "@/lib/fs/model"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
 import { LanguageMode } from "@/lib/ipc"
-import { defaultLanguageAtom } from "@/store/setting/setup"
+import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } from "@/store/setting/setup"
 import { activedSourceAtom, createSourceAtom, sourceAtom } from "@/store/source"
 import { Source, SourceStore } from "@/store/source/model"
 import { dialog } from "@tauri-apps/api"
@@ -66,10 +66,10 @@ async function openFile(targetStore: SourceStore, setMetadata?: (id: string, dat
     files = files as string[]
     for (let [filepath, problem] of zip(files, problems)) {
       const [source] = targetStore.createFromStatic(problem!)
-      if(setMetadata){
+      if (setMetadata) {
         setMetadata(source.id, {
           crc16: crc16(source.source.toString()),
-          pathname: filepath!
+          pathname: filepath!,
         })
       }
     }
@@ -83,13 +83,16 @@ export default function MenuEventReceiver() {
   const sourceStore = useAtomValue(sourceAtom)
   const getSourceMeta = useSetAtom(getSourceMetaAtom)
   const setSourceMeta = useSetAtom(setSourceMetaAtom)
+  const defaultTimeLimit = useAtomValue(defaultTimeLimitsAtom)
+  const defaultMemoryLimit = useAtomValue(defaultMemoryLimitsAtom)
 
   useMitt(
     "fileMenu",
     async (event) => {
       if (event == "new") {
         //TODO: set default language
-        createSource(LanguageMode.CXX)
+        const src = createSource(LanguageMode.CXX, defaultTimeLimit, defaultMemoryLimit)
+        src.name.insert(0, "Unamed")
       } else if (event == "open") {
         openFile(sourceStore, setSourceMeta)
       } else if (event == "save" || event == "saveAs") {
@@ -103,7 +106,6 @@ export default function MenuEventReceiver() {
           dialog.message("No file opened!", { type: "error", title: "Save Error" })
         }
       }
-      // emit('cache', -1)
     },
     [defaultLanguage, createSource, activedSource, sourceStore],
   )

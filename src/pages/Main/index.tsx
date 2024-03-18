@@ -10,6 +10,7 @@ import { primaryPanelShowAtom, statusBarShowAtom } from "@/store/ui"
 import { useZoom } from "@/hooks/useZoom"
 import { motion } from "framer-motion"
 import { activedSourceAtom } from "@/store/source"
+import SessionPanel from "@/components/session"
 
 export default function Main() {
   useZoom()
@@ -45,6 +46,7 @@ export default function Main() {
           })}
         >
           <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} source={activedSource} />
+          <SessionPanel className={clsx({hidden: activePrimaryPanel != 'files'})}/>
         </PrimaryPanel>
         <div className="flex-1 flex flex-col w-0 min-h-0">{editor}</div>
       </div>

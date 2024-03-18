@@ -62,13 +62,6 @@ const Codemirror = memo((props: CodemirrorProps) => {
     [props.source],
   )
 
-  // cache file on source leave
-  useEffect(() => {
-    return () => {
-      cache.debouncedUpdateCache(props.source.id, buildStaticSourceforCache)
-    }
-  }, [props.source])
-
   useEffect(() => {
     if (parentRef.current == null) return
     let isDestroy = false

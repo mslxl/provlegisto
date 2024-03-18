@@ -31,7 +31,7 @@ export default function EditorTabPanel(props: EditorProps) {
 
   return (
     <Suspense>
-      <Codemirror source={props.source} title={title} keymapAtom={keymapExtensionAtom} lspAtom={lspExtensionAtom} />
+      <Codemirror className={props.className} source={props.source} title={title} keymapAtom={keymapExtensionAtom} lspAtom={lspExtensionAtom} />
     </Suspense>
   )
 }

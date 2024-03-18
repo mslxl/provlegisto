@@ -1,11 +1,12 @@
 import { Doc, Array } from "yjs"
 import { SourceStore } from "./model"
 import { atom } from "jotai"
-import { includes, isEmpty } from "lodash/fp"
+import { forEach, includes, isEmpty, range } from "lodash/fp"
 import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
 import { createYjsHookAtom } from "@/hooks/useY"
-import {uniq} from 'lodash/fp'
+import cache from "@/lib/fs/cache"
+import { fromSource } from "@/lib/fs/model"
 
 export const docAtom = atom(new Doc())
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
@@ -64,20 +65,69 @@ export const activedSourceAtom = atom((get) => {
  * Create an empty source object inside doc
  * Return the new source
  */
-export const createSourceAtom = atom(null, (get, _, targetLanguage: LanguageMode) => {
+export const createSourceAtom = atom(
+  null,
+  (get, _, targetLanguage: LanguageMode, defaultTimeLimits: number, defaultMemoryLimits: number) => {
+    const store = get(sourceAtom)
+    const [source, id] = store.create()
+    store.doc.transact(() => {
+      source.language = targetLanguage
+      source.timelimit = defaultTimeLimits
+      source.memorylimit = defaultMemoryLimits
+      log.info(`create new source: ${id}`)
+      log.info(JSON.stringify(get(sourceIdsAtom)))
+    })
+    cache.updateCache(id, () => fromSource(source))
+    return source
+  },
+)
+
+/**
+ * Duplicate an new source object
+ * return null if origin id is not exists
+ */
+export const duplicateSourceAtom = atom(null, (get, set, id: string, newName: (origin: string) => string) => {
   const store = get(sourceAtom)
-  const [source, id] = store.create()
-  source.language = targetLanguage
-  log.info(`create new source: ${id}`)
-  log.info(JSON.stringify(get(sourceIdsAtom)))
-  return source
+  const source = store.get(id)
+  if (source) {
+    const newSource = set(createSourceAtom, source.language, source.timelimit, source.memorylimit)
+    store.doc.transact(() => {
+      if (source.checker) newSource.checker = source.checker
+      newSource.contestUrl = source.contestUrl
+      newSource.url = source.url
+      newSource.name.insert(0, newName(source.name.toString()))
+      newSource.private = source.private
+      newSource.source.insert(0, source.source.toString())
+
+      forEach(
+        (index) => {
+          newSource.pushEmptyTest()
+
+          const srcTest = source.getTest(index)
+          const dstTest = newSource.getTest(index)
+
+          dstTest.input.insert(0, srcTest.input.toString())
+          dstTest.except.insert(0, srcTest.except.toString())
+        },
+        range(0, source.testsLength ?? 0),
+      )
+    })
+
+    cache.updateCache(newSource.id, () => fromSource(newSource))
+    return newSource
+  } else {
+    return null
+  }
 })
 
 /**
- * Delete an source by id
+ * Delete an source by id and remove its cach
  * Do noting if it not exists
  */
 export const deleteSourceAtom = atom(null, (get, _, id: string) => {
   const store = get(sourceAtom)
-  store.delete(id)
+  if (store.get(id)) {
+    cache.dropCache(id)
+    store.delete(id)
+  }
 })

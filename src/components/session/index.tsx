@@ -1,12 +1,16 @@
-import { activedSourceIdAtom, deleteSourceAtom, sourceAtom, sourceIdsAtom } from "@/store/source"
+import { activedSourceIdAtom, createSourceAtom, deleteSourceAtom, sourceAtom, sourceIdsAtom } from "@/store/source"
 import clsx from "clsx"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { isEmpty } from "lodash/fp"
-import { VscClose, VscFile } from "react-icons/vsc"
+import { VscClose, VscFile, VscNewFile } from "react-icons/vsc"
 import SessionContextMenu from "./SessionContextMenu"
 import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
 
-import * as log from 'tauri-plugin-log-api'
+import * as log from "tauri-plugin-log-api"
+import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } from "@/store/setting/setup"
+import { useHoverDirty } from "react-use"
+import { useRef } from "react"
+import { useRenameDialog } from "@/hooks/useRenameDialog"
 
 interface FileItemProps {
   id: string
@@ -28,7 +32,7 @@ function FileItem(props: FileItemProps) {
       onClick={() => props.onClick(props.id)}
     >
       <VscFile className="mx-1" />
-      <span className="flex-1">{nameDisplay}</span>
+      <span className="flex-1 truncate">{nameDisplay}</span>
       <button onClick={() => props.onRemove(props.id)}>
         <VscClose></VscClose>
       </button>
@@ -44,33 +48,66 @@ export default function SessionPanel(props: SessionPanelProps) {
   const [activedSourceId, setActivedSourceId] = useAtom(activedSourceIdAtom)
   const removeSource = useSetAtom(deleteSourceAtom)
   const sourceStore = useAtomValue(sourceAtom)
+  const createSource = useSetAtom(createSourceAtom)
+  const defaultLanguage = useAtomValue(defaultLanguageAtom)
+  const defaultTimeLimit = useAtomValue(defaultTimeLimitsAtom)
+  const defaultMemoryLimit = useAtomValue(defaultMemoryLimitsAtom)
 
-  const [dialogChangeLanguage, showChangeLanguageDialog] = useChangeLanguageDialog()
+  const [dialogChangeLanguageElem, showChangeLanguageDialog] = useChangeLanguageDialog()
+  const [renameElem, showRenameDialog] = useRenameDialog()
 
+  const sessionPanelRef = useRef<HTMLDivElement>(null)
+  const isHover = useHoverDirty(sessionPanelRef)
 
-  async function changeLanguage(id: string){
+  async function changeLanguage(id: string) {
     const src = sourceStore.get(id)
-    if(!src) return
+    if (!src) return
     const newLanguage = await showChangeLanguageDialog(src.language)
-    if(newLanguage){
+    if (newLanguage) {
       log.info(`change lang of ${id} to ${newLanguage}`)
       src.language = newLanguage
+    }
+  }
+  async function renameSource(id: string) {
+    const src = sourceStore.get(id)
+    if (!src) return
+    const newName = await showRenameDialog(src.name.toString())
+    if (newName) {
+      log.info(`rename ${id} to ${newName}`)
+      src.name.delete(0, src.name.length)
+      src.name.insert(0, newName)
     }
   }
 
   const filesList = sourceIds.map((v) => (
     <li key={v}>
-      <SessionContextMenu id={v} onChangeLanguage={changeLanguage}>
+      <SessionContextMenu id={v} onChangeLanguage={changeLanguage} onRename={renameSource}>
         <FileItem id={v} onClick={setActivedSourceId} actived={activedSourceId == v} onRemove={removeSource} />
       </SessionContextMenu>
     </li>
   ))
 
+  function newFile() {
+    createSource(defaultLanguage, defaultTimeLimit, defaultMemoryLimit)
+  }
+
   return (
     <>
-      {dialogChangeLanguage}
-      <div className={clsx(props.className, "h-full select-none flex flex-col min-h-0 min-w-0")}>
-        <ul className="overflow-auto divide-transparent">{filesList}</ul>
+      {dialogChangeLanguageElem}
+      {renameElem}
+      <div className={clsx(props.className, "h-full select-none flex flex-col min-h-0 min-w-0")} ref={sessionPanelRef}>
+        <ul className="overflow-auto divide-transparent">
+          <li className="sticky top-0 bg-accent">
+            <div className="shadow-sm flex pl-2">
+              <span className="truncate font-semibold">FILES</span>
+              <span className="flex-1"></span>
+              <button className={clsx("p-1 hover:bg-neutral-200", { hidden: !isHover })} onClick={newFile}>
+                <VscNewFile />
+              </button>
+            </div>
+          </li>
+          {filesList}
+        </ul>
       </div>
     </>
   )

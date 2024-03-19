@@ -89,8 +89,7 @@ export default function MenuEventReceiver() {
     "fileMenu",
     async (event) => {
       if (event == "new") {
-        const src = createSource(defaultLanguage, defaultTimeLimit, defaultMemoryLimit)
-        src.name.insert(0, "Unamed")
+        createSource(defaultLanguage, defaultTimeLimit, defaultMemoryLimit)
       } else if (event == "open") {
         openFile(sourceStore, setSourceMeta)
       } else if (event == "save" || event == "saveAs") {

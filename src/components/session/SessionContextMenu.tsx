@@ -12,6 +12,7 @@ import { deleteSourceAtom, duplicateSourceAtom } from "@/store/source"
 interface SessionContextMenuProps {
   id: string
   children: ReactNode
+  onRename: (id: string) => void
   onChangeLanguage: (id: string) => void
 }
 export default function SessionContextMenu(props: SessionContextMenuProps) {
@@ -27,9 +28,9 @@ export default function SessionContextMenu(props: SessionContextMenuProps) {
         <ContextMenuItem onClick={() => duplicateSource(props.id, (name) => `${name} - Copy`)}>
           Duplicate
         </ContextMenuItem>
-        <ContextMenuItem onClick={() => props.onChangeLanguage(props.id)}>
-          Change Language
-        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => props.onRename(props.id)}>Rename</ContextMenuItem>
+        <ContextMenuItem onClick={() => props.onChangeLanguage(props.id)}>Change Language</ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem>Reopen with...</ContextMenuItem>
       </ContextMenuContent>

@@ -7,6 +7,7 @@ import { LanguageMode } from "@/lib/ipc"
 import { createYjsHookAtom } from "@/hooks/useY"
 import cache from "@/lib/fs/cache"
 import { fromSource } from "@/lib/fs/model"
+import generateRandomName from "@/lib/names"
 
 export const docAtom = atom(new Doc())
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
@@ -67,13 +68,19 @@ export const activedSourceAtom = atom((get) => {
  */
 export const createSourceAtom = atom(
   null,
-  (get, _, targetLanguage: LanguageMode, defaultTimeLimits: number, defaultMemoryLimits: number) => {
+  (get, _, targetLanguage: LanguageMode, defaultTimeLimits: number, defaultMemoryLimits: number, name?: string) => {
     const store = get(sourceAtom)
     const [source, id] = store.create()
     store.doc.transact(() => {
       source.language = targetLanguage
       source.timelimit = defaultTimeLimits
       source.memorylimit = defaultMemoryLimits
+      if(name){
+        source.name.insert(0, name)
+      }else{
+        const name = generateRandomName("'s code")
+        source.name.insert(0, name)
+      }
       log.info(`create new source: ${id}`)
       log.info(JSON.stringify(get(sourceIdsAtom)))
     })

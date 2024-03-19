@@ -65,6 +65,10 @@ export function intoSource(
   source.language = data.language as LanguageMode
   source.source.delete(0, source.source.length)
   source.source.insert(0, data.source)
+  if(data.name){
+    source.name.delete(0, source.name.length)
+    source.name.insert(0, data.name)
+  }
   source.timelimit = data.timelimit ?? defaultTimeLimit
   source.memorylimit = data.memorylimit ?? defaultMemoryLimit
   source.checker = data.checker ?? "wcmp"

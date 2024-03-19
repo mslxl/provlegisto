@@ -215,7 +215,7 @@ export class SourceStore {
   create(id: string = uuid() ): [Source, string] {
     let subDoc = new YjsNS(this.doc, id)
     let store = new Source(subDoc)
-    this.list.insert(0, [subDoc.id])
+    this.list.push([subDoc.id])
     return [store, subDoc.id]
   }
   createFromStatic(data: StaticSourceData, specifyId: string = uuid()): [Source, string]{

@@ -1,16 +1,24 @@
-name: "test-on-pr"
-on: [pull_request]
+name: "test-on-pr-issue"
+on:
+  issue_comment:
+    types: [created]
 
 jobs:
   test-tauri:
+    if: github.event.issue.pull_request && (contains(github.event.comment.body, '/test') || contains(github.event.comment.body, '/build'))
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         platform: [macos-latest, ubuntu-20.04, windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
+      - uses: xt0rted/pull-request-comment-branch@v2
+        id: comment-branch
       - uses: actions/checkout@v3
+        if: success()
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
       - name: setup node
         uses: actions/setup-node@v3
         with:
@@ -34,3 +42,15 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        path: src-tauri/target/release/bundle/**/*
+        if-no-files-found: error
+        retention-days: 7
+        compression-level: 9
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}

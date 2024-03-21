@@ -9,8 +9,7 @@ export default function CompetitiveCompanion() {
   const defaultLanguage = useAtomValue(defaultLanguageAtom)
   const createSource = useSetAtom(createSourceAtom)
   useCompetitiveCompanion((p) => {
-    const source = createSource(defaultLanguage ?? LanguageMode.CXX, p.timeLimit, p.memoryLimit) //TODO: narrow its type
-    source.name.insert(0, p.name)
+    const source = createSource(defaultLanguage ?? LanguageMode.CXX, p.timeLimit, p.memoryLimit, p.name) //TODO: narrow its type
     source.url = p.url
     source.contestUrl = p.url
     source.source.insert(0, "") //TODO: source code template

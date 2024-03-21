@@ -11,6 +11,7 @@ import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } f
 import { useHoverDirty } from "react-use"
 import { useRef } from "react"
 import { useRenameDialog } from "@/hooks/useRenameDialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 interface FileItemProps {
   id: string
@@ -31,8 +32,17 @@ function FileItem(props: FileItemProps) {
       })}
       onClick={() => props.onClick(props.id)}
     >
-      <VscFile className="mx-1" />
-      <span className="flex-1 truncate">{nameDisplay}</span>
+            <VscFile className="mx-1" />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex-1 truncate">{nameDisplay}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{nameDisplay}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <button onClick={() => props.onRemove(props.id)}>
         <VscClose></VscClose>
       </button>

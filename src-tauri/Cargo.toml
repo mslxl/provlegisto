@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "A simple IDE for ACMer"
 authors = ["mslxl"]
 license = "agpl"
-repository = "sdufeacm/provlegisto"
+repository = "mslxl/provlegisto"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

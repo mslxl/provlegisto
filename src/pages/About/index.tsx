@@ -42,7 +42,7 @@ export default function About() {
             </p>
             <p className="text-xs my-2">
               Source:
-              <a className="underline p-1" href="https://github.com/sdufeACM/provlegisto" target="__blank">sdufeACM/provlegisto</a>{" "}
+              <a className="underline p-1" href="https://github.com/mslxl/provlegisto" target="__blank">mslxl/provlegisto</a>{" "}
             </p>
           </div>
         </div>

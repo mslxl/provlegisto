@@ -120,7 +120,7 @@ type Problem = {
 
 export function useCompetitiveCompanion(listener: (data: Problem) => void, deps?: DependencyList | undefined) {
   useEffect(() => {
-    enableCompetitiveCompanion()
+    enableCompetitiveCompanion().catch()
     return () => {
       disableCompetitiveCompanion()
     }

@@ -89,9 +89,6 @@ dependencies:
   '@tauri-apps/api':
     specifier: ^1.5.1
     version: 1.5.1
-  '@types/ws':
-    specifier: ^8.5.10
-    version: 8.5.10
   '@uiw/codemirror-themes-all':
     specifier: ^4.21.21
     version: 4.21.21(@codemirror/language@6.9.2)(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)
@@ -122,21 +119,12 @@ dependencies:
   framer-motion:
     specifier: ^10.16.5
     version: 10.16.5(react-dom@18.2.0)(react@18.2.0)
-  immer:
-    specifier: ^10.0.3
-    version: 10.0.3
   jotai:
     specifier: ^2.5.1
     version: 2.5.1(@types/react@18.2.37)(react@18.2.0)
   jotai-devtools:
     specifier: ^0.7.0
     version: 0.7.0(@emotion/react@11.11.1)(@types/react@18.2.37)(react-dom@18.2.0)(react@18.2.0)(redux@4.2.1)
-  jotai-immer:
-    specifier: ^0.2.0
-    version: 0.2.0(immer@10.0.3)(jotai@2.5.1)(react@18.2.0)
-  jotai-optics:
-    specifier: ^0.3.1
-    version: 0.3.1(jotai@2.5.1)(optics-ts@2.4.1)
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
@@ -149,9 +137,6 @@ dependencies:
   normalize.css:
     specifier: ^8.0.1
     version: 8.0.1
-  optics-ts:
-    specifier: ^2.4.1
-    version: 2.4.1
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -197,9 +182,18 @@ dependencies:
   thememirror:
     specifier: ^2.0.1
     version: 2.0.1(@codemirror/language@6.9.2)(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)
+  uuid:
+    specifier: ^9.0.1
+    version: 9.0.1
   vscode-languageserver-protocol:
     specifier: ^3.17.5
     version: 3.17.5
+  y-codemirror.next:
+    specifier: ^0.3.2
+    version: 0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.14)
+  yjs:
+    specifier: ^13.6.14
+    version: 13.6.14
   zod:
     specifier: ^3.22.4
     version: 3.22.4
@@ -220,6 +214,12 @@ devDependencies:
   '@types/react-dom':
     specifier: ^18.2.15
     version: 18.2.15
+  '@types/uuid':
+    specifier: ^9.0.8
+    version: 9.0.8
+  '@types/ws':
+    specifier: ^8.5.10
+    version: 8.5.10
   '@vitejs/plugin-react':
     specifier: ^4.2.0
     version: 4.2.0(vite@4.5.2)
@@ -2416,11 +2416,15 @@ packages:
     resolution: {integrity: sha512-86XLCVEmWagiUEbr2AjSbeY4qHN9jMm3pgM3PuBYfLIbT0MpDSnA3GA/4W7KoH/C/eeK77kNaeIxZzjhKYIBgw==}
     dev: false
 
+  /@types/uuid@9.0.8:
+    resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
+    dev: true
+
   /@types/ws@8.5.10:
     resolution: {integrity: sha512-vmQSUcfalpIq0R9q7uTo2lXs6eGIpt9wtnLdMv9LVpIjCA/+ufZRozlVoVelIYixx1ugCBKDhn89vnsEGOCx9A==}
     dependencies:
       '@types/node': 20.9.1
-    dev: false
+    dev: true
 
   /@uiw/codemirror-theme-abcdef@4.21.21(@codemirror/language@6.9.2)(@codemirror/state@6.3.1)(@codemirror/view@6.22.0):
     resolution: {integrity: sha512-5gHVFyrcOC6ejQeNz7eoSXq46ODYnjFHX8VIzs5Z8oqVqOKIkquI6jL3frP2jN2wdm9EEwa1w4W1zX4nyag9Tg==}
@@ -3816,10 +3820,6 @@ packages:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
     dev: false
 
-  /immer@10.0.3:
-    resolution: {integrity: sha512-pwupu3eWfouuaowscykeckFmVTpqbzW+rXFCX8rQLkZzM9ftBmU/++Ra+o+L27mz03zJTlyV4UUr+fdKNffo4A==}
-    dev: false
-
   /immutable@4.3.4:
     resolution: {integrity: sha512-fsXeu4J4i6WNWSikpI88v/PcVflZz+6kMhUfIwc5SY+poQRPnaf5V7qds6SUyUN3cVxEzuCab7QIoLOQ+DQ1wA==}
 
@@ -3957,6 +3957,10 @@ packages:
       ws: 7.5.9
     dev: false
 
+  /isomorphic.js@0.2.5:
+    resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
+    dev: false
+
   /javascript-stringify@2.1.0:
     resolution: {integrity: sha512-JVAfqNPTvNq3sB/VHQJAFxN/sPgKnsKrCwyRt15zwNCdrMMJDdcEOdubuy+DuJYYdm0ox1J4uzEuYKkN+9yhVg==}
     dev: false
@@ -3987,28 +3991,6 @@ packages:
       - '@types/react'
       - react-dom
       - redux
-    dev: false
-
-  /jotai-immer@0.2.0(immer@10.0.3)(jotai@2.5.1)(react@18.2.0):
-    resolution: {integrity: sha512-hahK8EPiROS9RoNWmX/Z8rY9WkAijspX4BZ1O7umpcwI4kPNkbcCpu/PhiQ8FMcpEcF6KmbpbMpSSj/GFmo8NA==}
-    peerDependencies:
-      immer: '*'
-      jotai: '>=1.11.0'
-      react: '>=17.0.0'
-    dependencies:
-      immer: 10.0.3
-      jotai: 2.5.1(@types/react@18.2.37)(react@18.2.0)
-      react: 18.2.0
-    dev: false
-
-  /jotai-optics@0.3.1(jotai@2.5.1)(optics-ts@2.4.1):
-    resolution: {integrity: sha512-KibUx9IneM2hGWGIYGs/v0KCxU985lg7W2c6dt5RodJCB2XPbmok8rkkLmdVk9+fKsn2shkPMi+AG8XzHgB3+w==}
-    peerDependencies:
-      jotai: '>=1.11.0'
-      optics-ts: '*'
-    dependencies:
-      jotai: 2.5.1(@types/react@18.2.37)(react@18.2.0)
-      optics-ts: 2.4.1
     dev: false
 
   /jotai@2.5.1(@types/react@18.2.37)(react@18.2.0):
@@ -4080,6 +4062,14 @@ packages:
   /kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
+    dev: false
+
+  /lib0@0.2.91:
+    resolution: {integrity: sha512-LRcTp8RmdHexL8olb7qErdROnJ2L6Js5Am99WQo0hiTRDWtk6vyUJJjTB6I/RcW8jwNQshM3NqH598DdhSOajA==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      isomorphic.js: 0.2.5
     dev: false
 
   /lilconfig@2.1.0:
@@ -4370,10 +4360,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       mimic-fn: 4.0.0
-    dev: false
-
-  /optics-ts@2.4.1:
-    resolution: {integrity: sha512-HaYzMHvC80r7U/LqAd4hQyopDezC60PO2qF5GuIwALut2cl5rK1VWHsqTp0oqoJJWjiv6uXKqsO+Q2OO0C3MmQ==}
     dev: false
 
   /ora@6.3.1:
@@ -5428,6 +5414,11 @@ packages:
       which-typed-array: 1.1.13
     dev: false
 
+  /uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    hasBin: true
+    dev: false
+
   /vite-node@0.34.6(@types/node@20.9.1)(sass@1.69.5):
     resolution: {integrity: sha512-nlBMJ9x6n7/Amaz6F3zJ97EBwR2FkzhBRxF5e+jE6LA3yi6Wtc2lyTij1OnDMIr34v5g/tVQtsVAzhT0jc5ygA==}
     engines: {node: '>=v14.18.0'}
@@ -5642,6 +5633,19 @@ packages:
         optional: true
     dev: false
 
+  /y-codemirror.next@0.3.2(@codemirror/state@6.3.1)(@codemirror/view@6.22.0)(yjs@13.6.14):
+    resolution: {integrity: sha512-3ksMXoietzNkrgluG9ut+5q4PNHCS6sQ+mHd44hNX1s7TBe4iDgOOIswfY3oLsdamZLAUPr+TnRdYgYuNDs7Qg==}
+    peerDependencies:
+      '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.0.0
+      yjs: ^13.5.6
+    dependencies:
+      '@codemirror/state': 6.3.1
+      '@codemirror/view': 6.22.0
+      lib0: 0.2.91
+      yjs: 13.6.14
+    dev: false
+
   /yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
@@ -5653,6 +5657,13 @@ packages:
   /yaml@2.3.4:
     resolution: {integrity: sha512-8aAvwVUSHpfEqTQ4w/KMlf3HcRdt50E5ODIQJBw1fQ5RL34xabzxtUlzTXVqc4rkZsPbvrXKWnABCD7kWSmocA==}
     engines: {node: '>= 14'}
+
+  /yjs@13.6.14:
+    resolution: {integrity: sha512-D+7KcUr0j+vBCUSKXXEWfA+bG4UQBviAwP3gYBhkstkgwy5+8diOPMx0iqLIOxNo/HxaREUimZRxqHGAHCL2BQ==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    dependencies:
+      lib0: 0.2.91
+    dev: false
 
   /yocto-queue@1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}

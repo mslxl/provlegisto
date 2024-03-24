@@ -5,6 +5,7 @@
     "dbaeumer.vscode-eslint",
     "bradlc.vscode-tailwindcss",
     "styled-components.vscode-styled-components",
-    "tauri-apps.tauri-vscode"
+    "tauri-apps.tauri-vscode",
+    "gruntfuggly.todo-tree"
   ]
 }

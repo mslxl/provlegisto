@@ -1,43 +1,45 @@
 import PrimarySide from "./sidebar"
-import Tabbar from "./tabbar"
 import clsx from "clsx"
 import PrimaryPanel from "./sidebar-panel"
 import StatusBar from "@/components/statusbar"
-import EditorTabPanel from "./editor-tabpane"
+import EditorTabPanel from "./editor"
 import Runner from "@/components/runner"
 import MainEventRegister from "./event"
 import { useAtom, useAtomValue } from "jotai"
 import { primaryPanelShowAtom, statusBarShowAtom } from "@/store/ui"
 import { useZoom } from "@/hooks/useZoom"
-import { sourceIndexAtomAtoms, sourceIndexAtoms } from "@/store/source"
-import { hostnameAtom, setupDeviceAtom } from "@/store/setting/setup"
+import { motion } from "framer-motion"
+import { activedSourceAtom } from "@/store/source"
+import SessionPanel from "@/components/session"
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
-import { zip } from "lodash"
-import { motion } from "framer-motion"
-import * as log from "tauri-plugin-log-api"
+import { isCurrentDeviceSetupAtom } from "@/store/setting/setup"
 
 export default function Main() {
   useZoom()
-  const hostname = useAtomValue(hostnameAtom)
-  const setupHostname = useAtomValue(setupDeviceAtom)
   const navgiate = useNavigate()
   const [activePrimaryPanel] = useAtom(primaryPanelShowAtom)
   const [showStatusBar] = useAtom(statusBarShowAtom)
 
-  const sourceIndexContent = useAtomValue(sourceIndexAtoms)
-  const sourceIndexAtom = useAtomValue(sourceIndexAtomAtoms)
-  const sourceIndex = zip(sourceIndexContent, sourceIndexAtom)
+  const isSetup = useAtomValue(isCurrentDeviceSetupAtom)
+  useEffect(()=>{
+    if(!isSetup){
+      navgiate("/setup")
+    }
 
-  useEffect(() => {
-    log.info(`hostname: ${hostname}`)
-    log.info(`setupHostname: ${setupHostname}`)
-    if (setupHostname != hostname) navgiate("/setup")
-  }, [hostname, setupHostname])
+  }, [isSetup])
+  const activedSource = useAtomValue(activedSourceAtom)
+
+  const editor = activedSource ? (
+    <EditorTabPanel className="box-border flex-1 min-h-0" source={activedSource} />
+  ) : (
+    //TODO: make it beautiful
+    <div className="box-border flex-1 min-h-0">No File opened</div>
+  )
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full flex flex-col items-stretch">
-      <MainEventRegister/>
+      <MainEventRegister />
       <div className="flex-1 flex flex-row min-h-0">
         <PrimarySide />
         <PrimaryPanel
@@ -45,14 +47,10 @@ export default function Main() {
             hidden: activePrimaryPanel === null,
           })}
         >
-          <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} />
+          <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} source={activedSource} />
+          <SessionPanel className={clsx({hidden: activePrimaryPanel != 'files'})}/>
         </PrimaryPanel>
-        <div className="flex-1 flex flex-col w-0 min-h-0">
-          <Tabbar className="h-8" />
-          {sourceIndex.map(([content, atom]) => (
-            <EditorTabPanel key={content!.id} className={clsx("box-border flex-1 min-h-0")} headerAtom={atom!} />
-          ))}
-        </div>
+        <div className="flex-1 flex flex-col w-0 min-h-0">{editor}</div>
       </div>
       {showStatusBar ? <StatusBar className="h-6 w-full" /> : null}
     </motion.div>

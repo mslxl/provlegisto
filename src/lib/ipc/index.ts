@@ -6,6 +6,7 @@ export * from "./rt"
 export enum LanguageMode {
   CXX = "CXX",
   PY = "PY",
+  UNKNOW = "ERROR"
 }
 
 export const openDevTools = (): Promise<void> => invoke("open_devtools")

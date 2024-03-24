@@ -1,5 +1,5 @@
 import * as Sidebar from "@/components/ui/sidebar"
-import { VscMenu, VscVmRunning, VscSettingsGear, VscOrganization, VscTypeHierarchySub } from "react-icons/vsc"
+import { VscMenu, VscVmRunning, VscSettingsGear, VscOrganization, VscFile } from "react-icons/vsc"
 import { primaryPanelShowAtom } from "@/store/ui"
 import {
   DropdownMenu,
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { emit } from "@/hooks/useMitt"
 import { useAtom } from "jotai"
-import { ReactNode } from "react"
 import { openDevTools } from "@/lib/ipc"
 import { Link, useNavigate } from "react-router-dom"
 import clsx from "clsx"
@@ -29,19 +28,19 @@ export default function PrimarySide() {
 
   const panelBtn = (
     [
-      ["run", <VscVmRunning className="text-2xl my-4" />],
-      ["team", <VscOrganization className="text-2xl my-4 hidden" />],
-      ["version", <VscTypeHierarchySub className="text-2xl my-4 hidden" />],
-    ] as [string, ReactNode][]
-  ).map((item, index) => (
+      ["files", VscFile],
+      ["run", VscVmRunning],
+      ["team", VscOrganization],
+    ] as [string, typeof VscFile][]
+  ).map(([id, Icon], index) => (
     <Sidebar.Button
       key={index}
       className={clsx({
-        "text-neutral-100 border-l-4 border-l-neutral-100": item[0] == panel,
+        "text-neutral-100 border-l-4 border-l-neutral-100": id == panel,
       })}
-      onClick={() => onPanelButtonClick(item[0])}
+      onClick={() => onPanelButtonClick(id)}
     >
-      {item[1]}
+      <Icon className="text-2xl my-4"/>
     </Sidebar.Button>
   ))
 

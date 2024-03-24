@@ -1,17 +1,19 @@
+import "normalize.css"
+import "@fontsource/jetbrains-mono"
+import "./styles.scss"
+import store from "./store"
 import React from "react"
 import ReactDOM from "react-dom/client"
-import "normalize.css"
-import "./styles.scss"
-import "@fontsource/jetbrains-mono"
 import Router from "./router"
+import CompetitiveCompanion from "./components/cplistener"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { DevTools } from "jotai-devtools"
 import { attachConsole } from "tauri-plugin-log-api"
 import { loadSettingsStore } from "./store/setting"
-import { LanguageMode, isDebug } from "./lib/ipc"
-import { useCompetitiveCompanion } from "./hooks/useCompetitiveCompanion"
-import { Source, useAddSources } from "./store/source"
+import { isDebug } from "./lib/ipc"
+import { dialog } from "@tauri-apps/api"
+import { Provider } from "jotai"
+import { DevTools } from "jotai-devtools"
 
 async function maskContextMenu() {
   const debug = await isDebug()
@@ -25,35 +27,16 @@ async function maskContextMenu() {
   }
 }
 
-function CompetitiveCompanion() {
-  const addSources = useAddSources()
-  useCompetitiveCompanion((p) => {
-    let title = p.name
-    let source: Source = {
-      url: p.url,
-      contest: p.group,
-      code: {
-        language: LanguageMode.CXX,
-        source: "",
-      },
-      test: {
-        timeLimits: p.timeLimit,
-        memoryLimits: p.memoryLimit,
-        checker: "wcmp",
-        testcases: p.tests,
-      },
-    }
-    addSources([{ title, source }])
-  })
-  return null
-}
 
 function Root() {
   return (
-    <DndProvider backend={HTML5Backend}>
-      <CompetitiveCompanion />
-      <Router />
-    </DndProvider>
+    <Provider store={store}>
+      <DndProvider backend={HTML5Backend}>
+        <CompetitiveCompanion />
+        <Router />
+        <DevTools />
+      </DndProvider>
+    </Provider>
   )
 }
 
@@ -62,10 +45,12 @@ Promise.all([attachConsole(), loadSettingsStore(), maskContextMenu()])
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <React.StrictMode>
         <Root />
-        <DevTools />
       </React.StrictMode>,
     )
   })
   .catch((e: Error) => {
-    document.write(`${e.name}: ${e.message}`)
+    dialog.message(e.message, {
+      title: "Init error",
+      type: "error",
+    })
   })

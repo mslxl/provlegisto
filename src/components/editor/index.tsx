@@ -1,4 +1,4 @@
-import useExtensionCompartment, { generateCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
+import useExtensionCompartment, { useCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
 import { editorThemeExtensionAtom } from "@/store/setting/ui"
 import { Compartment, Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
@@ -6,33 +6,41 @@ import clsx from "clsx"
 import { minimalSetup } from "codemirror"
 import { map } from "lodash"
 import { useEffect, useRef } from "react"
+import { Text, UndoManager } from "yjs"
+// @ts-ignore
+import { yCollab } from "y-codemirror.next"
 
 type EditorProps = {
-  kernel: "codemirror" | "textarea"
   className?: string
-  text?: string
-  onChange?: (text: string) => void
-  editable?: boolean
-}
-function TextareaEditor(props: EditorProps) {
-  return (
-    <div className={clsx(props.className, "m-2 border border-slate-400")}>
-      <textarea
-        value={props.text}
-        className="w-full h-full p-1"
-        onChange={(e) => props.onChange && props.onChange(e.target.value)}
-      ></textarea>
-    </div>
-  )
+  text: Text | string
 }
 
-function CMEditor(props: EditorProps) {
+const cmStyleNoOutline = [
+  EditorView.theme({
+    "&": {
+      outline: "none",
+    },
+    "&.cm-focused": {
+      outline: "none",
+    },
+  }),
+]
+
+/**
+ * Lite editor based codemirror
+ * it will be readonly if the type of text primitive string
+ * @param props
+ * @returns
+ */
+export default function Editor(props: EditorProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const cm = useRef<EditorView | null>(null)
-  const updateCompart = useRef(new Compartment())
 
-  const configurableExtensions = generateCommonConfigurationExtension(cm)
+  // ycollab compartment, used to modify and share text if its type is Text(not primitive)
+  const collabCompartment = new Compartment()
+  const editorCompartment = new Compartment()
 
+  const configurableExtensions = useCommonConfigurationExtension(cm)
   useEffect(() => {
     if (parentRef.current == null) return
 
@@ -40,19 +48,11 @@ function CMEditor(props: EditorProps) {
       extensions: [
         minimalSetup,
         ...map(configurableExtensions, (e: () => Extension) => e()),
-        updateCompart.current.of(EditorView.updateListener.of(() => {})),
-        EditorView.editable.of(props.editable ?? true),
-        [
-          EditorView.theme({
-            "&": {
-              outline: "none",
-            },
-            "&.cm-focused": {
-              outline: "none",
-            },
-          }),
-        ],
+        editorCompartment.of(EditorView.editable.of(false)),
+        collabCompartment.of([]),
+        cmStyleNoOutline,
       ],
+      doc: props.text.toString(),
       parent: parentRef.current,
     })
 
@@ -63,21 +63,12 @@ function CMEditor(props: EditorProps) {
 
   useExtensionCompartment(cm, editorThemeExtensionAtom, (v: any) => v())
 
+  // update text if its type
   useEffect(() => {
-    cm.current?.dispatch({
-      effects: updateCompart.current.reconfigure([
-        EditorView.updateListener.of((update) => {
-          if (!update.docChanged) return
-          let code = update.state.doc.toString()
-          if (code == props.text) return
-          props.onChange && props.onChange(code)
-        }),
-      ]),
-    })
-  }, [props.onChange])
-
-  useEffect(() => {
-    if (cm.current?.state.doc.toString() != props.text) {
+    if (typeof props.text == "string") {
+      cm.current?.dispatch({
+        effects: [editorCompartment.reconfigure(EditorView.editable.of(false)), collabCompartment.reconfigure([])],
+      })
       cm.current?.dispatch({
         changes: [
           {
@@ -87,14 +78,16 @@ function CMEditor(props: EditorProps) {
           },
         ],
       })
+    } else if (props.text instanceof Text) {
+      const undoManager = new UndoManager(props.text)
+      cm.current?.dispatch({
+        effects: [
+          editorCompartment.reconfigure(EditorView.editable.of(true)),
+          collabCompartment.reconfigure([yCollab(props.text, null, { undoManager })]),
+        ],
+      })
     }
   }, [props.text])
 
-  return <div className={clsx(props.className, "border border-slate-400")} ref={parentRef}></div>
-}
-
-export default function Editor(props: EditorProps) {
-  const stylesheet = "w-full shadow-sm shadow-slate-950"
-  if (props.kernel == "codemirror") return <CMEditor className={clsx(props.className, stylesheet)} {...props} />
-  else return <TextareaEditor className={clsx(props.className, stylesheet, "w-full")} {...props} />
+  return <div className={clsx("w-full", props.className, "border border-slate-400")} ref={parentRef}></div>
 }

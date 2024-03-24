@@ -1,7 +1,6 @@
 import { useMemo } from "react"
 import PrefItem, { PrefItemProps } from "./Item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { PrimitiveAtom, useAtom } from "jotai"
 import { map } from "lodash"
 
 export type PrefSelectItem = {
@@ -11,23 +10,22 @@ export type PrefSelectItem = {
 
 type PrefSelectProps = {
   items: PrefSelectItem[]
-  atom: PrimitiveAtom<string>
+  value: string,
+  onChange: (value: string)=>void
 } & {
   [Property in keyof PrefItemProps as Exclude<Property, "children" | "msg">]: PrefItemProps[Property]
 }
 
 export default function PrefSelect(props: PrefSelectProps) {
-  const [value, setValue] = useAtom(props.atom)
-
   const dict = useMemo(() => 
     new Map(map(props.items, (v) => [v.key, v.value]))
   , [props.items])
 
   return (
     <PrefItem {...props}>
-      <Select value={value} onValueChange={setValue}>
+      <Select value={props.value} onValueChange={props.onChange}>
         <SelectTrigger>
-          <SelectValue className="text-sm px-2 h-8 my-2">{dict.get(value)!}</SelectValue>
+          <SelectValue className="text-sm px-2 h-8 my-2">{dict.get(props.value)!}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {props.items.map((v) => (

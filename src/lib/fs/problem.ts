@@ -1,50 +1,89 @@
-import { Source } from "@/store/source"
-import { dialog, fs, path } from "@tauri-apps/api"
+import { fs, path } from "@tauri-apps/api"
 import { LanguageMode, availableInternalChecker } from "../ipc"
 import * as log from "tauri-plugin-log-api"
 import { ProblemHeader, problemHeader } from "../parse/problem"
 import { parse, right } from "../parse"
-import { capitalize, map } from "lodash"
-import { TestCase } from "@/store/testcase"
+import { capitalize } from "lodash"
+import { map, __, flatten, zip, range } from "lodash/fp"
 import { crc16 } from "crc"
+import { StaticSourceData, StaticTestData } from "./model"
+import {v4 as uuid} from 'uuid'
 
-function parseLanguageMode(extName: string) {
+/**
+ * get language mode from file extension name
+ * @param extName
+ * @returns
+ */
+export function getLanguageModeByExt(extName: string): LanguageMode {
   let e = extName.toLowerCase()
   if (e == "c" || e == "cpp") return LanguageMode.CXX
   else if (e == "py") return LanguageMode.PY
   log.error(`unreconginze extension name ${extName}, fallback to c++`)
-  return LanguageMode.CXX
+  return LanguageMode.UNKNOW
 }
 
-function parseHeader(source: string) {
+export function getExtByLanguageMode(language: LanguageMode): string {
+  switch (language) {
+    case LanguageMode.CXX:
+      return "cpp"
+    case LanguageMode.PY:
+      return "py"
+    default:
+      break
+  }
+  return "txt"
+}
+
+/**
+ * parse basic info from file head
+ * throw error if it failed
+ * @param source
+ * @returns
+ */
+function parseHeader(source: string): ProblemHeader {
   let result = problemHeader()(source)
   if (result.ty == "left") {
-    log.warn(`parse header fail with error:\n${result.error}`)
-    return {}
+    // DO NOT THROW ERROR HERE
+    // the data always be needed even if there is no header
+    log.error(result.error)
+    return {} // no metadata found
+  }else{
+    return result.value.data
   }
-  return result.value.data
 }
 
-async function readTestcases(dirname: string, basename: string): Promise<TestCase[]> {
+/**
+ * read testcase from dir
+ * @param dirname
+ * @param basename
+ * @returns
+ */
+async function readTestcases(dirname: string, basename: string): Promise<StaticTestData[]> {
   let result = []
+  // TODO: read testcase data by pattern, which should be configurable
   for (let index = 1; ; index++) {
     let input = await path.join(dirname, `${basename}_${index}.in`)
-    let output = await path.join(dirname, `${basename}_${index}.out`)
-    if (!(await fs.exists(input)) || !(await fs.exists(output))) break
-    const [inp, oup] = await Promise.all([fs.readTextFile(input), fs.readTextFile(output)])
+    let except = await path.join(dirname, `${basename}_${index}.out`)
+    if (!(await fs.exists(input)) || !(await fs.exists(except))) break
+    const [inp, exc] = await Promise.all([fs.readTextFile(input), fs.readTextFile(except)])
     result.push({
       input: inp,
-      output: oup,
+      except: exc,
     })
   }
   return result
 }
 
-async function parseSrcFile(filePath: string): Promise<[string, Source]> {
+/**
+ * Parse info from file
+ * @param filePath
+ * @returns
+ */
+async function parseSrcFile(filePath: string): Promise<StaticSourceData> {
   const source = await fs.readTextFile(filePath)
   const extName = await path.extname(filePath)
   const dirName = await path.dirname(filePath)
-  const languageMode = parseLanguageMode(extName)
+  const languageMode = getLanguageModeByExt(extName)
   const header = parseHeader(source)
   const timeLimits =
     header.time == undefined
@@ -52,7 +91,7 @@ async function parseSrcFile(filePath: string): Promise<[string, Source]> {
       : parse.unwrap(
           parse.map(
             ([time]: string[]) => right(parseInt(time)),
-            parse.seq(parse.opt(parse.mapJoin(parse.many(parse.digit0())), "3000"), parse.text("ms")),
+            parse.seq(parse.opt(parse.mapJoin(parse.many(parse.digit0())), "3000"), parse.text("ms")), //TODO: set default tle time by config
           )(header.time),
         ).value.data
   const memoryLimits =
@@ -61,7 +100,7 @@ async function parseSrcFile(filePath: string): Promise<[string, Source]> {
       : parse.unwrap(
           parse.map(
             ([mem]: string[]) => right(parseInt(mem)),
-            parse.seq(parse.opt(parse.mapJoin(parse.many(parse.digit0())), "256"), parse.text("mb")),
+            parse.seq(parse.opt(parse.mapJoin(parse.many(parse.digit0())), "256"), parse.text("mb")), //TODO: set default mle memory by config
           )(header.memory!),
         ).value.data
   const checker =
@@ -72,70 +111,55 @@ async function parseSrcFile(filePath: string): Promise<[string, Source]> {
   const title = header.problem ?? basename
   const testcases = await readTestcases(dirName, basename)
 
-  let result: Source = {
+  let result: StaticSourceData = {
+    id: uuid(), // open from file, so it should be a new session
+    name: title,
     url: header.url,
-    path: filePath,
-    contest: header.contest,
-    code: {
-      language: languageMode,
-      source: source,
-    },
-    test: {
-      timeLimits,
-      memoryLimits,
-      checker,
-      testcases,
-    },
+    contestUrl: header.contest,
+    private: true,
+    language: languageMode,
+    source: source,
+    timelimit: timeLimits,
+    memorylimit: memoryLimits,
+    checker: checker,
+    tests: testcases,
   }
-  return [title, result]
+  return result
 }
 
-export async function openProblem(): Promise<[string, Source][]> {
-  let problemFiles = await dialog.open({
-    multiple: true,
-    filters: [
-      {
-        name: "Source File",
-        extensions: ["cpp", "c", "py"],
-      },
-    ],
-  })
-  if (problemFiles == null) return []
-  if (typeof problemFiles == "string") {
-    problemFiles = [problemFiles]
-  }
-  return Promise.all(map(problemFiles, parseSrcFile))
+export async function openProblem(files: string[]): Promise<StaticSourceData[]> {
+  return await Promise.all(map(parseSrcFile, files))
 }
 
 /**
  * Save source object to file
  * This function will remove the header and generate new header according to source object
- * @param source 
- * @param title 
- * @param filepath 
+ * @param source
+ * @param title
+ * @param filepath
  * @returns CRC16
  */
-export async function saveProblem(source: Source, title: string, filepath: string): Promise<number> {
+export async function saveProblem(source: StaticSourceData, filepath: string): Promise<number> {
   const sourceCode = (() => {
-    let result = problemHeader()(source.code.source)
-    if (result.ty == "left") return source.code.source
+    let result = problemHeader()(source.source)
+    if (result.ty == "left") return source.source
     else return result.value.unmatch
   })()
 
   const commentPrefix = (() => {
-    if (source.code.language == LanguageMode.CXX) return "// "
-    else if (source.code.language == LanguageMode.PY) return "# "
+    if (source.language == LanguageMode.CXX) return "// "
+    else if (source.language == LanguageMode.PY) return "# "
     return "# "
   })()
 
   const header = (() => {
     let header: ProblemHeader = {
-      problem: title,
+      problem: source.name,
       url: source.url,
-      contest: source.contest,
-      memory: `${source.test.memoryLimits}mb`,
-      time: `${source.test.timeLimits}ms`,
-      checker: source.test.checker,
+      contest: source.contestUrl,
+      memory: `${source.memorylimit}mb`,
+      time: `${source.timelimit}ms`,
+      checker: source.checker,
     }
 
     return Object.entries(header)
@@ -155,14 +179,15 @@ export async function saveProblem(source: Source, title: string, filepath: strin
   const dirname = await path.dirname(filepath)
   const basename = await path.basename(filepath, `.${extname}`)
 
-  for (let i = 0; i < source.test.testcases.length; i++) {
-    const input = await path.join(dirname, `${basename}_${i + 1}.in`)
-    const output = await path.join(dirname, `${basename}_${i + 1}.out`)
 
-    await Promise.all([
-      fs.writeTextFile(input, source.test.testcases[i].input),
-      fs.writeTextFile(output, source.test.testcases[i].output),
-    ])
-  }
+  const testcaseWritingPromise = flatten(
+    map(([testItem, index]) => {
+      const item = testItem as StaticTestData
+      const input = path.join(dirname, `${basename}_${index + 1}.in`)
+      const output = path.join(dirname, `${basename}_${index + 1}.out`)
+      return [input.then((f) => fs.writeTextFile(f, item.input)), output.then((f) => fs.writeTextFile(f, item.except))]
+    }, zip(source.tests, range(0, source.tests.length))),
+  )
+  await Promise.all(testcaseWritingPromise)
   return crc16(filecontent)
 }

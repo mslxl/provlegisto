@@ -37,6 +37,7 @@ once_cell = "1.18.0"
 fancy-regex = "0.12.0"
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1", features = ["colored"] }
 tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri-plugin-websocket = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 gethostname = "0.4.3"
 which = "5.0.0"
 toml = "0.8.8"

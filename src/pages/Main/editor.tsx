@@ -1,6 +1,6 @@
 import Codemirror from "@/components/codemirror"
 import { cxxLsp, noLsp, pyLsp } from "@/components/codemirror/language"
-import useReadAtom from "@/hooks/useReadAtom"
+import useReadAtom from "@/lib/hooks/useReadAtom"
 import { LanguageMode } from "@/lib/ipc"
 import { keymapExtensionAtom } from "@/store/setting/keymap"
 import { clangdPathAtom, pyrightsPathAtom } from "@/store/setting/setup"

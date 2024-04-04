@@ -1,4 +1,4 @@
-import { useCompetitiveCompanion } from "@/hooks/useCompetitiveCompanion"
+import { useCompetitiveCompanion } from "@/lib/hooks/useCompetitiveCompanion"
 import { LanguageMode } from "@/lib/ipc"
 import { defaultLanguageAtom } from "@/store/setting/setup"
 import { createSourceAtom } from "@/store/source"

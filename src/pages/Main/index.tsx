@@ -3,17 +3,18 @@ import clsx from "clsx"
 import PrimaryPanel from "./sidebar-panel"
 import StatusBar from "@/components/statusbar"
 import EditorTabPanel from "./editor"
-import Runner from "@/components/runner"
+import RunnerPanel from "@/components/runner"
 import MainEventRegister from "./event"
 import { useAtom, useAtomValue } from "jotai"
 import { primaryPanelShowAtom, statusBarShowAtom } from "@/store/ui"
-import { useZoom } from "@/hooks/useZoom"
+import { useZoom } from "@/lib/hooks/useZoom"
 import { motion } from "framer-motion"
 import { activedSourceAtom } from "@/store/source"
 import SessionPanel from "@/components/session"
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { isCurrentDeviceSetupAtom } from "@/store/setting/setup"
+import CollabPanel from "@/components/collab"
 
 export default function Main() {
   useZoom()
@@ -22,11 +23,10 @@ export default function Main() {
   const [showStatusBar] = useAtom(statusBarShowAtom)
 
   const isSetup = useAtomValue(isCurrentDeviceSetupAtom)
-  useEffect(()=>{
-    if(!isSetup){
+  useEffect(() => {
+    if (!isSetup) {
       navgiate("/setup")
     }
-
   }, [isSetup])
   const activedSource = useAtomValue(activedSourceAtom)
 
@@ -47,8 +47,9 @@ export default function Main() {
             hidden: activePrimaryPanel === null,
           })}
         >
-          <Runner className={clsx({ hidden: activePrimaryPanel != "run" })} source={activedSource} />
-          <SessionPanel className={clsx({hidden: activePrimaryPanel != 'files'})}/>
+          <RunnerPanel className={clsx({ hidden: activePrimaryPanel != "run" })} source={activedSource} />
+          <SessionPanel className={clsx({ hidden: activePrimaryPanel != "files" })} />
+          <CollabPanel className={clsx({ hidden: activePrimaryPanel != "collab" })} />
         </PrimaryPanel>
         <div className="flex-1 flex flex-col w-0 min-h-0">{editor}</div>
       </div>

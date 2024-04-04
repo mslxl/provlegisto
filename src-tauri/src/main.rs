@@ -46,6 +46,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(log_pugin())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_websocket::init())
         .setup(|app| {
             // provlegisto state
             CONFIG_DIR

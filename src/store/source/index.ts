@@ -4,11 +4,15 @@ import { atom } from "jotai"
 import { forEach, includes, isEmpty, range } from "lodash/fp"
 import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
-import { createYjsHookAtom } from "@/hooks/useY"
+import { createYjsHookAtom } from "@/lib/hooks/useY"
 import cache from "@/lib/fs/cache"
 import generateRandomName from "@/lib/names"
+import {Awareness} from 'y-protocols/awareness'
 
 export const docAtom = atom(new Doc())
+export const awarenessAtom = atom((get)=>{
+  return new Awareness(get(docAtom))
+})
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
 
 /**

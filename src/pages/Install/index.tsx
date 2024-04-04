@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
 } from "@/components/ui/alert-dialog"
 import { Progress } from "@/components/ui/progress"
-import { useTauriEvent } from "@/hooks/useTauriEvent"
+import { useTauriEvent } from "@/lib/hooks/useTauriEvent"
 import { installMsys2 } from "@/lib/fs/installer"
 import { clangdPathAtom, gccPathAtom } from "@/store/setting/setup"
 import { AlertDialogTitle } from "@radix-ui/react-alert-dialog"

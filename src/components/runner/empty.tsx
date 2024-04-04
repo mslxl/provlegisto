@@ -1,4 +1,4 @@
-import { emit } from "@/hooks/useMitt"
+import { emit } from "@/lib/hooks/useMitt"
 import clsx from "clsx"
 import styled from "styled-components"
 

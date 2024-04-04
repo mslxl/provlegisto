@@ -1,6 +1,6 @@
 import * as Sidebar from "@/components/ui/sidebar"
 import { VscMenu, VscVmRunning, VscSettingsGear, VscOrganization, VscFile } from "react-icons/vsc"
-import { primaryPanelShowAtom } from "@/store/ui"
+import { PrimaryPanelName, primaryPanelShowAtom } from "@/store/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { emit } from "@/hooks/useMitt"
+import { emit } from "@/lib/hooks/useMitt"
 import { useAtom } from "jotai"
 import { openDevTools } from "@/lib/ipc"
 import { Link, useNavigate } from "react-router-dom"
@@ -21,7 +21,7 @@ export default function PrimarySide() {
   const [panel, setPanel] = useAtom(primaryPanelShowAtom)
   const navigate = useNavigate()
 
-  function onPanelButtonClick(panelId: string) {
+  function onPanelButtonClick(panelId: PrimaryPanelName) {
     if (panelId == panel) setPanel(null)
     else setPanel(panelId)
   }
@@ -30,8 +30,8 @@ export default function PrimarySide() {
     [
       ["files", VscFile],
       ["run", VscVmRunning],
-      ["team", VscOrganization],
-    ] as [string, typeof VscFile][]
+      ["collab", VscOrganization],
+    ] as [PrimaryPanelName, typeof VscFile][]
   ).map(([id, Icon], index) => (
     <Sidebar.Button
       key={index}

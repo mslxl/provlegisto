@@ -4,13 +4,13 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { isEmpty } from "lodash/fp"
 import { VscClose, VscFile, VscNewFile } from "react-icons/vsc"
 import SessionContextMenu from "./SessionContextMenu"
-import useChangeLanguageDialog from "@/hooks/useChangeLanguageDialog"
+import useChangeLanguageDialog from "./useChangeLanguageDialog"
 
 import * as log from "tauri-plugin-log-api"
 import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } from "@/store/setting/setup"
 import { useHoverDirty } from "react-use"
 import { useRef } from "react"
-import { useRenameDialog } from "@/hooks/useRenameDialog"
+import { useRenameDialog } from "./useRenameDialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 interface FileItemProps {

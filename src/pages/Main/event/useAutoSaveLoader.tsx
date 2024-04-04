@@ -1,7 +1,7 @@
 import { atom, useAtom } from "jotai"
 import { useEffect, useRef } from "react"
 import cache from "@/lib/fs/cache"
-import useReadAtom from "@/hooks/useReadAtom"
+import useReadAtom from "@/lib/hooks/useReadAtom"
 import { sourceAtom } from "@/store/source"
 import { forEach } from "lodash/fp"
 

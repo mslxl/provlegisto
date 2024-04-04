@@ -1,13 +1,10 @@
-import { YjsNS, createYjsHook } from "@/hooks/useY"
+import { YjsNS, createYjsHook } from "@/lib/hooks/useY"
 import { LanguageMode } from "@/lib/ipc"
 import { v4 as uuid } from "uuid"
-import { atom } from "jotai"
 import { map, uniq } from "lodash/fp"
 import { useEffect, useState } from "react"
 import { Doc, Text, Array, Map } from "yjs"
 import { StaticSourceData, fillSource } from "@/lib/fs/model"
-
-export const rootDocument = atom(new Doc())
 
 export enum JudgeStatus {
   AC,

@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom"
 import PrefCatalog from "./catalog"
 import { Suspense } from "react"
 import Loading from "@/components/loading"
-import { useZoom } from "@/hooks/useZoom"
+import { useZoom } from "@/lib/hooks/useZoom"
 import { motion } from "framer-motion"
 
 export default function Preference() {
@@ -13,7 +13,7 @@ export default function Preference() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="p-8 w-full shadow-md select-none relative"
+        className="w-full shadow-md select-none relative"
       >
         <button className="absolute right-4 top-4" onClick={() => navigate("/")}>
           <VscClose />

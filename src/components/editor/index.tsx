@@ -1,4 +1,4 @@
-import useExtensionCompartment, { useCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
+import useExtensionCompartment, { useCommonConfigurationExtension } from "@/lib/hooks/useExtensionCompartment"
 import { editorThemeExtensionAtom } from "@/store/setting/ui"
 import { Compartment, Extension } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"

@@ -6,11 +6,11 @@ import { ContextMenu, ContextMenuItem, ContextMenuContent, ContextMenuTrigger } 
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { Accordion } from "../ui/accordion"
-import { emit, useMitt } from "@/hooks/useMitt"
+import { emit, useMitt } from "@/lib/hooks/useMitt"
 import SingleRunner from "./single"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import * as log from "tauri-plugin-log-api"
-import useGetLanguageCompiler from "@/hooks/useGetLanguageCompiler"
+import useGetLanguageCompiler from "@/lib/hooks/useGetLanguageCompiler"
 import EmptyRunner from "./empty"
 import { Source } from "@/store/source/model"
 import TestConfiguration from "./conf"
@@ -20,7 +20,7 @@ interface RunnerProps {
   source: Source | null
 }
 
-export default function Runner({ className, source }: RunnerProps) {
+export default function RunnerPanel({ className, source }: RunnerProps) {
   if (!source) {
     return <EmptyRunner className={className} />
   }

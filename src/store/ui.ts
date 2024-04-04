@@ -1,4 +1,5 @@
 import { atom } from "jotai"
 
-export const primaryPanelShowAtom = atom<string | null>(null)
+export type PrimaryPanelName = 'run' | 'files' | 'collab' | null
+export const primaryPanelShowAtom = atom<PrimaryPanelName>(null)
 export const statusBarShowAtom = atom(false)

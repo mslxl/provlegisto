@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { useNavigate } from "react-router-dom"
 import { VscClose } from "react-icons/vsc"
 import Contributer from "./contributer"
-import { useZoom } from "@/hooks/useZoom"
+import { useZoom } from "@/lib/hooks/useZoom"
 import { motion } from "framer-motion"
 
 export default function About() {

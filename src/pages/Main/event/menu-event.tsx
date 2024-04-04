@@ -1,4 +1,4 @@
-import { useMitt } from "@/hooks/useMitt"
+import { useMitt } from "@/lib/hooks/useMitt"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
 import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } from "@/store/setting/setup"
 import { activedSourceAtom, createSourceAtom, sourceAtom } from "@/store/source"

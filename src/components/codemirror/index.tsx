@@ -6,15 +6,16 @@ import { basicSetup } from "codemirror"
 import { LspProvider } from "./language"
 import { Extension } from "@codemirror/state"
 import { KeymapProvider } from "./keymap"
-import { Atom } from "jotai"
+import { Atom, useAtomValue } from "jotai"
 import { Source } from "@/store/source/model"
 import { concat, map } from "lodash/fp"
 import "@fontsource/jetbrains-mono"
-import useExtensionCompartment, { useCommonConfigurationExtension } from "@/hooks/useExtensionCompartment"
+import useExtensionCompartment, { useCommonConfigurationExtension } from "@/lib/hooks/useExtensionCompartment"
 import { UndoManager } from "yjs"
 import cache from "@/lib/fs/cache"
 // @ts-ignore
 import { yCollab } from "y-codemirror.next"
+import { awarenessAtom } from "@/store/source"
 
 type CodemirrorProps = {
   className?: string
@@ -51,6 +52,8 @@ const Codemirror = memo((props: CodemirrorProps) => {
     useCommonConfigurationExtension(cm),
   )
 
+  const awareness = useAtomValue(awarenessAtom)
+
   const cacheUpdateListenerExtension = useMemo(
     () =>
       EditorView.updateListener.of((e) => {
@@ -79,7 +82,7 @@ const Codemirror = memo((props: CodemirrorProps) => {
         EditorViewStyle,
         // use ycollab to modify and share source object
         //TODO: add awareness
-        yCollab(props.source.source, null, { undoManager }),
+        yCollab(props.source.source, awareness, { undoManager }),
         cacheUpdateListenerExtension,
       ],
       doc: props.source.source.toString(),

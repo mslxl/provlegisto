@@ -18,7 +18,7 @@ import Logo from "./logo"
 import SetupCXX from "../../components/setup/setup-cxx"
 import SetupPy from "../../components/setup/setup-py"
 import { Button } from "@/components/ui/button"
-import useReadAtom from "@/hooks/useReadAtom"
+import useReadAtom from "@/lib/hooks/useReadAtom"
 import {
   AlertDialog,
   AlertDialogAction,

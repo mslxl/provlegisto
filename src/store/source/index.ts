@@ -6,7 +6,6 @@ import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
 import { createYjsHookAtom } from "@/hooks/useY"
 import cache from "@/lib/fs/cache"
-import { fromSource } from "@/lib/fs/model"
 import generateRandomName from "@/lib/names"
 
 export const docAtom = atom(new Doc())
@@ -84,7 +83,7 @@ export const createSourceAtom = atom(
       log.info(`create new source: ${id}`)
       log.info(JSON.stringify(get(sourceIdsAtom)))
     })
-    cache.updateCache(id, () => fromSource(source))
+    cache.updateCache(id, ()=>source.serialize())
     return source
   },
 )
@@ -120,7 +119,7 @@ export const duplicateSourceAtom = atom(null, (get, set, id: string, newName: (o
       )
     })
 
-    cache.updateCache(newSource.id, () => fromSource(newSource))
+    cache.updateCache(newSource.id, ()=>newSource.serialize())
     return newSource
   } else {
     return null

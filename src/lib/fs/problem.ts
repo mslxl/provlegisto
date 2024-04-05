@@ -6,8 +6,8 @@ import { parse, right } from "../parse"
 import { capitalize } from "lodash"
 import { map, __, flatten, zip, range } from "lodash/fp"
 import { crc16 } from "crc"
-import { StaticSourceData, StaticTestData } from "./model"
 import {v4 as uuid} from 'uuid'
+import { StaticSourceData, StaticTestData } from "./model"
 
 /**
  * get language mode from file extension name

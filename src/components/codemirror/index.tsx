@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { memo, useCallback, useEffect, useMemo, useRef } from "react"
+import { memo, useEffect, useMemo, useRef } from "react"
 import { EditorView, keymap } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
@@ -15,7 +15,6 @@ import { UndoManager } from "yjs"
 import cache from "@/lib/fs/cache"
 // @ts-ignore
 import { yCollab } from "y-codemirror.next"
-import { fromSource } from "@/lib/fs/model"
 
 type CodemirrorProps = {
   className?: string
@@ -52,12 +51,11 @@ const Codemirror = memo((props: CodemirrorProps) => {
     useCommonConfigurationExtension(cm),
   )
 
-  const buildStaticSourceforCache = useCallback(() => fromSource(props.source), [props.source])
   const cacheUpdateListenerExtension = useMemo(
     () =>
       EditorView.updateListener.of((e) => {
         if (!e.docChanged) return
-        cache.debouncedUpdateCache(props.source.id, buildStaticSourceforCache)
+        cache.debouncedUpdateCache(props.source.id, () => props.source.serialize())
       }),
     [props.source],
   )

@@ -2,10 +2,10 @@ import { YjsNS, createYjsHook } from "@/hooks/useY"
 import { LanguageMode } from "@/lib/ipc"
 import { v4 as uuid } from "uuid"
 import { atom } from "jotai"
-import { map } from "lodash/fp"
+import { map, uniq } from "lodash/fp"
 import { useEffect, useState } from "react"
 import { Doc, Text, Array, Map } from "yjs"
-import { StaticSourceData, intoSource } from "@/lib/fs/model"
+import { StaticSourceData, fillSource } from "@/lib/fs/model"
 
 export const rootDocument = atom(new Doc())
 
@@ -18,7 +18,7 @@ export enum JudgeStatus {
   CE,
   UK,
   UKE,
-  INT
+  INT,
 }
 
 /**
@@ -60,9 +60,9 @@ export class Testcase {
   }
   get status(): JudgeStatus {
     let value = this.map.get("status")
-    if(value != undefined && JudgeStatus[value] != undefined){
+    if (value != undefined && JudgeStatus[value] != undefined) {
       return value
-    }else {
+    } else {
       return JudgeStatus.UK
     }
   }
@@ -150,7 +150,7 @@ export class Source {
   get timelimit(): number {
     return this.store.getNumber("timelimit")
   }
-  useTimelimit():number{
+  useTimelimit(): number {
     return this.store.useNumber("timelimit")
   }
   set memorylimit(bytes: number) {
@@ -202,25 +202,51 @@ export class Source {
   deleteTest(index: number, length: number | undefined = undefined) {
     this.tests.delete(index, length)
   }
+
+  serialize(): Uint8Array {
+    return this.store.encode()
+  }
+  deserialize(data: Uint8Array) {
+    this.store.decode(data)
+  }
 }
 
 export class SourceStore {
   doc: Doc
   constructor(doc: Doc) {
     this.doc = doc
+
+    // make id unique
+    this.list.observe((event) => {
+      if (event.changes.added.size > 0) {
+        const data = this.list.toArray()
+        const uniqueData = uniq(data)
+        if (data.length != uniqueData.length) {
+          this.doc.transact(() => {
+            this.list.delete(0, this.list.length)
+            this.list.insert(0, uniqueData)
+          })
+        }
+      }
+    })
   }
   get list(): Array<string> {
     return this.doc.getArray("source/list")
   }
-  create(id: string = uuid() ): [Source, string] {
+  create(id: string = uuid()): [Source, string] {
     let subDoc = new YjsNS(this.doc, id)
     let store = new Source(subDoc)
     this.list.push([subDoc.id])
     return [store, subDoc.id]
   }
-  createFromStatic(data: StaticSourceData, specifyId: string = uuid()): [Source, string]{
+  createByDeserialization(data: Uint8Array, specifyId: string = uuid()): [Source, string] {
     const [src, id] = this.create(specifyId)
-    intoSource(data, src)
+    src.deserialize(data)
+    return [src, id]
+  }
+  createFromStatic(data: StaticSourceData, specifyId: string = uuid()): [Source, string] {
+    const [src, id] = this.create(specifyId)
+    fillSource(data, src)
     return [src, id]
   }
   get(id: string): Source | undefined {

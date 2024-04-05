@@ -1,7 +1,7 @@
 import { Getter } from "jotai"
 import { atomWithObservable } from "jotai/utils"
 import { useEffect, useState } from "react"
-import { Text, Array, AbstractType, Map, Doc } from "yjs"
+import { Text, Array, AbstractType, Map, Doc, encodeStateAsUpdateV2, applyUpdateV2 } from "yjs"
 
 export function createYjsHook<T, V extends AbstractType<any>>(initialValue: T, observer: V, updater: (y: V) => T): T {
   const [content, setContent] = useState(initialValue)
@@ -66,6 +66,7 @@ export function useYMap<V>(ymap: Map<V>) {
 export class YjsNS {
   doc: Doc
   id: string
+
   public constructor(doc: Doc, id: string) {
     const map = doc.getMap()
     this.id = id
@@ -76,6 +77,7 @@ export class YjsNS {
       map.set(id, this.doc)
     }
     doc.load()
+
   }
 
   public destroy() {
@@ -155,5 +157,12 @@ export class YjsNS {
   }
   public useMap(name: string) {
     return useYMap(this.getMap(name))
+  }
+
+  public encode(): Uint8Array{
+    return encodeStateAsUpdateV2(this.doc)
+  }
+  public decode(data: Uint8Array){
+    applyUpdateV2(this.doc, data)
   }
 }

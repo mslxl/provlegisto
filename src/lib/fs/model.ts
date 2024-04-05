@@ -21,7 +21,13 @@ export interface StaticSourceData {
   readonly tests: StaticTestData[]
 }
 
-export function fromSource(source: Source): StaticSourceData {
+/**
+ * Get data from Yjs
+ * this would lost all history info
+ * @param source 
+ * @returns 
+ */
+export function intoStaticSource(source: Source): StaticSourceData {
   return {
     id: source.id,
     name: source.name.toString(),
@@ -53,7 +59,7 @@ export function fromSource(source: Source): StaticSourceData {
  * Attation: it would not change the id of source object,
  * if you want to specify its id, use store.create plz
  */
-export function intoSource(
+export function fillSource(
   data: StaticSourceData,
   source: Source,
   defaultTimeLimit: number = 5000,

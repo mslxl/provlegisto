@@ -4,7 +4,6 @@ import cache from "@/lib/fs/cache"
 import useReadAtom from "@/hooks/useReadAtom"
 import { sourceAtom } from "@/store/source"
 import { forEach } from "lodash/fp"
-import { StaticSourceData } from "@/lib/fs/model"
 
 const alreadyLoadedAtom = atom(false)
 /**
@@ -12,7 +11,7 @@ const alreadyLoadedAtom = atom(false)
  * It only be execuate on startup
  */
 
-export default function CacheLoader() {
+export default function useAutoSaveLoader() {
   const [alreadyLoaded, setAlreadyLoaded] = useAtom(alreadyLoadedAtom)
   const currentLoaded = useRef(false)
   const readSourceStore = useReadAtom(sourceAtom)
@@ -24,10 +23,9 @@ export default function CacheLoader() {
       const store = readSourceStore()
       cache.loadAll().then((data) => {
         store.doc.transact(() => {
-          forEach((v: StaticSourceData)=>store.createFromStatic(v, v.id), data)
+          forEach((v)=>store.createByDeserialization(v.data, v.id), data)
         })
       })
     }
   }, [alreadyLoaded])
-  return null
 }

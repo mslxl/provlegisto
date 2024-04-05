@@ -1,11 +1,11 @@
 import { path, fs } from "@tauri-apps/api"
 import * as log from "tauri-plugin-log-api"
-import { StaticSourceData } from "./model"
 import { debounce } from "lodash"
+import { map, zip } from "lodash/fp"
 
 /**
  * get dir that source data cache in
- * @returns 
+ * @returns
  */
 async function getDataDir() {
   const filesDir = await path.join(await path.appDataDir(), "files")
@@ -17,34 +17,34 @@ async function getDataDir() {
 
 /**
  * get expected filepath in datadir by source id
- * @param id 
- * @returns 
+ * @param id
+ * @returns
  */
 async function getFilePath(id: string): Promise<string> {
   const dir = await getDataDir()
-  const file = await path.join(dir, `${id}.src.json`)
+  const file = await path.join(dir, `${id}.bin`)
   return file
 }
 
 /**
  * create or update cache of source
- * @param src 
+ * @param src
  */
-async function updateCache(id: string, src: ()=>StaticSourceData) {
+async function updateCache(id: string, data: ()=>Uint8Array) {
   const file = await getFilePath(id)
   log.info(`update cache ${id} to path ${file}`)
-  fs.writeTextFile(file, JSON.stringify(src()))
+  fs.writeBinaryFile(file, data())
 }
 
-const debouncedUpdateCache = debounce(updateCache, 1000, {maxWait: 30*1000})
+const debouncedUpdateCache = debounce(updateCache, 3000, { maxWait: 30 * 1000 })
 
 /**
  * delete source cache if exists
- * @param id 
+ * @param id
  */
 async function dropCache(id: string) {
   const file = await getFilePath(id)
-  if ((await fs.exists(file))) {
+  if (await fs.exists(file)) {
     log.info(`drop cache ${id} (${file})`)
     await fs.removeFile(file)
   }
@@ -64,26 +64,25 @@ async function dropAll() {
   await Promise.all(tasks)
 }
 
-
-/**
- * 
- * @param file 
- * @returns 
- */
-async function loadFile(file: string): Promise<StaticSourceData> {
-  const content = await fs.readTextFile(file)
-  const obj = JSON.parse(content)
-  return obj 
+async function loadFile(file: string): Promise<Uint8Array> {
+  return await fs.readBinaryFile(file)
 }
 
-async function loadAll(): Promise<StaticSourceData[]> {
+interface SerializedSource {
+  id: string
+  data: Uint8Array
+}
+
+async function loadAll(): Promise<SerializedSource[]> {
   const dir = await getDataDir()
   const files = (await fs.readDir(dir, { recursive: false }))
-    .filter((p) => p.children == null && p.name != null && p.name.endsWith(".src.json"))
+    .filter((p) => p.children == null && p.name != null && p.name.endsWith(".bin"))
     .map((e) => e.path!)
 
-  const tasks = files.map(loadFile)
-  return await Promise.all(tasks)
+  const tasks = await Promise.all(map(loadFile, files))
+  const ids = map((name: string) => name.substring(0, name.lastIndexOf(".bin")), files)
+  const construct = (v: [Uint8Array, string]) => ({ data: v[0], id: v[1] }) as SerializedSource
+  return map((v) => construct(v as [Uint8Array, string]), zip(tasks, ids))
 }
 
 export default {

@@ -1,5 +1,4 @@
 import { useMitt } from "@/hooks/useMitt"
-import { fromSource } from "@/lib/fs/model"
 import { openProblem, saveProblem } from "@/lib/fs/problem"
 import { defaultLanguageAtom, defaultMemoryLimitsAtom, defaultTimeLimitsAtom } from "@/store/setting/setup"
 import { activedSourceAtom, createSourceAtom, sourceAtom } from "@/store/source"
@@ -9,6 +8,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { LocalSourceMetadata, getSourceMetaAtom, setSourceMetaAtom } from "@/store/source/local"
 import { crc16 } from "crc"
 import { zip } from "lodash/fp"
+import { intoStaticSource } from "@/lib/fs/model"
 
 /**
  * Save source to file
@@ -39,7 +39,7 @@ async function saveFile(source: Source, getSaveTarget?: (id: string) => string |
 
   // if it is null, that's means user cancel operation
   if (file) {
-    const staticSourceData = fromSource(source)
+    const staticSourceData = intoStaticSource(source)
     await saveProblem(staticSourceData, file)
   }
 }
@@ -109,3 +109,4 @@ export default function MenuEventReceiver() {
 
   return null
 }
+

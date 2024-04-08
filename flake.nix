@@ -19,7 +19,7 @@
         toolchain = pkgs.fenix.complete;
         buildInputs = with pkgs; [
           # js
-          yarn
+          nodejs.pkgs.pnpm
 
           # rust
           (with toolchain; [
@@ -41,33 +41,11 @@
         ];
       in
       rec {
-
-        # Executed by `nix build`
-        packages.default = pkgs.mkYarnPackage rec {
-          inherit buildInputs;
-          name = "template";
-          src = ./.;
-
-          buildPhase = "yarn build";
-
-          installPhase = ''
-            mkdir -p $out/bin
-
-            cp src-tauri/target/release/${name} $out/bin/${name}
-          '';
-        };
-
-        # Executed by `nix run`
-        apps.default = utils.lib.mkApp {
-          drv = packages.default;
-        };
-
         # Used by `nix develop`
         devShell = pkgs.mkShell {
           inherit buildInputs;
           XDG_DATA_DIRS = let                                                                                                                                                                                                                                                                                                
             base = pkgs.lib.concatMapStringsSep ":" (x: "${x}/share") [                                                                                                                                                                                                                                                      
-              pkgs.gnome.adwaita-icon-theme                                                                                                                                                                                                                                                                                  
               pkgs.shared-mime-info                                                                                                                                                                                                                                                                                          
             ];
             gsettings_schema = pkgs.lib.concatMapStringsSep ":" (x: "${x}/share/gsettings-schemas/${x.name}") [
@@ -79,7 +57,7 @@
 
           # Specify the rust-src path (many editors rely on this)
           RUST_SRC_PATH = "${toolchain.rust-src}/lib/rustlib/src/rust/library";
+          WEBKIT_DISABLE_COMPOSITING_MODE = "1";
         };
-
       });
 }

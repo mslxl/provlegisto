@@ -11,6 +11,9 @@ import { useAtom, useSetAtom } from "jotai"
 import { connectProviderAtom } from "@/store/source/provider"
 import { collabConnectFormSchema, lastConnectFormAtom } from "@/store/setting/form"
 import { dialog } from "@tauri-apps/api"
+import { MdOutlineNumbers } from "react-icons/md"
+import { random } from "lodash/fp"
+import { useState } from "react"
 
 interface Unconnection {
   className?: string
@@ -21,7 +24,11 @@ export default function Unconnect(props: Unconnection) {
 
   const form = useForm<z.infer<typeof collabConnectFormSchema>>({
     resolver: zodResolver(collabConnectFormSchema),
-    defaultValues: lastConnectForm,
+    defaultValues: lastConnectForm || {
+      p2p: true,
+      color: random(0, 0xffffff).toString(16).padStart(6, "0"),
+      username: "Anonymous " + Math.floor(Math.random() * 100),
+    },
   })
 
   const providerConnect = useSetAtom(connectProviderAtom)
@@ -29,7 +36,7 @@ export default function Unconnect(props: Unconnection) {
   function onConfirm(values: z.infer<typeof collabConnectFormSchema>) {
     log.info(`connect with ${JSON.stringify(values)}`)
     setLastConnectForm(values)
-    providerConnect(values.server, values.roomName).catch(() => {
+    providerConnect(values.server, values.roomName, { color: `#${values.color}`, name: values.username }).catch(() => {
       dialog.message("Connect fail in 3 times", { title: "Network Error", type: "error" })
     })
   }
@@ -107,6 +114,40 @@ export default function Unconnect(props: Unconnection) {
                 <FormMessage />
               </FormItem>
             )}
+          />
+          <FormField
+            control={form.control}
+            name="color"
+            render={({ field }) => {
+              const [colorPreview, setColorPreview] = useState(field.value)
+
+              return (
+                <FormItem>
+                  <FormLabel>User Color</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-1">
+                      <MdOutlineNumbers />
+                      <Input
+                        onChange={(v) => {
+                          setColorPreview(v.target.value)
+                          field.onChange(v)
+                        }}
+                        value={field.value}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        name={field.name}
+                        disabled={field.disabled}
+                      />
+                      <div
+                        className="w-8 h-8 border-teal-950 border-2 rounded-md inline-block"
+                        style={{ background: `#${colorPreview}` }}
+                      ></div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
           <div className="w-full p-4">
             <Button type="submit" className="w-full">

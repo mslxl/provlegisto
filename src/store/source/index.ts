@@ -6,10 +6,10 @@ import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
 import { createYjsHookAtom } from "@/lib/hooks/useY"
 import generateRandomName from "@/lib/names"
-import {Awareness} from 'y-protocols/awareness'
+import { Awareness } from "y-protocols/awareness"
 
-export const docAtom = atom(new Doc({autoLoad: true}))
-export const awarenessAtom = atom((get)=>{
+export const docAtom = atom(new Doc({ autoLoad: true }))
+export const awarenessAtom = atom((get) => {
   return new Awareness(get(docAtom))
 })
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
@@ -77,9 +77,9 @@ export const createSourceAtom = atom(
       source.language = targetLanguage
       source.timelimit = defaultTimeLimits
       source.memorylimit = defaultMemoryLimits
-      if(name){
+      if (name) {
         source.name.insert(0, name)
-      }else{
+      } else {
         const name = generateRandomName("'s code")
         source.name.insert(0, name)
       }

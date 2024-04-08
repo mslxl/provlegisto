@@ -7,6 +7,7 @@ export const collabConnectFormSchema = z.object({
   username: z.string().min(5).max(20),
   password: z.string().min(8).max(128),
   roomName: z.string().min(5).max(20),
+  color: z.string().regex(/([\d(a-f)(A-F)]{3}){1,2}/)
 })
 
-export const lastConnectFormAtom = atomWithSettings<z.infer<typeof collabConnectFormSchema> | {}>('last.connect', {})
+export const lastConnectFormAtom = atomWithSettings<z.infer<typeof collabConnectFormSchema> | null>('last.connect', null)

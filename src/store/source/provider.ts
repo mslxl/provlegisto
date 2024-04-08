@@ -43,9 +43,14 @@ export const disconnectProviderAtom = atom(null, (get, set) => {
   }
 })
 
+export interface UserAwareness {
+  name: string
+  color: string
+}
+
 export const connectProviderAtom = atom(
   null,
-  (get, set, address: string, roomName: string, retriedTimes: number = 3) => {
+  (get, set, address: string, roomName: string, user?: UserAwareness, retriedTimes: number = 3) => {
     set(disconnectProviderAtom)
     const awareness = get(awarenessAtom)
 
@@ -54,6 +59,14 @@ export const connectProviderAtom = atom(
       // WebSocketPolyfill : WebsocketTauriPolyfill,
       awareness: awareness,
     })
+    if (user) {
+      wsProvider.awareness.setLocalStateField(
+        "user",
+        Object.assign(user, {
+          colorLight: user.color + "cc",
+        }),
+      )
+    }
     wsProvider.on("status", ({ status }: { status: string }) => {
       log.info(`provider connection status: ${status}`)
     })

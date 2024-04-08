@@ -1,8 +1,7 @@
 import { Getter } from "jotai"
 import { atomWithObservable } from "jotai/utils"
 import { useEffect, useState } from "react"
-import { Text, Array, AbstractType, Map, Doc, encodeStateAsUpdateV2, applyUpdateV2 } from "yjs"
-
+import { Text, Array, AbstractType, Map, Doc } from "yjs"
 export function createYjsHook<T, V extends AbstractType<any>>(initialValue: T, observer: V, updater: (y: V) => T): T {
   const [content, setContent] = useState(initialValue)
   useEffect(() => {
@@ -68,36 +67,25 @@ export class YjsNS {
   id: string
 
   public constructor(doc: Doc, id: string) {
-    const map = doc.getMap()
+    this.doc = doc
     this.id = id
-    if (map.has(id)) {
-      this.doc = map.get(id) as Doc
-    } else {
-      this.doc = new Doc()
-      map.set(id, this.doc)
-    }
-    doc.load()
-
   }
 
-  public destroy() {
-    this.doc.destroy()
+  private getPrimitiveValueMap(): Map<number> {
+    return this.doc.getMap(`ns/${this.id}/primitive`)
+  }
+  private getStringValueMap(): Map<string> {
+    return this.doc.getMap(`ns/${this.id}/string`)
   }
 
   public getText(name: string): Text {
-    return this.doc.getText("~" + name)
+    return this.doc.getText(`ns/${this.id}/text/${name}`)
   }
   public getMap<V>(name: string): Map<V> {
-    return this.doc.getMap("~" + name)
+    return this.doc.getMap(`ns/${this.id}/map/${name}`)
   }
   public getArray<V>(name: string): Array<V> {
-    return this.doc.getArray("~" + name)
-  }
-  private getPrimitiveValueMap(): Map<number> {
-    return this.doc.getMap("primitive")
-  }
-  private getStringValueMap(): Map<string> {
-    return this.doc.getMap("string")
+    return this.doc.getArray(`ns/${this.id}/array/${name}`)
   }
 
   public getNumber(name: string): number {
@@ -157,12 +145,5 @@ export class YjsNS {
   }
   public useMap(name: string) {
     return useYMap(this.getMap(name))
-  }
-
-  public encode(): Uint8Array{
-    return encodeStateAsUpdateV2(this.doc)
-  }
-  public decode(data: Uint8Array){
-    applyUpdateV2(this.doc, data)
   }
 }

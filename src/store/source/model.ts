@@ -1,9 +1,9 @@
 import { YjsNS, createYjsHook } from "@/lib/hooks/useY"
 import { LanguageMode } from "@/lib/ipc"
 import { v4 as uuid } from "uuid"
-import { map, uniq } from "lodash/fp"
+import { map } from "lodash/fp"
 import { useEffect, useState } from "react"
-import { Doc, Text, Array, Map } from "yjs"
+import { Doc, Text, Array, Map, encodeStateAsUpdateV2, applyUpdateV2 } from "yjs"
 import { StaticSourceData, fillSource } from "@/lib/fs/model"
 
 export enum JudgeStatus {
@@ -93,6 +93,10 @@ export class Source {
   private store: YjsNS
   constructor(store: YjsNS) {
     this.store = store
+    this.name.observe((v)=>{
+      console.log(v.changes)
+
+    })
   }
 
   get id(): string {
@@ -199,33 +203,12 @@ export class Source {
   deleteTest(index: number, length: number | undefined = undefined) {
     this.tests.delete(index, length)
   }
-
-  serialize(): Uint8Array {
-    return this.store.encode()
-  }
-  deserialize(data: Uint8Array) {
-    this.store.decode(data)
-  }
 }
 
 export class SourceStore {
   doc: Doc
   constructor(doc: Doc) {
     this.doc = doc
-
-    // make id unique
-    this.list.observe((event) => {
-      if (event.changes.added.size > 0) {
-        const data = this.list.toArray()
-        const uniqueData = uniq(data)
-        if (data.length != uniqueData.length) {
-          this.doc.transact(() => {
-            this.list.delete(0, this.list.length)
-            this.list.insert(0, uniqueData)
-          })
-        }
-      }
-    })
   }
   get list(): Array<string> {
     return this.doc.getArray("source/list")
@@ -236,21 +219,12 @@ export class SourceStore {
     this.list.push([subDoc.id])
     return [store, subDoc.id]
   }
-  createByDeserialization(data: Uint8Array, specifyId: string = uuid()): [Source, string] {
-    const [src, id] = this.create(specifyId)
-    src.deserialize(data)
-    return [src, id]
-  }
   createFromStatic(data: StaticSourceData, specifyId: string = uuid()): [Source, string] {
     const [src, id] = this.create(specifyId)
     fillSource(data, src)
     return [src, id]
   }
   get(id: string): Source | undefined {
-    const map = this.doc.getMap()
-    if (!map.has(id)) {
-      return undefined
-    }
     let subDoc = new YjsNS(this.doc, id)
     let store = new Source(subDoc)
     return store
@@ -262,5 +236,11 @@ export class SourceStore {
       doc.destroy()
       this.list.delete(index)
     }
+  }
+  serialize(): Uint8Array {
+    return encodeStateAsUpdateV2(this.doc)
+  }
+  deserialize(data: Uint8Array){
+    return applyUpdateV2(this.doc, data)
   }
 }

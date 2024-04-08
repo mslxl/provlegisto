@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { memo, useEffect, useMemo, useRef } from "react"
+import { memo, useEffect, useRef } from "react"
 import { EditorView, keymap } from "@codemirror/view"
 import { indentWithTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
@@ -12,7 +12,6 @@ import { concat, map } from "lodash/fp"
 import "@fontsource/jetbrains-mono"
 import useExtensionCompartment, { useCommonConfigurationExtension } from "@/lib/hooks/useExtensionCompartment"
 import { UndoManager } from "yjs"
-import cache from "@/lib/fs/cache"
 // @ts-ignore
 import { yCollab } from "y-codemirror.next"
 import { awarenessAtom } from "@/store/source"
@@ -54,15 +53,6 @@ const Codemirror = memo((props: CodemirrorProps) => {
 
   const awareness = useAtomValue(awarenessAtom)
 
-  const cacheUpdateListenerExtension = useMemo(
-    () =>
-      EditorView.updateListener.of((e) => {
-        if (!e.docChanged) return
-        cache.debouncedUpdateCache(props.source.id, () => props.source.serialize())
-      }),
-    [props.source],
-  )
-
   useEffect(() => {
     if (parentRef.current == null) return
     let isDestroy = false
@@ -83,7 +73,6 @@ const Codemirror = memo((props: CodemirrorProps) => {
         // use ycollab to modify and share source object
         //TODO: add awareness
         yCollab(props.source.source, awareness, { undoManager }),
-        cacheUpdateListenerExtension,
       ],
       doc: props.source.source.toString(),
       parent: parentRef.current!,

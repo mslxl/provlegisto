@@ -59,6 +59,11 @@ export const connectProviderAtom = atom(
     })
     set(docProviderAtom, wsProvider)
 
+    // doc.on("subdocs", ({ loaded }) => {
+    //   loaded.forEach((subdoc) => {
+    //     new WebsocketProvider(address, roomName + subdoc.guid, subdoc)
+    //   })
+    // })
     const promise = new Promise<string>((resolve, reject) => {
       let count = 0
       const callback = ({ status }: { status: string }) => {

@@ -1,16 +1,16 @@
 import { atom, useAtom } from "jotai"
 import { useEffect, useRef } from "react"
-import cache from "@/lib/fs/cache"
 import useReadAtom from "@/lib/hooks/useReadAtom"
 import { sourceAtom } from "@/store/source"
-import { forEach } from "lodash/fp"
+import { readSession, saveSession } from "@/lib/fs/session"
+import { window as tauriWin } from "@tauri-apps/api"
 
 const alreadyLoadedAtom = atom(false)
+
 /**
  * Load cache and insert to source store
  * It only be execuate on startup
  */
-
 export default function useAutoSaveLoader() {
   const [alreadyLoaded, setAlreadyLoaded] = useAtom(alreadyLoadedAtom)
   const currentLoaded = useRef(false)
@@ -21,11 +21,23 @@ export default function useAutoSaveLoader() {
       setAlreadyLoaded(true)
       currentLoaded.current = true
       const store = readSourceStore()
-      cache.loadAll().then((data) => {
-        store.doc.transact(() => {
-          forEach((v)=>store.createByDeserialization(v.data, v.id), data)
-        })
+      readSession().then((session) => {
+        if (session) {
+          store.deserialize(session)
+        }
       })
     }
   }, [alreadyLoaded])
+
+  // save source store on close
+  useEffect(() => {
+    const unlisten = tauriWin.getCurrent().listen("tauri://close-requested", async () => {
+      const store = readSourceStore()
+      await saveSession(store.serialize())
+      tauriWin.getCurrent().close()
+    })
+    return () => {
+      unlisten.then((fn) => fn())
+    }
+  }, [readSourceStore])
 }

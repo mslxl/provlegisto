@@ -93,10 +93,6 @@ export class Source {
   private store: YjsNS
   constructor(store: YjsNS) {
     this.store = store
-    this.name.observe((v)=>{
-      console.log(v.changes)
-
-    })
   }
 
   get id(): string {
@@ -232,8 +228,6 @@ export class SourceStore {
   delete(id: string) {
     const index = this.list.toArray().indexOf(id)
     if (index != -1) {
-      let doc = this.doc.getMap().get(id) as Doc
-      doc.destroy()
       this.list.delete(index)
     }
   }

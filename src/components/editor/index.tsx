@@ -89,5 +89,5 @@ export default function Editor(props: EditorProps) {
     }
   }, [props.text])
 
-  return <div className={clsx("w-full", props.className, "border border-slate-400")} ref={parentRef}></div>
+  return <div className={clsx("w-full", props.className)} ref={parentRef}></div>
 }

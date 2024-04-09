@@ -1,8 +1,10 @@
 import { WebsocketProvider } from "y-websocket"
 import { atom } from "jotai"
-import { awarenessAtom, docAtom } from "."
+import { awarenessAtom, awarenessStateAtom, docAtom, syncAwarenessActiveSourceIdAtom } from "."
 import * as log from "tauri-plugin-log-api"
 import { atomWithObservable } from "jotai/utils"
+import { map } from "lodash/fp"
+import { normalizeColor } from "@/lib/utils"
 
 export const docProviderAtom = atom<null | WebsocketProvider>(null)
 
@@ -48,6 +50,36 @@ export interface UserAwareness {
   color: string
 }
 
+export interface UserFocusDocId {
+  activeId: string
+}
+
+export interface UserCursor {
+  cursor: string
+}
+
+export type OnlineUserInfo = UserAwareness &
+  UserFocusDocId &
+  (UserFocusDocId | {}) & {
+    clientId: number
+  }
+
+export const onlineUsersAtom = atom<OnlineUserInfo[]>((get) => {
+  const states = get(awarenessStateAtom)
+  return map(
+    ([clientId, client]) =>
+      Object.assign(
+        client.user,
+        { cursor: client?.cursor?.anchor?.tname },
+        { activeId: client.active },
+        {
+          clientId: clientId,
+        },
+      ),
+    Array.from(states.entries()),
+  )
+})
+
 export const connectProviderAtom = atom(
   null,
   (get, set, address: string, roomName: string, user?: UserAwareness, retriedTimes: number = 3) => {
@@ -63,20 +95,18 @@ export const connectProviderAtom = atom(
       wsProvider.awareness.setLocalStateField(
         "user",
         Object.assign(user, {
-          colorLight: user.color + "cc",
+          colorLight: normalizeColor(user.color) + "cc",
         }),
       )
     }
+    // logging
     wsProvider.on("status", ({ status }: { status: string }) => {
       log.info(`provider connection status: ${status}`)
     })
     set(docProviderAtom, wsProvider)
 
-    // doc.on("subdocs", ({ loaded }) => {
-    //   loaded.forEach((subdoc) => {
-    //     new WebsocketProvider(address, roomName + subdoc.guid, subdoc)
-    //   })
-    // })
+    set(syncAwarenessActiveSourceIdAtom)
+
     const promise = new Promise<string>((resolve, reject) => {
       let count = 0
       const callback = ({ status }: { status: string }) => {

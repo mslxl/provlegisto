@@ -53,3 +53,11 @@ export function filterCSSQuote(text: string): string {
   }
   return result
 }
+
+
+export function normalizeColor(hex: string, fillColor: string = '00'): string{
+  const result = hex.match(/^#?((?:[\d(?:a-f)(?:A-F)]{2}){1,3})/)
+  if(result == null) return `#${fillColor}${fillColor}${fillColor}`
+  const value = result[1]
+  return `#${value.padEnd(6, fillColor)}`
+}

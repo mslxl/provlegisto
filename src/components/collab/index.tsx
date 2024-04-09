@@ -2,6 +2,7 @@ import { docProviderStateAtom } from "@/store/source/provider"
 import { useAtomValue } from "jotai"
 import Unconnect from "./unconnect"
 import Connecting from "./connecting"
+import Connected from "./connected"
 
 interface CollabPanelProps {
   className?: string
@@ -17,6 +18,6 @@ export default function CollabPanel(props: CollabPanelProps) {
     return <Connecting className={props.className} />
   }
   if (connectedStatus == "connected") {
-    return <>TODO: connected</>
+    return <Connected className={props.className}/>
   }
 }

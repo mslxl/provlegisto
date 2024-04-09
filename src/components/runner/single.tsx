@@ -207,11 +207,11 @@ export default function SingleRunner(props: SingleRunnerProps) {
       </AccordionTrigger>
       <AccordionContent>
         <span className="text-sm px-2">Input:</span>
-        <Editor className="min-w-0 m-2" text={props.testcase.input} />
+        <Editor className="min-w-0 p-2" text={props.testcase.input} />
         <span className="text-sm px-2">Expected Output:</span>
-        <Editor className="min-w-0 m-2" text={props.testcase.except} />
+        <Editor className="min-w-0 p-2" text={props.testcase.except} />
         <span className="text-sm px-2">Ouput:</span>
-        <Editor className="min-w-0 m-2" text={stdout} />
+        <Editor className="min-w-0 p-2" text={stdout} />
         <Popover>
           <PopoverTrigger asChild>
             <span className="text-end text-xs w-full px-2 hover:text-gray-600">See Report&gt;&gt;</span>

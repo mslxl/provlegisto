@@ -1,17 +1,55 @@
 import { Doc, Array } from "yjs"
 import { SourceStore } from "./model"
 import { atom } from "jotai"
-import { forEach, includes, isEmpty, range, uniq } from "lodash/fp"
+import { clone, forEach, includes, isEmpty, range, uniq } from "lodash/fp"
 import * as log from "tauri-plugin-log-api"
 import { LanguageMode } from "@/lib/ipc"
 import { createYjsHookAtom } from "@/lib/hooks/useY"
 import generateRandomName from "@/lib/names"
 import { Awareness } from "y-protocols/awareness"
+import { atomWithObservable } from "jotai/utils"
 
 export const docAtom = atom(new Doc({ autoLoad: true }))
 export const awarenessAtom = atom((get) => {
   return new Awareness(get(docAtom))
 })
+
+type AwarenessStates = Map<number, { [name: string]: any }>
+/**
+ * All awareness states (remote and local).
+ * Maps from clientID to awareness state.
+ * The clientID is usually the ydoc.clientID
+ */
+export const awarenessStateAtom = atomWithObservable(
+  (get) => {
+    const awareness = get(awarenessAtom)
+
+    return {
+      subscribe(observer: { next: (data: AwarenessStates) => void }): { unsubscribe: () => void } {
+        const cb = () => {
+          const states = awareness.getStates()
+          observer.next(clone(states))
+        }
+        cb()
+        awareness.on("update", cb)
+        return {
+          unsubscribe() {
+            awareness.off("update", cb)
+          },
+        }
+      },
+    }
+  },
+  { initialValue: new Map() },
+)
+
+/**
+ * Sync current user's focus, which used to show status on collab editing
+ *  */
+export const syncAwarenessActiveSourceIdAtom = atom(null, (get) => {
+  get(awarenessAtom).setLocalStateField("active", get(activedSourceIdAtom))
+})
+
 export const sourceAtom = atom((get) => new SourceStore(get(docAtom)))
 
 /**
@@ -47,6 +85,7 @@ export const activedSourceIdAtom = atom<string | null, [id: string | null], void
   (get, set, id) => {
     if (includes(id, get(sourceIdsAtom))) {
       set(activedSourceIdUncheckedAtom, id)
+      set(syncAwarenessActiveSourceIdAtom)
     } else {
       set(activedSourceIdUncheckedAtom, null)
     }

@@ -1,6 +1,7 @@
 pub mod console;
 pub mod error;
 pub mod keylock;
+pub mod fs;
 
 pub fn append_env_var(name: &str, value: String) -> String {
   let origin = std::env::var(name);

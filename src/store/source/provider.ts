@@ -5,6 +5,7 @@ import * as log from "tauri-plugin-log-api"
 import { atomWithObservable } from "jotai/utils"
 import { map } from "lodash/fp"
 import { normalizeColor } from "@/lib/utils"
+import WebsocketTauriPolyfill from "@/lib/net/WebsocketTauriPolyfill"
 
 export const docProviderAtom = atom<null | WebsocketProvider>(null)
 
@@ -88,7 +89,7 @@ export const connectProviderAtom = atom(
 
     const doc = get(docAtom)
     const wsProvider = new WebsocketProvider(address, roomName, doc, {
-      // WebSocketPolyfill : WebsocketTauriPolyfill,
+      WebSocketPolyfill : WebsocketTauriPolyfill as any, // fuck, this is executable, through "anyscript"
       awareness: awareness,
     })
     if (user) {

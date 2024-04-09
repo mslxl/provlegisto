@@ -65,7 +65,7 @@ export default function Connected(props: ConnectedProps) {
   return (
     <div className={clsx(props.className, "h-full select-none flex flex-col min-h-0 min-w-0")} ref={panelRef}>
       <div className="shadow-sm flex pl-2 top-0 bg-accent">
-        <span className="truncate font-semibold">Online Users</span>
+        <span className="truncate font-semibold">ONLINE USERS</span>
         <span className="flex-1"></span>
         <button className={clsx("p-1 hover:bg-neutral-200", {hidden: !isHover})} onClick={exitRoom}>
           <ImExit />

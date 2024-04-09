@@ -73,10 +73,13 @@ class WebsocketTauriPolyfill implements WebSocket {
       this.ws?.send(data)
     } else if (data instanceof Blob) {
       data.arrayBuffer().then((buff) => this.send(buff))
-    } else if (data instanceof ArrayBuffer || data instanceof SharedArrayBuffer) {
+    } else if (data instanceof ArrayBuffer) {
       this.send(new Int8Array(data))
-    } else if (data instanceof Int8Array) {
+    } else if (data instanceof Int8Array || data instanceof Uint8Array) {
       this.ws?.send(Array.from(data))
+    }else{
+      console.log(data)
+      throw new Error("Unsupported data type")
     }
   }
 

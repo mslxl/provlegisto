@@ -50,11 +50,11 @@ fn main() {
         .setup(|app| {
             // provlegisto state
             CONFIG_DIR
-                .set(dunce::canonicalize(app.path_resolver().app_config_dir().unwrap()).unwrap())
+                .set(util::fs::canonicalize(app.path_resolver().app_config_dir().unwrap()).unwrap())
                 .unwrap();
             RESOURCE_DIR
                 .set(
-                    dunce::canonicalize(app.path_resolver().app_local_data_dir().unwrap()).unwrap(),
+                    util::fs::canonicalize(app.path_resolver().app_local_data_dir().unwrap()).unwrap(),
                 )
                 .unwrap();
             app.manage(LSPState::default());
